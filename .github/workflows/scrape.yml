@@ -1,0 +1,48 @@
+name: Scrape LCSC Parts Data
+
+on:
+  schedule:
+    # 每 6 小时自动运行
+    - cron: '0 */6 * * *'
+  workflow_dispatch:  # 允许手动触发
+  push:
+    paths:
+      - 'backend/scraper.py'
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+    
+    - name: Run scraper
+      run: |
+        python scraper.py
+    
+    - name: Commit and push data
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: 'data/'
+        message: '📦 Update parts data - LCSC scraping'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: parts-data
+        path: data/
+        retention-days: 7

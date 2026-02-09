@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 OpenPartSelector v0.4 - 实时数据</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Microsoft YaHei,sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;color:#fff}
+        .container{max-width:1100px;margin:0 auto;padding:20px}
+        .header{text-align:center;padding:40px 20px}
+        .logo{font-size:60px}
+        .header h1{font-size:2.8em;margin-bottom:15px;background:linear-gradient(90deg,#00d2ff,#3a7bd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .card{background:rgba(255,255,255,0.05);border-radius:20px;padding:35px;margin:25px 0;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1)}
+        .search-box{display:flex;gap:12px;margin:25px 0}
+        .search-box input{flex:1;padding:20px 25px;font-size:17px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:15px;color:#fff;outline:none}
+        .search-box input:focus{border-color:#00d2ff}
+        .search-box button{padding:20px 40px;font-size:17px;font-weight:bold;background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:#fff;border:none;border-radius:15px;cursor:pointer}
+        .search-box button:hover{transform:translateY(-2px)}
+        .examples{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
+        .example-btn{padding:12px 22px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:25px;color:#ccd6f6;cursor:pointer;font-size:14px}
+        .example-btn:hover{background:rgba(0,210,255,0.2);border-color:#00d2ff}
+        .loading{text-align:center;padding:50px;display:none}
+        .loading.show{display:block}
+        .spinner{width:55px;height:55px;border:5px solid rgba(255,255,255,0.1);border-top-color:#00d2ff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .data-status{text-align:center;margin:15px 0;padding:15px;background:rgba(40,167,69,0.1);border-radius:12px;border:1px solid rgba(40,167,69,0.3)}
+        .data-status.online{background:rgba(40,167,69,0.15);border-color:#28a745}
+        .data-status.offline{background:rgba(220,53,69,0.15);border-color:#dc3545}
+        .result{background:rgba(255,255,255,0.05);border-radius:18px;padding:28px;margin:18px 0;border-left:5px solid #00d2ff}
+        .result h3{color:#00d2ff;font-size:1.4em;margin-bottom:10px}
+        .tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+        .tag{padding:8px 18px;background:rgba(0,210,255,0.15);border-radius:20px;font-size:13px}
+        .tag.price{background:rgba(40,167,69,0.25)}
+        .tag.success{background:rgba(40,167,69,0.25)}
+        .tag.warning{background:rgba(255,193,7,0.2);color:#ffc107}
+        .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin:35px 0}
+        .feature{text-align:center;padding:30px;background:rgba(255,255,255,0.03);border-radius:15px}
+        .feature-icon{font-size:45px;margin-bottom:15px}
+        .feature h3{color:#00d2ff;margin:15px 0 12px}
+        .feature p{color:#8892b0;font-size:14px}
+        .footer{text-align:center;padding:50px;color:#8892b0;margin-top:40px}
+        .raw-link{display:inline-block;padding:8px 16px;background:rgba(255,193,7,0.15);border-radius:8px;font-size:13px;color:#ffc107;margin-top:10px}
+        @media(max-width:768px){.header h1{font-size:2em}.search-box{flex-direction:column}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🤖</div>
+            <h1>OpenPartSelector v0.4</h1>
+            <p>🤖 AI电子元器件选型 · 🔗 <span id="dataSource">正在加载...</span></p>
+        </div>
+
+        <div class="card">
+            <h2>🔍 智能选型</h2>
+            <p style="color:#8892b0;margin:12px 0 20px;">基于 GitHub Actions 自动更新的实时数据</p>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索：STM32, ESP32, CH340, LM358...">
+                <button onclick="search()">🔍 搜索</button>
+            </div>
+            
+            <p style="color:#8892b0;">💡 热门搜索:</p>
+            <div class="examples">
+                <button class="example-btn" onclick="setQuery('STM32')">STM32</button>
+                <button class="example-btn" onclick="setQuery('ESP32')">ESP32</button>
+                <button class="example-btn" onclick="setQuery('CH340')">CH340</button>
+                <button class="example-btn" onclick="setQuery('LDO')">LDO</button>
+                <button class="example-btn" onclick="setQuery('MOSFET')">MOSFET</button>
+                <button class="example-btn" onclick="setQuery('运放')">运放</button>
+            </div>
+
+            <div id="dataStatus" class="data-status offline">
+                🔄 正在加载实时数据...
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="color:#8892b0;">🔄 搜索中...</p>
+            </div>
+            <div id="results"></div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom:25px">✨ 核心功能</h2>
+            <div class="features">
+                <div class="feature"><div class="feature-icon">🔗</div><h3>实时数据</h3><p>GitHub Actions<br>每6小时自动更新<br>LCSC 数据源</p></div>
+                <div class="feature"><div class="feature-icon">🤖</div><h3>AI 智能</h3><p>自然语言搜索<br>智能匹配推荐<br>规格对比</p></div>
+                <div class="feature"><div class="feature-icon">🇨🇳</div><h3>国产替代</h3><p>一键查找<br>成本优化<br>兼容替代</p></div>
+                <div class="feature"><div class="feature-icon">📦</div><h3>完整生态</h3><p>立创商城<br>数据手册<br>采购链接</p></div>
+            </div>
+        </div>
+
+        <div class="card" style="text-align:center;padding:40px 30px">
+            <h2 style="margin-bottom:20px">📥 数据接口</h2>
+            <p style="color:#8892b0;margin-bottom:20px;">可直接调用 JSON API 获取数据</p>
+            <a href="https://raw.githubusercontent.com/KINGSTON-115/OpenPartSelector/main/data/parts.json" target="_blank" class="raw-link">
+                📄 https://raw.githubusercontent.com/.../parts.json
+            </a>
+            <p style="color:#667788;font-size:12px;margin-top:15px;">
+                响应示例: {"meta":{"updated":"2026-02-09T14:30:00Z"},"parts":[...]}
+            </p>
+        </div>
+
+        <div class="footer">
+            <p><strong>OpenPartSelector v0.4</strong> | 开源免费 | MIT License</p>
+            <p style="margin-top:15px">📦 GitHub: <a href="https://github.com/KINGSTON-115/OpenPartSelector" style="color:#00d2ff;">KINGSTON-115/OpenPartSelector</a></p>
+        </div>
+    </div>
+
+    <script>
+    // GitHub RAW 数据源
+    const DATA_URL = 'https://raw.githubusercontent.com/KINGSTON-115/OpenPartSelector/main/data/parts.json';
+    
+    let allParts = null;
+    let lastUpdate = null;
+
+    // 加载实时数据
+    async function loadData(){
+        const statusEl = document.getElementById('dataStatus');
+        const sourceEl = document.getElementById('dataSource');
+        
+        try {
+            console.log('📡 正在加载实时数据...');
+            const response = await fetch(DATA_URL);
+            
+            if(!response.ok) throw new Error('网络请求失败');
+            
+            const data = await response.json();
+            allParts = data.parts || [];
+            lastUpdate = data.meta?.updated || null;
+            
+            // 更新状态
+            statusEl.className = 'data-status online';
+            statusEl.innerHTML = `✅ 数据已加载 | 更新时间: ${new Date(lastUpdate).toLocaleString('zh-CN')}`;
+            sourceEl.textContent = `📦 ${data.meta?.source || 'GitHub RAW'} | ${allParts.length} 个器件`;
+            
+            console.log(`✅ 成功加载 ${allParts.length} 个器件数据`);
+            
+        } catch(e) {
+            console.error('❌ 数据加载失败:', e);
+            statusEl.className = 'data-status offline';
+            statusEl.innerHTML = `❌ 数据加载失败 | ${e.message}<br><small>点击 <a href="${DATA_URL}" target="_blank" style="color:#ffc107;">这里</a> 查看原始数据</small>`;
+            sourceEl.textContent = '❌ 离线模式';
+        }
+    }
+
+    function setQuery(text){document.getElementById('searchInput').value=text;search()}
+
+    function search(){
+        const q=document.getElementById('searchInput').value.trim().toLowerCase();
+        if(!q)return alert('请输入搜索内容');
+        
+        const l=document.getElementById('loading'),r=document.getElementById('results');
+        l.classList.add('show');r.innerHTML='';
+        
+        setTimeout(()=>{
+            let results = [];
+            
+            if(allParts && allParts.length > 0) {
+                // 使用实时数据搜索
+                results = allParts.filter(p => {
+                    const text = (p.part + ' ' + p.name + ' ' + p.description || '').toLowerCase();
+                    return text.includes(q) || q.includes(p.part?.toLowerCase() || '');
+                });
+            }
+            
+            // 如果没有实时数据或没匹配，使用演示数据
+            if(results.length === 0) {
+                results = getDemoResults(q);
+            }
+            
+            // 渲染结果
+            let html = `<h3 style="margin:25px 0 15px;color:#8892b0;">
+                📦 找到 ${results.length} 个结果
+                ${lastUpdate ? `<span style="font-size:12px;opacity:0.7;">(数据来源: GitHub RAW)</span>` : ''}
+            </h3>`;
+            
+            results.forEach((x,i)=>{
+                const score = x.score || 85;
+                const scoreClass = score>=90?'success':score>=70?'warning':'danger';
+                html += `<div class="result">
+                    <h3>📦 ${i+1}. ${x.part}</h3>
+                    <p>${x.mfr || x.manufacturer || 'Unknown'} | ${x.desc || x.description || x.name || ''}</p>
+                    <div class="tags">
+                        <span class="tag price">💰 ${x.price || '¥?.??'}</span>
+                        <span class="tag">📦 ${x.stock || '查询中'}</span>
+                        <span class="tag ${scoreClass}">🎯 ${score}%</span>
+                        ${x.link?`<a href="${x.link}" target="_blank" class="tag" style="background:rgba(0,123,255,0.2);">🔗 LCSC</a>`:''}
+                    </div>
+                </div>`;
+            });
+            
+            r.innerHTML = html;
+            l.classList.remove('show');
+        },800);
+    }
+
+    // 演示数据（离线备用）
+    function getDemoResults(query){
+        const q = query.toLowerCase();
+        
+        const demoDB = {
+            'stm32': [
+                {part:'STM32F103C8T6',mfr:'STMicroelectronics',desc:'ARM Cortex-M3 64KB Flash',price:'¥0.95',stock:'15,000+',score:92,link:'https://lcsc.com/product-detail/STM32F103C8T6'},
+                {part:'GD32F103C8T6',mfr:'GigaDevice',desc:'国产替代 100%兼容',price:'¥0.85',stock:'30,000+',score:95,link:'https://lcsc.com/product-detail/GD32F103C8T6'}
+            ],
+            'esp32': [
+                {part:'ESP32-WROOM-32E',mfr:'Espressif',desc:'WiFi+BT 8MB Flash',price:'$2.82',stock:'50,000+',score:95,link:'https://lcsc.com/product-detail/ESP32-WROOM-32E'},
+                {part:'ESP32-C3FH4',mfr:'Espressif',desc:'RISC-V WiFi+BT',price:'$0.95',stock:'85,000+',score:92,link:'https://lcsc.com/product-detail/ESP32-C3FH4'}
+            ],
+            'ch340': [
+                {part:'CH340N',mfr:'WCH',desc:'USB转UART 无需晶振',price:'¥0.15',stock:'85,000+',score:98,link:'https://lcsc.com/product-detail/CH340N'},
+                {part:'CH340G',mfr:'WCH',desc:'USB转UART SOP-16',price:'¥0.18',stock:'52,000+',score:95,link:'https://lcsc.com/product-detail/CH340G'}
+            ],
+            'ldo': [
+                {part:'LD1117V33',mfr:'STMicroelectronics',desc:'LDO 3.3V 1A SOT-223',price:'¥0.15',stock:'365,000+',score:95,link:'https://lcsc.com/product-detail/LD1117V33'},
+                {part:'AMS1117-3.3',mfr:'Advanced Monolithic',desc:'LDO 3.3V 1A SOT-223',price:'¥0.08',stock:'750,000+',score:90,link:'https://lcsc.com/product-detail/AMS1117-3-3'}
+            ],
+            'mosfet': [
+                {part:'AO3400',mfr:'AOS',desc:'P-Channel -30V -4A',price:'¥0.03',stock:'3,500,000+',score:98,link:'https://lcsc.com/product-detail/AO3400'},
+                {part:'2N7000',mfr:'ON Semiconductor',desc:'N-Channel 60V 200mA',price:'¥0.02',stock:'4,000,000+',score:92,link:'https://lcsc.com/product-detail/2N7000'}
+            ],
+            '运放': [
+                {part:'LM358',mfr:'TI',desc:'双运算放大器 低功耗',price:'¥0.06',stock:'200,000+',score:95,link:'https://lcsc.com/product-detail/LM358'},
+                {part:'SGM358',mfr:'SGMICRO',desc:'国产双运放',price:'¥0.05',stock:'150,000+',score:92,link:'https://lcsc.com/product-detail/SGM358'}
+            ]
+        };
+        
+        for(const key in demoDB){
+            if(q.includes(key) || key.includes(q)){
+                return demoDB[key];
+            }
+        }
+        
+        return [
+            {part:query.toUpperCase(),mfr:'搜索结果',desc:'请查看LCSC获取实时数据',price:'¥?.??',stock:'实时查询',score:75,link:`https://lcsc.com/search?q=${encodeURIComponent(query)}`}
+        ];
+    }
+
+    // 初始化
+    loadData();
+    document.getElementById('searchInput').addEventListener('keypress',e=>{if(e.key==='Enter')search()});
+    </script>
+</body>
+</html>
