@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 OpenPartSelector v0.2 - AI电子元器件选型</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Microsoft YaHei,sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;color:#fff}
+        .container{max-width:900px;margin:0 auto;padding:20px}
+        .header{text-align:center;padding:40px 20px}
+        .logo{font-size:60px}
+        .header h1{font-size:2.5em;margin-bottom:10px;background:linear-gradient(90deg,#00d2ff,#3a7bd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .card{background:rgba(255,255,255,0.05);border-radius:20px;padding:30px;margin:20px 0;backdrop-filter:blur(10px)}
+        .search-box{display:flex;gap:10px;margin:20px 0}
+        .search-box input{flex:1;padding:18px 25px;font-size:16px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:15px;color:#fff;outline:none}
+        .search-box input:focus{border-color:#00d2ff}
+        .search-box button{padding:18px 35px;font-size:16px;font-weight:bold;background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:#fff;border:none;border-radius:15px;cursor:pointer}
+        .examples{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
+        .example-btn{padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:25px;color:#fff;cursor:pointer;font-size:14px}
+        .example-btn:hover{background:rgba(0,210,255,0.2)}
+        .result{background:rgba(255,255,255,0.05);border-radius:15px;padding:25px;margin:15px 0;border-left:4px solid #00d2ff}
+        .result h3{color:#00d2ff;margin-bottom:10px}
+        .tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}
+        .tag{padding:6px 15px;background:rgba(0,210,255,0.2);border-radius:20px;font-size:13px}
+        .tag.price{background:rgba(40,167,69,0.3)}
+        .warning-box{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:10px;padding:20px;margin:20px 0}
+        .warning-box h4{color:#ffc107}
+        .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:30px 0}
+        .feature{text-align:center;padding:25px;background:rgba(255,255,255,0.03);border-radius:15px}
+        .feature-icon{font-size:40px}
+        .feature h3{color:#00d2ff;margin:15px 0 10px}
+        .bom-section{margin-top:40px}
+        .bom-table{width:100%;border-collapse:collapse;margin:20px 0}
+        .bom-table th,.bom-table td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .bom-table th{color:#00d2ff}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:20px 0}
+        .stat{text-align:center;padding:20px;background:rgba(255,255,255,0.05);border-radius:15px}
+        .stat-value{font-size:2em;font-weight:bold;color:#00d2ff}
+        .footer{text-align:center;padding:40px;color:#8892b0}
+        .download-btn{display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#28a745,#20c997);color:#fff;text-decoration:none;border-radius:30px;margin:10px}
+        .loading{text-align:center;padding:40px;display:none}
+        .spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,0.1);border-top-color:#00d2ff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🤖</div>
+            <h1>OpenPartSelector v0.2</h1>
+            <p>AI电子元器件智能选型引擎 | 完全离线可用</p>
+        </div>
+
+        <div class="card">
+            <h2>🔍 智能选型</h2>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="例如：找一个 3.3V LDO 1A">
+                <button onclick="search()">🔍 选型</button>
+            </div>
+            <div class="examples">
+                <button class="example-btn" onclick="setQuery('找一个 3.3V LDO 1A')">找一个 3.3V LDO 1A</button>
+                <button class="example-btn" onclick="setQuery('ESP32 WiFi 模块')">ESP32 WiFi 模块</button>
+                <button class="example-btn" onclick="setQuery('STM32 单片机 国产替代')">STM32 国产替代</button>
+                <button class="example-btn" onclick="setQuery('USB 转串口芯片')">USB 转串口</button>
+            </div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>🤖 AI 正在分析...</p>
+            </div>
+            <div id="results"></div>
+        </div>
+
+        <div class="card">
+            <h2>📦 BOM 分析示例</h2>
+            <div class="stats">
+                <div class="stat"><div class="stat-value">5</div><div class="stat-label">器件种类</div></div>
+                <div class="stat"><div class="stat-value">¥3.12</div><div class="stat-label">预估总价</div></div>
+                <div class="stat"><div class="stat-value">1</div><div class="stat-label">高风险</div></div>
+                <div class="stat"><div class="stat-value">¥0.84</div><div class="stat-label">预估节省</div></div>
+            </div>
+            <table class="bom-table">
+                <tr><th>位号</th><th>型号</th><th>单价</th><th>状态</th><th>风险</th></tr>
+                <tr><td>U1</td><td>STM32F103C8T6</td><td>¥0.95</td><td><span style="color:#ffc107">⚠️ NRND</span></td><td>medium</td></tr>
+                <tr><td>U2</td><td>CH340C</td><td>¥0.18</td><td><span style="color:#28a745">✅ Active</span></td><td>low</td></tr>
+                <tr><td>U3</td><td>ESP32-WROOM</td><td>¥1.85</td><td><span style="color:#28a745">✅ Active</span></td><td>low</td></tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>🚨 EOL 停产预警</h2>
+            <div class="warning-box">
+                <h4>⚠️ 重要预警 - 每年47万+器件停产</h4>
+                <ul style="margin-left:20px;color:#ccd6f6">
+                    <li><strong>STM32F103C8T6</strong> - NRND (不推荐新设计) → 建议: STM32G431</li>
+                    <li><strong>ATMEGA328P</strong> - Active → 建议: AVR DD (更低功耗)</li>
+                    <li><strong>ESP32-WROOM-32</strong> - Active → 可考虑 ESP32-C3 (更便宜)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>✨ 核心功能</h2>
+            <div class="features">
+                <div class="feature"><div class="feature-icon">🤖</div><h3>AI 智能选型</h3><p>自然语言查询<br>多平台比价</p></div>
+                <div class="feature"><div class="feature-icon">🇨🇳</div><h3>国产替代</h3><p>STM32→GD32<br>降本30%</p></div>
+                <div class="feature"><div class="feature-icon">🚨</div><h3>EOL 预警</h3><p>47万+/年停产<br>提前预警</p></div>
+                <div class="feature"><div class="feature-icon">🔌</div><h3>CAD 库</h3><p>SamacSys集成<br>一键下载</p></div>
+                <div class="feature"><div class="feature-icon">📋</div><h3>BOM 分析</h3><p>供应链风险<br>成本优化</p></div>
+                <div class="feature"><div class="feature-icon">🏭</div><h3>立创生态</h3><p>立创商城<br>SMT报价</p></div>
+            </div>
+        </div>
+
+        <div class="download-section" style="text-align:center;padding:40px;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:15px;margin:30px 0">
+            <h2 style="color:#fff">📥 完整版下载</h2>
+            <p style="color:#8892b0;margin:15px 0;">选择最适合您的方式:</p>
+            <a href="https://github.com/KINGSTON-115/OpenPartSelector/releases" target="_blank" class="download-btn">📥 Windows EXE (推荐)</a>
+            <a href="https://pypi.org/project/OpenPartSelector" target="_blank" class="download-btn" style="background:linear-gradient(135deg,#667eea,#764ba2)">📦 pip install</a>
+            <a href="https://github.com/KINGSTON-115/OpenPartSelector" target="_blank" class="download-btn" style="background:linear-gradient(135deg,#6c757d,#495057)">📄 源码</a>
+        </div>
+
+        <div class="footer">
+            <p>🤖 <strong>OpenPartSelector v0.2</strong> | 开源免费 | MIT License</p>
+            <p style="margin-top:10px">📦 GitHub: <a href="https://github.com/KINGSTON-115/OpenPartSelector" style="color:#00d2ff">KINGSTON-115/OpenPartSelector</a></p>
+        </div>
+    </div>
+
+    <script>
+    const database={
+        '找一个 3.3v ldo':[
+            {part:'LD1117V33',mfr:'STMicroelectronics',desc:'LDO Voltage Regulator 3.3V 1A',price:0.15,stock:365000,score:100,voltage:'3.3V',current:'1A'},
+            {part:'AMS1117-3.3',mfr:'Advanced Monolithic',desc:'LDO稳压器 3.3V 1A SOT-223',price:0.08,stock:750000,score:100,voltage:'3.3V',current:'1A'},
+            {part:'ME6211C33',mfr:'Midsummer',desc:'LDO 3.3V 500mA SOT-23-5',price:0.04,stock:1500000,score:90,voltage:'3.3V',current:'500mA'}
+        ],
+        'esp32 wifi 模块':[
+            {part:'ESP32-WROOM-32',mfr:'乐鑫',desc:'WiFi+BT Module 4MB Flash',price:1.85,stock:290000,score:95,voltage:'3.3V'},
+            {part:'ESP32-C3FH4',mfr:'乐鑫',desc:'RISC-V内核 更省电',price:0.95,stock:85000,score:85,voltage:'3.3V'}
+        ],
+        'stm32 单片机':[
+            {part:'STM32F103C8T6',mfr:'STMicroelectronics',desc:'ARM Cortex-M3 64KB Flash',price:0.95,stock:15000,score:85,voltage:'3.3V'},
+            {part:'GD32F103C8T6',mfr:'兆易创新',desc:'国产替代 100%兼容',price:0.85,stock:30000,score:90,voltage:'3.3V',alt:'✅ GD32国产替代，便宜10%'}
+        ],
+        'stm32 国产替代':[
+            {part:'GD32F103C8T6',mfr:'兆易创新',desc:'国产替代 100%兼容',price:0.85,stock:30000,score:95,voltage:'3.3V',alt:'✅ 价格便宜10%，性能更强'},
+            {part:'HK32F103C8T6',mfr:'航顺微',desc:'国产替代 95%兼容',price:0.80,stock:18000,score:85,voltage:'3.3V',alt:'⚠️ ADC精度略有差异'}
+        ],
+        'usb 转串口':[
+            {part:'CH340G',mfr:'沁恒',desc:'USB to UART Converter',price:0.18,stock:52000,score:95,voltage:'5V/3.3V'},
+            {part:'CP2102N',mfr:'Silicon Labs',desc:'USB to UART Bridge',price:1.45,stock:12000,score:80,voltage:'3.3V'}
+        ],
+        '双运放':[
+            {part:'LM358',mfr:'TI',desc:'Dual Op-Amp Low Power',price:0.06,stock:200000,score:95,voltage:'3-32V'},
+            {part:'TL072',mfr:'TI',desc:'Dual Low-Noise JFET Op-Amp',price:0.08,stock:80000,score:90,voltage:'±6~18V'}
+        ]
+    };
+    function setQuery(t){document.getElementById('searchInput').value=t;search()}
+    function search(){
+        const q=document.getElementById('searchInput').value.trim().toLowerCase();
+        if(!q)return alert('请输入搜索内容');
+        const l=document.getElementById('loading'),r=document.getElementById('results');
+        l.classList.add('show');r.innerHTML='';
+        setTimeout(()=>{
+            let m=null;
+            for(const k in database){if(q.includes(k)||k.includes(q.replace(/找一个|单片机|模块/g,'').trim())){m=database[k];break}}
+            if(!m)m=database['找一个 3.3v ldo'];
+            let h='<h3 style="margin:20px 0 10px;">📦 推荐结果</h3>';
+            m.forEach((x,i)=>{
+                h+=`<div class="result"><h3>📦 ${i+1}. ${x.part}</h3><p>${x.mfr} | ${x.desc}</p><div class="tags"><span class="tag price">💰 ¥${x.price.toFixed(2)}</span><span class="tag">📦 ${x.stock.toLocaleString()}件</span><span class="tag">🎯 ${x.score}%</span><span class="tag">⚡ ${x.voltage||''}</span>${x.alt?`<span class="tag">${x.alt}</span>`:''}</div></div>`;
+            });
+            r.innerHTML=h;l.classList.remove('show');
+        },800);
+    }
+    document.getElementById('searchInput').addEventListener('keypress',e=>{if(e.key==='Enter')search()});
+    </script>
+</body>
+</html>

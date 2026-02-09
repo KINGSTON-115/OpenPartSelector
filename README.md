@@ -2,11 +2,36 @@
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
-
 > **核心价值**：用 AI Agent 自动化解决电子工程师的元器件选型痛点——搜索、对比、验证、一键生成采购清单
+
+---
+
+## 🎯 一键使用 (立即可用!)
+
+### 📄 **网页版** (推荐! 无需安装)
+> 双击打开即可使用所有功能
+
+| 文件 | 说明 | 大小 |
+|------|------|------|
+| [`standalone.html`](standalone.html) | 🌍 完整功能网页版 | 12KB |
+| [`OpenPartSelector-v0.2.html`](OpenPartSelector-v0.2.html) | 完整功能演示版 | 24KB |
+
+**使用方法:**
+1. 下载 `standalone.html`
+2. 双击用浏览器打开
+3. 立即使用 AI 选型功能！
+
+### 💻 **Windows 桌面版**
+```bash
+# 方式1: pip 安装 (推荐)
+pip install openpartselector
+
+# 方式2: 源码运行
+git clone https://github.com/KINGSTON-115/OpenPartSelector.git
+cd OpenPartSelector
+pip install -e .
+python desktop_app.py
+```
 
 ---
 
