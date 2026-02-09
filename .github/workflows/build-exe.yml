@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
@@ -24,7 +24,7 @@ jobs:
     - name: Build EXE
       run: |
         pip install -e .
-        pyinstaller --onefile --windowed desktop_app.py --name OpenPartSelector
+        pyinstaller --onefile --windowed desktop_app.py --name OpenPartSelector --clean
     
     - name: Upload EXE
       uses: actions/upload-artifact@v4
