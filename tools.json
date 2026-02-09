@@ -1,0 +1,12 @@
+{
+  "tool": "openpartselector",
+  "entry_point": "tools.cli:main",
+  "description": "AI-Driven Electronic Component Selection Engine CLI",
+  "commands": {
+    "select": "Search and select components using natural language",
+    "price": "Compare prices across multiple vendors",
+    "parse": "Parse and analyze datasheets",
+    "bom": "Generate Bill of Materials",
+    "search": "Search components in database"
+  }
+}
