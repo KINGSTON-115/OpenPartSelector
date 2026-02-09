@@ -218,3 +218,70 @@ MIT License - 开源商用皆可。
 ---
 
 > **Built with AI Agents, for Engineers** 🛠️
+
+---
+
+## 🔥 锦上添花功能 - 学生工程师最需要的实用工具
+
+### 🇨🇳 国产替代推荐
+```python
+from ops.features import find_alternatives
+
+# 查找国产替代
+alts = find_alternatives('STM32F103C8T6')
+# → GD32F103 (90%价格, 100%兼容)
+```
+
+| 原器件 | 国产替代 | 价格 | 兼容性 | 备注 |
+|--------|----------|------|--------|------|
+| STM32F103C8T6 | GD32F103C8T6 | 90% | 100% | 兆易创新，pin2pin兼容 |
+| STM32F103C8T6 | HK32F103C8T6 | 85% | 95% | 航顺微，ADC略有差异 |
+| ESP32 | ESP32-C3 | 110% | 功能兼容 | RISC-V内核，更省电 |
+| CH340G | CH340N | 100% | 100% | 无需外接晶振 |
+| AMS1117 | ME6211 | 70% | 功能兼容 | 低压差，更省电 |
+| LM358 | SGM358 | 85% | 100% | 圣邦微，低噪声 |
+
+### 📚 参考电路模板库
+```python
+from ops.features import get_circuit_template
+
+# 获取参考电路
+tmpl = get_circuit_template('esp32_minimal')
+# → 返回BOM清单、注意事项、预估成本
+```
+
+| 模板 | 难度 | BOM成本 | 说明 |
+|------|------|---------|------|
+| ESP32 最小系统 | ⭐ | ¥15 | WiFi模块最小系统 |
+| STM32 最小系统 | ⭐⭐ | ¥12 | ARM Cortex-M3 |
+| LDO 稳压电源 | ⭐ | ¥2 | 5V→3.3V |
+| ESP32 下载器 | ⭐ | ¥8 | CH340C 烧录电路 |
+| 蓝牙串口 | ⭐ | ¥15 | HC-05 蓝牙模块 |
+| MQ气体传感器 | ⭐⭐ | ¥8 | MQ-2/3 接口 |
+| 充电宝 | ⭐⭐ | ¥12 | TP4056 锂电池 |
+
+### 📖 Datasheet 中文解读
+```python
+from ops.features import get_datasheet_summary
+
+# 获取中文解读
+summary = get_datasheet_summary('STM32F103C8T6')
+# → 一句话说明、主要特点、应用场景、注意事项
+```
+
+支持器件: STM32F103C8T6, ESP32-WROOM-32, CH340G, AMS1117, LM358
+
+### 🧮 常用电路计算
+```python
+from ops.features import calculate_resistor_for_led, calculate_voltage_divider
+
+# LED限流电阻
+led = calculate_resistor_for_led(voltage=5.0, led_voltage=2.0, led_current=0.02)
+# → 推荐 82Ω 电阻
+
+# 分压电阻
+div = calculate_voltage_divider(v_in=5.0, v_out=3.3)
+# → 推荐 R1=10K, R2=10KΩ
+```
+
+---
