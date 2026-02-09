@@ -10,7 +10,37 @@
 
 ---
 
-## 🎯 解决痛点
+## 🎓 中国特色功能
+
+### 嘉立创/立创商城集成
+```python
+from ops.jlc import search_jlc, calculate_jlc_smt
+
+# 🎓 学生常用器件搜索
+results = search_jlc('ESP32')
+# → 返回: 立创货号C14663, ¥9.8/10pcs, 库存8500
+# → 直接生成采购链接
+
+# 📐 封装查询 (嘉立创EDA)
+fp = get_jlc_footprint('SOP-8')
+# → 返回: JLC封装ID: SOP-8-3.9
+
+# 🔧 SMT费用计算
+smt = calculate_jlc_smt(bom)
+# → 返回: 单面SMT ¥9.2 (80点起)
+```
+
+### 支持的器件
+| 器件类型 | 型号 | 立创货号 | 价格/10pcs |
+|----------|------|----------|------------|
+| WiFi模块 | ESP-12F | C10047 | ¥7.50 |
+| WiFi模块 | ESP32-C3 | C14663 | ¥9.80 |
+| USB转串口 | CH340C | C10488 | ¥1.80 |
+| 国产替代 | GD32F103 | C11449 | ¥8.50 |
+| 时基电路 | NE555P | C8580 | ¥0.50 |
+
+### 嘉立创EDA封装库
+支持常用封装: SOP-8, SOT-223, LQFP-48, QFN-24, ESP-12F 等
 
 | 痛点 | OpenPartSelector 方案 |
 |------|------------------------|
