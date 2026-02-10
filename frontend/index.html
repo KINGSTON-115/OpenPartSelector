@@ -450,29 +450,16 @@
         .footer a{color:#667eea;text-decoration:none}
         .footer a:hover{text-decoration:underline}
     
-/* 暗黑模式 */
-body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important;color:#e2e8f0 !important}
-body.dark-mode .card{background:#1e1e3f !important;border:1px solid rgba(102,126,234,0.3) !important}
-body.dark-mode .card h2{color:#e2e8f0 !important}
-body.dark-mode .card p{color:#a0aec0 !important}
-body.dark-mode .hero{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%) !important}
-body.dark-mode .search-wrapper{background:linear-gradient(135deg,rgba(30,30,63,0.95) 0%,rgba(22,33,62,0.95) 100%) !important}
-body.dark-mode .search-box input{background:#1e1e3f !important;color:#fff !important}
-body.dark-mode .suggestions{background:#1e1e3f !important}
-body.dark-mode .suggestion-item{border-color:rgba(102,126,234,0.2) !important}
-body.dark-mode .suggestion-item:hover{background:rgba(102,126,234,0.3) !important}
-body.dark-mode .result{background:linear-gradient(135deg,#1e1e3f 0%,#16213e 100%) !important}
-body.dark-mode .download-section{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%) !important}
-body.dark-mode .feature{background:rgba(102,126,234,0.1) !important}
-body.dark-mode .feature:hover{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important}
-body.dark-mode .footer{color:#718096 !important}
-body.dark-mode a{color:#667eea !important}
-body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
-
-/* 浮动导航 */
-.floating-nav{position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;opacity:0;transform:translateX(-100px);transition:all 0.3s;}
-.floating-nav.show{opacity:1;transform:translateX(0)}
-</style>
+        /* 浮动导航 */
+        .floating-nav{position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;opacity:0;transform:translateX(-100px);transition:all 0.3s;}
+        .floating-nav.show{opacity:1;transform:translateX(0)}
+        
+        /* 筛选和排序控件 */
+        .search-filters{display:flex;gap:15px;margin-top:15px;flex-wrap:wrap;}
+        .filter-select{padding:10px 15px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;transition:all 0.3s;background:#fff;color:#4a5568;cursor:pointer;}
+        .filter-select:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,0.2);}
+        body.dark-mode .filter-select{background:#1a1a2e;border-color:rgba(102,126,234,0.3);color:#e2e8f0;}
+    </style>
 </head>
 <body>
     <!-- Toast 容器 -->
@@ -515,6 +502,25 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="输入型号：STM32F103C8T6、ESP32、CH340...">
                     <button onclick="search()">🔍 立即搜索</button>
+                </div>
+                <div class="search-filters">
+                    <select id="filterCategory" class="filter-select">
+                        <option value="">📦 全部分类</option>
+                        <option value="MCU">🔌 MCU</option>
+                        <option value="Power">⚡ 电源芯片</option>
+                        <option value="Sensor">📡 传感器</option>
+                        <option value="Interface">🔗 接口芯片</option>
+                        <option value="Memory">💾 存储芯片</option>
+                        <option value="Wireless">📶 无线模块</option>
+                        <option value="Display">🖥️ 显示模块</option>
+                        <option value="Motor">🏎️ 电机驱动</option>
+                    </select>
+                    <select id="sortBy" class="filter-select">
+                        <option value="score">🔥 推荐排序</option>
+                        <option value="price_asc">💰 价格升序</option>
+                        <option value="price_desc">💎 价格降序</option>
+                        <option value="name">🔤 名称排序</option>
+                    </select>
                 </div>
                 
                 <p style="color:#fff;margin:15px 0 10px;font-size:15px;">🔥 热门搜索：</p>
@@ -928,7 +934,62 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
         'W25Q128': {mfr: 'Winbond', category: 'SPI Flash 16MB', type: 'Memory', alternatives: ['GD25Q128'], price: '¥0.80', doc: 'https://www.winbond.com'},
         'W25Q64': {mfr: 'Winbond', category: 'SPI Flash 8MB', type: 'Memory', alternatives: ['GD25Q64'], price: '¥0.50', doc: 'https://www.winbond.com'},
         'FM24C256': {mfr: '复旦微', category: '国产EEPROM', type: 'Memory', alternatives: ['AT24C256'], price: '¥0.35', doc: 'http://www.fmsh.com'},
-        'GD25Q128': {mfr: '兆易创新', category: '国产SPI Flash', type: 'Memory', alternatives: ['W25Q128'], price: '¥0.70', doc: 'https://www.gd32mcu.com'}
+        'GD25Q128': {mfr: '兆易创新', category: '国产SPI Flash', type: 'Memory', alternatives: ['W25Q128'], price: '¥0.70', doc: 'https://www.gd32mcu.com'},
+        
+        // 传感器
+        'DHT11': {mfr: '国产', category: '温湿度传感器', type: 'Sensor', alternatives: ['DHT22', 'SHT30'], price: '¥0.50', doc: ''},
+        'DHT22': {mfr: 'Aosong', category: '高精度温湿度', type: 'Sensor', alternatives: ['SHT30', 'BME280'], price: '¥2.00', doc: ''},
+        'SHT30': {mfr: 'Sensirion', category: 'I2C温湿度', type: 'Sensor', alternatives: ['SHT31', 'HDC1080'], price: '¥3.50', doc: ''},
+        'BME280': {mfr: 'Bosch', category: '温湿度+气压', type: 'Sensor', alternatives: ['BMP280'], price: '¥4.00', doc: ''},
+        'BMP280': {mfr: 'Bosch', category: '气压传感器', type: 'Sensor', alternatives: ['BME280'], price: '¥2.50', doc: ''},
+        'MPU6050': {mfr: 'Invensense', category: '6轴加速度计+陀螺仪', type: 'Sensor', alternatives: ['MPU9250'], price: '¥1.50', doc: ''},
+        'MPU9250': {mfr: 'Invensense', category: '9轴运动传感器', type: 'Sensor', alternatives: ['MPU6050'], price: '¥3.00', doc: ''},
+        'HC-SR04': {mfr: '国产', category: '超声波测距', type: 'Sensor', alternatives: ['US-015'], price: '¥0.80', doc: ''},
+        'US-015': {mfr: '国产', category: '超声波测距', type: 'Sensor', alternatives: ['HC-SR04'], price: '¥0.75', doc: ''},
+        'HC-SR501': {mfr: '国产', category: '人体红外传感器', type: 'Sensor', alternatives: ['AM312'], price: '¥0.60', doc: ''},
+        'AM312': {mfr: '国产', category: '低功耗人体感应', type: 'Sensor', alternatives: ['HC-SR501'], price: '¥0.55', doc: ''},
+        'BH1750': {mfr: 'ROHM', category: '数字光照传感器', type: 'Sensor', alternatives: [], price: '¥1.20', doc: ''},
+        'DS18B20': {mfr: 'Maxim', category: '单总线温度传感器', type: 'Sensor', alternatives: ['DS18S20'], price: '¥1.00', doc: ''},
+        'APDS-9960': {mfr: 'Broadcom', category: '手势+颜色+接近传感器', type: 'Sensor', alternatives: [], price: '¥2.80', doc: ''},
+        
+        // 显示模块
+        'OLED0.96': {mfr: '国产', category: 'I2C OLED 128x64', type: 'Display', alternatives: ['SSD1306'], price: '¥2.50', doc: ''},
+        'SSD1306': {mfr: 'Solomon', category: 'OLED驱动芯片', type: 'Display', alternatives: [], price: '¥1.50', doc: ''},
+        'LCD1602': {mfr: '国产', category: '字符液晶 16x2', type: 'Display', alternatives: ['LCD2004'], price: '¥2.00', doc: ''},
+        'LCD2004': {mfr: '国产', category: '字符液晶 20x4', type: 'Display', alternatives: ['LCD1602'], price: '¥3.50', doc: ''},
+        'TM1637': {mfr: 'Titan', category: '数码管驱动', type: 'Display', alternatives: ['MAX7219'], price: '¥0.40', doc: ''},
+        'MAX7219': {mfr: 'Maxim', category: '8x8点阵驱动', type: 'Display', alternatives: ['TM1637'], price: '¥1.00', doc: ''},
+        'WS2812B': {mfr: 'Worldsemi', category: 'RGB LED灯珠', type: 'LED', alternatives: ['SK6812'], price: '¥0.15', doc: ''},
+        'SK6812': {mfr: 'Skiar', category: 'RGB LED灯珠', type: 'LED', alternatives: ['WS2812B'], price: '¥0.12', doc: ''},
+        
+        // 电源模块
+        'LM2596': {mfr: 'TI/国产', category: '降压电源模块', type: 'Power', alternatives: ['MP1584'], price: '¥0.30', doc: ''},
+        'MP1584': {mfr: '国产', category: '降压电源芯片', type: 'Power', alternatives: ['LM2596'], price: '¥0.35', doc: ''},
+        'AMS1117': {mfr: 'AMS', category: 'LDO 3.3V/5V', type: 'Power', alternatives: ['LM1117', 'ME6211'], price: '¥0.06', doc: 'https://www.advanced-monolithic.com'},
+        'TP4056': {mfr: '国产', category: '锂电池充电管理', type: 'Power', alternatives: ['IP5306'], price: '¥0.25', doc: ''},
+        'IP5306': {mfr: '国产', category: '移动电源管理', type: 'Power', alternatives: ['TP4056'], price: '¥0.40', doc: ''},
+        'XL6009': {mfr: '国产', category: '升压模块', type: 'Power', alternatives: ['MT3608'], price: '¥0.45', doc: ''},
+        'UC3843': {mfr: 'TI/国产', category: 'PWM控制芯片', type: 'Power', alternatives: ['SG3525'], price: '¥0.25', doc: ''},
+        'NE555': {mfr: 'TI/国产', category: '精密定时器', type: 'Analog', alternatives: ['NE556', 'LM555'], price: '¥0.06', doc: 'https://www.ti.com/ne555'},
+        'LM358': {mfr: 'TI/国产', category: '双运算放大器', type: 'Amplifier', alternatives: ['SGM358', 'TL072'], price: '¥0.06', doc: 'https://www.ti.com/lm358'},
+        
+        // 电机驱动
+        'L298N': {mfr: 'ST', category: 'H桥电机驱动', type: 'Motor', alternatives: ['TB6612'], price: '¥1.50', doc: ''},
+        'TB6612': {mfr: 'TOSHIBA', category: '双H桥电机驱动', type: 'Motor', alternatives: ['L298N'], price: '¥1.20', doc: ''},
+        'PCA9685': {mfr: 'NXP', category: '16路PWM舵机驱动', type: 'Motor', alternatives: [], price: '¥2.00', doc: ''},
+        'SG90': {mfr: '国产', category: '9g舵机', type: 'Motor', alternatives: ['MG90S'], price: '¥0.80', doc: ''},
+        'MG90S': {mfr: '国产', category: '金属齿轮舵机', type: 'Motor', alternatives: ['SG90'], price: '¥1.20', doc: ''},
+        
+        // 通信模块
+        'NRF24L01': {mfr: 'Nordic', category: '2.4G无线模块', type: 'Wireless', alternatives: ['SI24R1'], price: '¥0.80', doc: ''},
+        'SI24R1': {mfr: '国产', category: '2.4G无线模块', type: 'Wireless', alternatives: ['NRF24L01'], price: '¥0.50', doc: ''},
+        'HC-05': {mfr: '国产', category: '蓝牙串口模块', type: 'Wireless', alternatives: ['HC-06', 'JDY-31'], price: '¥1.00', doc: ''},
+        'HC-06': {mfr: '国产', category: '蓝牙从机模块', type: 'Wireless', alternatives: ['HC-05'], price: '¥0.90', doc: ''},
+        'JDY-31': {mfr: '国产', category: '蓝牙串口模块', type: 'Wireless', alternatives: ['HC-05'], price: '¥0.70', doc: ''},
+        'SIM800L': {mfr: 'SimCom', category: 'GSM/GPRS模块', type: 'Wireless', alternatives: ['SIM900A'], price: '¥8.00', doc: ''},
+        'A6': {mfr: 'AI-Thinker', category: 'GPRS模块', type: 'Wireless', alternatives: ['SIM800L'], price: '¥5.00', doc: ''},
+        'ESP-01S': {mfr: '乐鑫科技', category: 'ESP8266模块', type: 'Wireless', alternatives: ['ESP-01'], price: '¥2.50', doc: ''},
+        'ENJ3': {mfr: '乐鑫科技', category: 'ESP32-C3模块', type: 'Wireless', alternatives: [], price: '¥5.00', doc: ''}
     };
 
     function setQuery(text){
@@ -947,7 +1008,7 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
             return;
         }
         
-        saveToHistory(q);
+        saveSearch(q);
         const l = document.getElementById('loading');
         const r = document.getElementById('results');
         l.classList.add('show');
@@ -970,25 +1031,6 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
                 results.sort((a, b) => a.part.localeCompare(b.part));
             }
             
-            renderResults(results, q);
-            l.classList.remove('show');
-            showToast(`🔍 找到 ${results.length} 个结果`, 'success');
-        }, 500);
-    }
-        const q = document.getElementById('searchInput').value.trim();
-        if(!q){
-            showToast('⚠️ 请输入搜索内容', 'error');
-            return;
-        }
-        
-        saveSearch(q);
-        const l = document.getElementById('loading');
-        const r = document.getElementById('results');
-        l.classList.add('show');
-        r.innerHTML = '';
-        
-        setTimeout(() => {
-            const results = findParts(q);
             renderResults(results, q);
             l.classList.remove('show');
             showToast(`🔍 找到 ${results.length} 个结果`, 'success');
