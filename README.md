@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.14 🚀🤖🔌
+# OpenPartSelector v1.1.15 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,14 +6,13 @@
 
 ---
 
-## ✨ v1.1.14 更新日志 (2026-02-10)
+## ✨ v1.1.15 更新日志 (2026-02-10)
 
 | 功能 | 说明 |
 |------|------|
-| 🔧 **兼容性修复** | 恢复 calculate_led_series_resistor() 兼容性函数 |
-| 🧪 **测试修复** | 修复单元测试 key 名称问题 (recommended_resistance → recommended_resistor) |
-| 🧪 **测试修复** | 修复集成测试断言问题 |
-| ✅ **全部通过** | 96 个测试全部通过 |
+| 🛠️ **standalone.html 修复** | 重新生成单文件版本，解决缺失问题 |
+| 🔧 **版本号统一** | 更新所有版本号为 v1.1.15 |
+| 🐛 **Bug 修复** | 修复多处稳定性问题 |
 
 ---
 
