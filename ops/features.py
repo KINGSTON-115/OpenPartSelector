@@ -523,7 +523,7 @@ def calculate_voltage_divider(
     v_out: float = 3.3,
     r1: float = None  # 如果为None则自动计算
 ) -> Dict:
-    """计算分压电阻"""
+    """计算分压电阻 (改进版 - 完整E24系列)"""
     if r1 is None:
         # 假设R2=10K，计算R1
         r2 = 10000
@@ -531,22 +531,36 @@ def calculate_voltage_divider(
     else:
         r2 = r1 * v_out / (v_in - v_out)
     
-    # 标准化
-    e24 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 51, 68, 100]
+    # 完整E24标准电阻系列 (用于标准化)
+    e24_values = [
+        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
+        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
+        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
+        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
+        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
+        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
+        10000, 11000, 12000, 13000, 15000, 16000, 18000, 20000, 22000, 24000, 27000, 30000,
+        33000, 36000, 39000, 43000, 47000, 51000, 56000, 62000, 68000, 75000, 82000, 91000,
+        100000, 110000, 120000, 130000, 150000, 160000, 180000, 200000, 220000, 240000, 270000, 300000,
+        330000, 360000, 390000, 430000, 470000, 510000, 560000, 620000, 680000, 750000, 820000, 910000,
+        1000000
+    ]
     
-    r1_std = min(e24, key=lambda x: abs(x * 1000 - r1))
-    r2_std = min(e24, key=lambda x: abs(x * 1000 - r2))
+    # 查找最接近的标准值
+    r1_std = min(e24_values, key=lambda x: abs(x - r1))
+    r2_std = min(e24_values, key=lambda x: abs(x - r2))
     
-    actual_vout = v_in * r2_std * 1000 / (r1_std * 1000 + r2_std * 1000)
+    actual_vout = v_in * r2_std / (r1_std + r2_std)
     
     return {
         "input_voltage": f"{v_in}V",
         "desired_output": f"{v_out}V",
         "calculated_r1": f"{r1/1000:.1f}KΩ",
         "calculated_r2": f"{r2/1000:.1f}KΩ",
-        "recommended_r1": f"{r1_std}KΩ",
-        "recommended_r2": f"{r2_std}KΩ",
+        "recommended_r1": f"{r1_std}Ω",
+        "recommended_r2": f"{r2_std}Ω",
         "actual_output": f"{actual_vout:.2f}V",
+        "error_percent": f"{abs(actual_vout - v_out) / v_out * 100:.2f}%",
         "formula": "Vout = Vin × R2 / (R1 + R2)"
     }
 

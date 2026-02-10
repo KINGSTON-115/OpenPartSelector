@@ -154,7 +154,7 @@ def test_features_sync():
     
     # 测试LED计算器 (5V - 2V = 3V, 3V/0.02A = 150Ω, E24最近值=150)
     result = calculate_resistor_for_led()
-    assert result["recommended_resistance"] == "150"  # 期望标准值
+    assert result["recommended_resistance"] == "150Ω"  # 期望标准值(带单位)
     print(f"✅ LED计算器同步测试通过")
     
     # 测试改进后的LED计算器 (包含更多E24值)
