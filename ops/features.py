@@ -487,7 +487,9 @@ def calculate_resistor_for_led(
     led_current: float = 0.02
 ) -> Dict:
     """
-    计算LED限流电阻
+    计算LED限流电阻 (统一版 v1.1.24)
+    
+    合并了 calculate_led_resistor 功能，提供完整的电阻计算和封装推荐。
     
     Args:
         voltage: 输入电压 (V)
@@ -497,23 +499,94 @@ def calculate_resistor_for_led(
     Returns:
         推荐电阻值及参数
     """
-    return calculate_led_resistor(voltage=voltage, led_voltage=led_voltage, led_current=led_current)
-
-
-def _get_power_rating(power_watts: float) -> str:
-    """根据功率推荐合适的电阻功率等级"""
-    if power_watts < 0.125:
-        return "1/8W (或更大)"
-    elif power_watts < 0.25:
-        return "1/4W (推荐)"
-    elif power_watts < 0.5:
-        return "1/2W (推荐)"
-    elif power_watts < 1.0:
-        return "1W (必须)"
-    elif power_watts < 2.0:
-        return "2W (推荐)"
+    v_resistor = voltage - led_voltage
+    
+    if v_resistor <= 0:
+        return {"error": "输入电压必须大于LED压降"}
+    
+    # 计算理想电阻值
+    r_ideal = v_resistor / led_current
+    
+    # 使用共享E24标准值
+    r_std = find_e24_closest(r_ideal)
+    
+    # 计算实际电流
+    i_actual = v_resistor / r_std
+    
+    # 计算功耗
+    power = v_resistor * i_actual
+    
+    # 推荐功率 (留50%余量)
+    recommended_power = power * 2
+    
+    # 推荐封装
+    if recommended_power < 0.125:
+        package = "0603"
+    elif recommended_power < 0.25:
+        package = "0805"
+    elif recommended_power < 0.5:
+        package = "1206"
     else:
-        return f"{int(power_watts)}W+ (大功率电阻)"
+        package = "1210或更大"
+    
+    return {
+        "input_voltage": f"{voltage}V",
+        "led_voltage": f"{led_voltage}V",
+        "led_current": f"{led_current*1000:.0f}mA",
+        "ideal_resistor": f"{r_ideal:.1f}Ω",
+        "recommended_resistor": f"{r_std}Ω",
+        "actual_current": f"{i_actual*1000:.1f}mA",
+        "power_dissipation": f"{power*1000:.1f}mW",
+        "recommended_power": f"{recommended_power*1000:.1f}mW",
+        "recommended_package": package,
+        "formula": "R = (V_in - V_led) / I_led"
+    }
+
+
+# 移除旧版重复函数 (v1.1.24 合并)
+# def calculate_led_resistor(...)  # 已合并到 calculate_resistor_for_led
+# def calculate_led_series_resistor(...)  # 已合并
+
+# 为保持向后兼容性，保留这些别名函数
+def calculate_led_resistor(
+    voltage: float = 5.0,
+    led_voltage: float = 2.0,
+    led_current: float = 0.02
+) -> Dict:
+    """计算LED限流电阻 (别名函数)"""
+    return calculate_resistor_for_led(voltage=voltage, led_voltage=led_voltage, led_current=led_current)
+
+
+def calculate_led_series_resistor(
+    supply_voltage: float = None,
+    led_forward_voltage: float = None,
+    led_current: float = None,
+    voltage: float = None,
+    led_voltage: float = None,
+    led_current_ma: float = None
+) -> Dict:
+    """计算LED串联电阻 (兼容性函数)"""
+    if supply_voltage is None:
+        supply_voltage = voltage
+    if led_forward_voltage is None:
+        led_forward_voltage = led_voltage
+    if led_current is None and led_current_ma is not None:
+        led_current = led_current_ma / 1000
+    elif led_current is None:
+        led_current = 0.02
+    
+    result = calculate_resistor_for_led(
+        voltage=supply_voltage,
+        led_voltage=led_forward_voltage,
+        led_current=led_current
+    )
+    
+    if "recommended_resistor" in result:
+        result["recommended_resistance"] = result["recommended_resistor"]
+    if "power_dissipation" in result:
+        result["power_dissipation_mw"] = result["power_dissipation"]
+    
+    return result
 
 
 def calculate_voltage_divider(
@@ -568,116 +641,6 @@ def calculate_pwm_frequency(
         "duty_resolution": f"{duty_resolution}级 ({duty_step:.2f}%/级)",
         "formula": "Freq = TimerClock / (PSC+1) / (ARR+1)"
     }
-
-
-# ==================== 新增实用计算函数 (v1.1.7) ====================
-
-def calculate_led_resistor(
-    voltage: float = 5.0,
-    led_voltage: float = 2.0,
-    led_current: float = 0.02  # 20mA
-) -> Dict:
-    """
-    计算LED限流电阻 (统一版)
-    
-    Args:
-        voltage: 输入电压 (V)
-        led_voltage: LED正向压降 (V)
-        led_current: LED工作电流 (A)
-    
-    Returns:
-        推荐电阻值及参数
-    """
-    v_resistor = voltage - led_voltage
-    
-    if v_resistor <= 0:
-        return {"error": "输入电压必须大于LED压降"}
-    
-    # 计算理想电阻值
-    r_ideal = v_resistor / led_current
-    
-    # 使用共享E24标准值
-    r_std = find_e24_closest(r_ideal)
-    
-    # 计算实际电流
-    i_actual = v_resistor / r_std
-    
-    # 计算功耗
-    power = v_resistor * i_actual
-    
-    # 推荐功率 (留50%余量)
-    recommended_power = power * 2
-    
-    # 推荐封装
-    if recommended_power < 0.125:
-        package = "0603"
-    elif recommended_power < 0.25:
-        package = "0805"
-    elif recommended_power < 0.5:
-        package = "1206"
-    else:
-        package = "1210或更大"
-    
-    return {
-        "input_voltage": f"{voltage}V",
-        "led_voltage": f"{led_voltage}V",
-        "led_current": f"{led_current*1000:.0f}mA",
-        "ideal_resistor": f"{r_ideal:.1f}Ω",
-        "recommended_resistor": f"{r_std}Ω",
-        "actual_current": f"{i_actual*1000:.1f}mA",
-        "power_dissipation": f"{power*1000:.1f}mW",
-        "recommended_power": f"{recommended_power*1000:.1f}mW",
-        "recommended_package": package,
-        "formula": "R = (V_in - V_led) / I_led"
-    }
-
-
-def calculate_led_series_resistor(
-    supply_voltage: float = None,
-    led_forward_voltage: float = None,
-    led_current: float = None,
-    # 兼容旧参数名
-    voltage: float = None,
-    led_voltage: float = None,
-    led_current_ma: float = None
-) -> Dict:
-    """
-    计算LED串联电阻 (兼容性函数)
-    
-    Args:
-        supply_voltage: 输入电压 (V)
-        led_forward_voltage: LED正向压降 (V)
-        led_current: LED工作电流 (A) 或 led_current_ma (mA)
-        voltage: 输入电压 (V, 别名)
-        led_voltage: LED正向压降 (V, 别名)
-        led_current_ma: LED工作电流 (mA)
-    
-    Returns:
-        推荐电阻值及参数
-    """
-    # 参数适配
-    if supply_voltage is None:
-        supply_voltage = voltage
-    if led_forward_voltage is None:
-        led_forward_voltage = led_voltage
-    if led_current is None and led_current_ma is not None:
-        led_current = led_current_ma / 1000
-    elif led_current is None:
-        led_current = 0.02
-    
-    result = calculate_led_resistor(
-        voltage=supply_voltage,
-        led_voltage=led_forward_voltage,
-        led_current=led_current
-    )
-    
-    # 兼容旧版 key 名称
-    if "recommended_resistor" in result:
-        result["recommended_resistance"] = result["recommended_resistor"]
-    if "power_dissipation" in result:
-        result["power_dissipation_mw"] = result["power_dissipation"]
-    
-    return result
 
 
 def calculate_rc_time_constant(
