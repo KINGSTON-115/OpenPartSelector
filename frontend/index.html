@@ -97,6 +97,36 @@
             border-radius:10px;
             transition:all 0.3s
         }
+        /* 自动补全建议 */
+        .suggestions{
+            position:absolute;
+            top:100%;
+            left:10px;
+            right:10px;
+            background:#fff;
+            border-radius:12px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.3);
+            z-index:1000;
+            max-height:300px;
+            overflow-y:auto;
+            display:none
+        }
+        .suggestions.show{display:block}
+        .suggestion-item{
+            padding:15px 20px;
+            cursor:pointer;
+            border-bottom:1px solid #eee;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            transition:all 0.2s
+        }
+        .suggestion-item:hover{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+        .suggestion-item:last-child{border-bottom:none}
+        .suggestion-item .part{font-weight:bold;color:#667eea}
+        .suggestion-item:hover .part{color:#fff}
+        .suggestion-item .mfr{font-size:13px;color:#718096}
+        .suggestion-item:hover .mfr{color:rgba(255,255,255,0.8)}
         .search-box input:focus{
             box-shadow:0 0 0 4px rgba(102,126,234,0.3)
         }
@@ -406,7 +436,8 @@
                 输入器件型号或需求，实时搜索全网最优方案
             </p>
             
-            <div class="search-wrapper">
+            <div class="search-wrapper" style="position:relative">
+        <div id="suggestions" class="suggestions"></div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="输入型号：STM32F103C8T6、ESP32、CH340...">
                     <button onclick="search()">🔍 立即搜索</button>
@@ -591,6 +622,43 @@
         }
     }
     
+    // 搜索自动补全
+    const suggestionsEl = document.getElementById('suggestions');
+    const searchInput = document.getElementById('searchInput');
+    
+    searchInput.addEventListener('input', function(){
+        const val = this.value.toUpperCase().trim();
+        if(val.length < 1){
+            suggestionsEl.classList.remove('show');
+            return;
+        }
+        const matches = [];
+        for(const [key, data] of Object.entries(partsDB)){
+            if(key.toUpperCase().includes(val) || data.mfr.toUpperCase().includes(val) || data.category.toUpperCase().includes(val)){
+                matches.push({part: key, ...data});
+            }
+        }
+        if(matches.length === 0){
+            suggestionsEl.classList.remove('show');
+            return;
+        }
+        suggestionsEl.innerHTML = matches.slice(0, 8).map(m => `
+            <div class="suggestion-item" onclick="setQuery('${m.part}')">
+                <div><span class="part">${m.part}</span><br><span class="mfr">${m.mfr} | ${m.category}</span></div>
+                <span style="color:#48bb78;font-weight:bold;">${m.price}</span>
+            </div>
+        `).join('') + '<div class="suggestion-item" style="justify-content:center;color:#667eea;" onclick="search()">🔍 搜索更多结果</div>';
+        suggestionsEl.classList.add('show');
+    });
+    
+    searchInput.addEventListener('blur', () => {
+        setTimeout(() => suggestionsEl.classList.remove('show'), 200);
+    });
+    
+    searchInput.addEventListener('focus', () => {
+        if(searchInput.value.trim()) searchInput.dispatchEvent(new Event('input'));
+    });
+    
     function removeFav(part){
         let favs = JSON.parse(localStorage.getItem('favorites') || '[]');
         favs = favs.filter(f => f.part !== part);
@@ -628,16 +696,101 @@
 
     // 器件数据库
     const partsDB = {
-        'STM32': {mfr: 'STMicroelectronics', category: 'ARM Cortex-M', type: 'MCU', alternatives: ['GD32F103', 'HK32F103'], price: '¥0.95-8.00'},
-        'GD32': {mfr: '兆易创新', category: '国产ARM', type: 'MCU', alternatives: ['STM32F103'], price: '¥0.80-2.50'},
-        'ESP32': {mfr: '乐鑫科技', category: 'WiFi+BT', type: 'Wireless SoC', alternatives: ['ESP8266'], price: '¥8.00-25.00'},
-        'STC89': {mfr: '宏晶科技', category: '8051单片机', type: 'MCU', alternatives: ['AT89S52'], price: '¥0.50-1.50'},
-        'ATMEGA': {mfr: 'Microchip', category: 'AVR单片机', type: 'MCU', alternatives: ['APM32'], price: '¥1.50-8.00'},
-        'CH340': {mfr: '沁恒微电子', category: 'USB转UART', type: 'Interface', alternatives: ['CP2102'], price: '¥0.15-0.30'},
-        'NE555': {mfr: 'TI/国产', category: '定时器', type: 'Analog', alternatives: ['NE556'], price: '¥0.04-0.15'},
-        'RP2040': {mfr: 'Raspberry Pi', category: '双核M0+', type: 'MCU', alternatives: ['STM32G0'], price: '¥1.80-5.00'},
-        'NRF52': {mfr: 'Nordic', category: 'BLE+ARM', type: 'Wireless', alternatives: ['ESP32'], price: '¥2.50-8.00'},
-        '74HC': {mfr: 'NXP/国产', category: 'CMOS逻辑', type: 'Logic', alternatives: ['74LS'], price: '¥0.05-0.30'}
+        // MCU - ARM系列
+        'STM32F103': {mfr: 'STMicroelectronics', category: 'ARM Cortex-M3', type: 'MCU', alternatives: ['GD32F103', 'HK32F103'], price: '¥0.95', doc: 'https://www.st.com/stm32f103'},
+        'STM32F407': {mfr: 'STMicroelectronics', category: 'ARM Cortex-M4', type: 'MCU', alternatives: ['GD32F407'], price: '¥3.50', doc: 'https://www.st.com/stm32f407'},
+        'STM32G431': {mfr: 'STMicroelectronics', category: 'ARM Cortex-M4', type: 'MCU', alternatives: ['APM32G431'], price: '¥1.45', doc: 'https://www.st.com/stm32g4'},
+        'STM32H743': {mfr: 'STMicroelectronics', category: 'ARM Cortex-M7', type: 'MCU', alternatives: ['GD32H743'], price: '¥6.00', doc: 'https://www.st.com/stm32h7'},
+        'GD32F103': {mfr: '兆易创新', category: '国产ARM Cortex-M3', type: 'MCU', alternatives: ['STM32F103'], price: '¥0.85', doc: 'https://www.gd32mcu.com'},
+        'GD32F303': {mfr: '兆易创新', category: '国产ARM Cortex-M4', type: 'MCU', alternatives: ['STM32F303'], price: '¥1.20', doc: 'https://www.gd32mcu.com'},
+        'HK32F103': {mfr: '航顺微电子', category: '国产ARM', type: 'MCU', alternatives: ['STM32F103'], price: '¥0.80', doc: 'http://www.hsxp-hk.com'},
+        'APM32F103': {mfr: '航芯微电子', category: '国产ARM', type: 'MCU', alternatives: ['STM32F103'], price: '¥0.88', doc: 'https://www.apexic.com'},
+        'RP2040': {mfr: 'Raspberry Pi', category: '双核Cortex-M0+', type: 'MCU', alternatives: ['STM32G0', 'EFM32'], price: '¥1.80', doc: 'https://www.raspberrypi.com/rp2040'},
+        
+        // MCU - ESP系列
+        'ESP32': {mfr: '乐鑫科技', category: 'WiFi+BT+BLE', type: 'Wireless SoC', alternatives: ['ESP32-C3'], price: '¥12.00', doc: 'https://www.espressif.com'},
+        'ESP32-C3': {mfr: '乐鑫科技', category: 'RISC-V WiFi+BT', type: 'Wireless SoC', alternatives: ['ESP32'], price: '¥8.00', doc: 'https://www.espressif.com'},
+        'ESP32-S3': {mfr: '乐鑫科技', category: 'WiFi+BT+AI加速', type: 'Wireless SoC', alternatives: ['ESP32'], price: '¥15.00', doc: 'https://www.espressif.com'},
+        'ESP8266': {mfr: '乐鑫科技', category: 'WiFi SoC', type: 'Wireless', alternatives: ['ESP32'], price: '¥3.50', doc: 'https://www.espressif.com'},
+        
+        // MCU - 8051系列
+        'STC89C51': {mfr: '宏晶科技', category: '8051单片机', type: 'MCU', alternatives: ['AT89S51', 'N76E003'], price: '¥0.60', doc: 'http://www.stcmcu.com'},
+        'STC89C52': {mfr: '宏晶科技', category: '8051单片机', type: 'MCU', alternatives: ['AT89S52', 'N76E003'], price: '¥0.70', doc: 'http://www.stcmcu.com'},
+        'STC8A8K': {mfr: '宏晶科技', category: '增强型8051', type: 'MCU', alternatives: ['N76E003'], price: '¥1.20', doc: 'http://www.stcmcu.com'},
+        'AT89S52': {mfr: 'Microchip', category: '8051单片机', type: 'MCU', alternatives: ['STC89C52'], price: '¥1.00', doc: 'https://www.microchip.com'},
+        'N76E003': {mfr: '新唐科技', category: '8051单片机', type: 'MCU', alternatives: ['STC89C51'], price: '¥0.55', doc: 'https://www.nuvoton.com'},
+        
+        // MCU - AVR系列
+        'ATMEGA328P': {mfr: 'Microchip', category: 'AVR单片机', type: 'MCU', alternatives: ['APM32'], price: '¥1.80', doc: 'https://www.microchip.com'},
+        'ATMEGA2560': {mfr: 'Microchip', category: 'AVR高性能', type: 'MCU', alternatives: ['SAM3X8E'], price: '¥4.50', doc: 'https://www.microchip.com'},
+        'ATMEGA32U4': {mfr: 'Microchip', category: 'AVR USB', type: 'MCU', alternatives: ['AT90USB'], price: '¥2.50', doc: 'https://www.microchip.com'},
+        'ATTINY85': {mfr: 'Microchip', category: 'AVR小型', type: 'MCU', alternatives: ['ATMEGA'], price: '¥0.80', doc: 'https://www.microchip.com'},
+        
+        // MCU - 其他
+        'MSP430': {mfr: 'TI', category: '超低功耗MCU', type: 'MCU', alternatives: ['EFM32'], price: '¥1.50', doc: 'https://www.ti.com/msp430'},
+        'MSP430F5529': {mfr: 'TI', category: '低功耗USB', type: 'MCU', alternatives: ['EFM32'], price: '¥2.80', doc: 'https://www.ti.com/msp430'},
+        'NRF52832': {mfr: 'Nordic', category: 'BLE+ARM', type: 'Wireless MCU', alternatives: ['ESP32', 'CC2640'], price: '¥3.50', doc: 'https://www.nordicsemi.com'},
+        'NRF52840': {mfr: 'Nordic', category: 'BLE5.0+ARM', type: 'Wireless MCU', alternatives: ['ESP32-S3'], price: '¥5.00', doc: 'https://www.nordicsemi.com'},
+        'CC1310': {mfr: 'TI', category: 'Sub-1G无线', type: 'Wireless', alternatives: ['SI4463'], price: '¥3.00', doc: 'https://www.ti.com/cc1310'},
+        'CC2640': {mfr: 'TI', category: 'BLE无线', type: 'Wireless', alternatives: ['NRF52832'], price: '¥2.50', doc: 'https://www.ti.com/cc2640'},
+        
+        // 接口芯片
+        'CH340N': {mfr: '沁恒微电子', category: 'USB转UART', type: 'Interface', alternatives: ['CH340G', 'CP2102'], price: '¥0.15', doc: 'http://www.wch.cn/ch340'},
+        'CH340G': {mfr: '沁恒微电子', category: 'USB转UART', type: 'Interface', alternatives: ['CH340N', 'CP2102'], price: '¥0.18', doc: 'http://www.wch.cn/ch340'},
+        'CH552': {mfr: '沁恒微电子', category: 'USB 8051 MCU', type: 'MCU', alternatives: ['ATMEGA'], price: '¥0.65', doc: 'http://www.wch.cn/ch552'},
+        'CP2102': {mfr: 'Silicon Labs', category: 'USB转UART', type: 'Interface', alternatives: ['CH340', 'FT232R'], price: '¥1.20', doc: 'https://www.silabs.com'},
+        'FT232R': {mfr: 'FTDI', category: 'USB转UART工业级', type: 'Interface', alternatives: ['CP2102', 'CH340'], price: '¥3.50', doc: 'https://www.ftdichip.com'},
+        'PL2303': {mfr: 'Prolific', category: 'USB转UART', type: 'Interface', alternatives: ['CH340'], price: '¥0.50', doc: 'https://www.prolific.com'},
+        'MAX232': {mfr: 'Maxim', category: 'RS232收发器', type: 'Interface', alternatives: ['SP232'], price: '¥0.80', doc: 'https://www.maximintegrated.com'},
+        'SP3232': {mfr: 'Maxim', category: 'RS232收发器', type: 'Interface', alternatives: ['MAX232'], price: '¥0.60', doc: 'https://www.maximintegrated.com'},
+        
+        // 模拟芯片
+        'NE555': {mfr: 'TI/国产', category: '精密定时器', type: 'Analog', alternatives: ['NE556', 'LM555'], price: '¥0.06', doc: 'https://www.ti.com/ne555'},
+        'NE556': {mfr: 'TI/国产', category: '双定时器', type: 'Analog', alternatives: ['NE555x2'], price: '¥0.12', doc: 'https://www.ti.com/ne556'},
+        'LM358': {mfr: 'TI/国产', category: '双运算放大器', type: 'Amplifier', alternatives: ['SGM358', 'TL072'], price: '¥0.06', doc: 'https://www.ti.com/lm358'},
+        'LM324': {mfr: 'TI/国产', category: '四运算放大器', type: 'Amplifier', alternatives: ['LM324'], price: '¥0.08', doc: 'https://www.ti.com/lm324'},
+        'TL072': {mfr: 'TI', category: '低噪声双运放', type: 'Amplifier', alternatives: ['NE5532', 'LM358'], price: '¥0.15', doc: 'https://www.ti.com/tl072'},
+        'NE5532': {mfr: 'TI', category: '专业级运放', type: 'Amplifier', alternatives: ['TL072'], price: '¥0.25', doc: 'https://www.ti.com/ne5532'},
+        'SGM358': {mfr: '圣邦微电子', category: '国产低噪声运放', type: 'Amplifier', alternatives: ['LM358'], price: '¥0.05', doc: 'http://www.sg-micro.com'},
+        
+        // 电源芯片
+        'LM317': {mfr: 'TI/国产', category: '可调稳压器', type: 'Power', alternatives: ['LT317', 'AMS317'], price: '¥0.15', doc: 'https://www.ti.com/lm317'},
+        'LM7805': {mfr: 'TI/国产', category: '5V稳压器', type: 'Power', alternatives: ['AMS7805', 'LT7805'], price: '¥0.10', doc: 'https://www.ti.com/lm7805'},
+        'AMS1117': {mfr: 'AMS', category: 'LDO稳压器', type: 'Power', alternatives: ['LM1117', 'ME6211'], price: '¥0.06', doc: 'https://www.advanced-monolithic.com'},
+        'LD1117': {mfr: 'ST', category: 'LDO 1A', type: 'Power', alternatives: ['AMS1117', 'ME6211'], price: '¥0.12', doc: 'https://www.st.com/ld1117'},
+        'ME6211': {mfr: '中科微', category: 'LDO 3.3V/5V', type: 'Power', alternatives: ['AMS1117', 'LD1117'], price: '¥0.04', doc: 'http://www.microne.com'},
+        'SX1308': {mfr: 'Semtech', category: '升压芯片', type: 'Power', alternatives: ['MT3608'], price: '¥0.20', doc: 'https://www.semtech.com'},
+        'MT3608': {mfr: '国产', category: '升压芯片', type: 'Power', alternatives: ['SX1308'], price: '¥0.15', doc: ''},
+        
+        // 逻辑芯片
+        '74HC00': {mfr: 'NXP/国产', category: '四2输入与非门', type: 'Logic', alternatives: ['74LS00'], price: '¥0.05', doc: 'https://www.nxp.com/74HC00'},
+        '74HC04': {mfr: 'NXP/国产', category: '六反相器', type: 'Logic', alternatives: ['74LS04'], price: '¥0.05', doc: 'https://www.nxp.com/74HC04'},
+        '74HC08': {mfr: 'NXP/国产', category: '四2输入与门', type: 'Logic', alternatives: ['74LS08'], price: '¥0.05', doc: 'https://www.nxp.com/74HC08'},
+        '74HC32': {mfr: 'NXP/国产', category: '四2输入或门', type: 'Logic', alternatives: ['74LS32'], price: '¥0.05', doc: 'https://www.nxp.com/74HC32'},
+        '74HC74': {mfr: 'NXP/国产', category: '双D触发器', type: 'Logic', alternatives: ['74LS74'], price: '¥0.08', doc: 'https://www.nxp.com/74HC74'},
+        '74HC125': {mfr: 'NXP/国产', category: '四总线缓冲器', type: 'Logic', alternatives: ['74LS125'], price: '¥0.10', doc: 'https://www.nxp.com/74HC125'},
+        '74HC595': {mfr: 'NXP/国产', category: '8位移位寄存器', type: 'Logic', alternatives: ['74LS595'], price: '¥0.08', doc: 'https://www.nxp.com/74HC595'},
+        '74HC165': {mfr: 'NXP/国产', category: '8位并行输入', type: 'Logic', alternatives: ['74LS165'], price: '¥0.08', doc: 'https://www.nxp.com/74HC165'},
+        '74HC4060': {mfr: 'NXP/国产', category: '14级分频器', type: 'Logic', alternatives: ['CD4060'], price: '¥0.10', doc: 'https://www.nxp.com/74HC4060'},
+        'CD4017': {mfr: 'TI/国产', category: '十进制计数器', type: 'Logic', alternatives: ['74HC4017'], price: '¥0.08', doc: 'https://www.ti.com/cd4017'},
+        'CD4066': {mfr: 'TI/国产', category: '四双向开关', type: 'Logic', alternatives: ['74HC4066'], price: '¥0.06', doc: 'https://www.ti.com/cd4066'},
+        
+        // MOSFET
+        'AO3400': {mfr: 'AOS', category: 'P-Channel MOSFET', type: 'MOSFET', alternatives: ['AO3401'], price: '¥0.03', doc: 'https://www.aosmd.com'},
+        'AO3401': {mfr: 'AOS', category: 'N-Channel MOSFET', type: 'MOSFET', alternatives: ['2N7000'], price: '¥0.03', doc: 'https://www.aosmd.com'},
+        '2N7000': {mfr: 'ON Semi', category: 'N-Channel MOSFET', type: 'MOSFET', alternatives: ['BS170'], price: '¥0.02', doc: 'https://www.onsemi.com'},
+        'IRF540N': {mfr: 'Infineon', category: 'N-Channel 100V', type: 'MOSFET', alternatives: ['IRF3205'], price: '¥0.25', doc: 'https://www.infineon.com'},
+        'IRF3205': {mfr: 'Infineon', category: 'N-Channel 55V', type: 'MOSFET', alternatives: ['IRF540N'], price: '¥0.20', doc: 'https://www.infineon.com'},
+        'IRF9540': {mfr: 'Infineon', category: 'P-Channel 100V', type: 'MOSFET', alternatives: ['AO3400'], price: '¥0.35', doc: 'https://www.infineon.com'},
+        
+        // 存储芯片
+        'AT24C02': {mfr: 'Microchip', category: 'I2C EEPROM 2Kb', type: 'Memory', alternatives: ['AT24C01', 'FM24C02'], price: '¥0.15', doc: 'https://www.microchip.com'},
+        'AT24C16': {mfr: 'Microchip', category: 'I2C EEPROM 16Kb', type: 'Memory', alternatives: ['AT24C32'], price: '¥0.25', doc: 'https://www.microchip.com'},
+        'AT24C256': {mfr: 'Microchip', category: 'I2C EEPROM 256Kb', type: 'Memory', alternatives: ['FM24C256'], price: '¥0.40', doc: 'https://www.microchip.com'},
+        'W25Q128': {mfr: 'Winbond', category: 'SPI Flash 16MB', type: 'Memory', alternatives: ['GD25Q128'], price: '¥0.80', doc: 'https://www.winbond.com'},
+        'W25Q64': {mfr: 'Winbond', category: 'SPI Flash 8MB', type: 'Memory', alternatives: ['GD25Q64'], price: '¥0.50', doc: 'https://www.winbond.com'},
+        'FM24C256': {mfr: '复旦微', category: '国产EEPROM', type: 'Memory', alternatives: ['AT24C256'], price: '¥0.35', doc: 'http://www.fmsh.com'},
+        'GD25Q128': {mfr: '兆易创新', category: '国产SPI Flash', type: 'Memory', alternatives: ['W25Q128'], price: '¥0.70', doc: 'https://www.gd32mcu.com'}
     };
 
     function setQuery(text){
