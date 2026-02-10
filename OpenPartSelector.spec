@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='OpenPartSelector',
+    name='OpenPartSelector-v0.3',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

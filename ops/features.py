@@ -461,15 +461,11 @@ def calculate_resistor_for_led(
     r = v_r / led_current
     power = v_r * led_current
     
-    # 查找最近的标准电阻值
-    e24_values = [10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30, 33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91, 100]
-    e12_values = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82]
+    # 查找最近的标准电阻值 (E24 通用系列)
+    e24_values = [10, 12, 15, 18, 22, 27, 33, 39, 47, 51, 56, 62, 68, 75, 82, 91, 100, 120, 150, 180, 200, 220, 270, 330, 390, 470, 510, 560, 680, 820, 1000]
     
-    # 选择合适的系列
-    if r < 100:
-        standard = min(e24_values, key=lambda x: abs(x - r))
-    else:
-        standard = min(e12_values, key=lambda x: abs(x - r))
+    # 使用 E24 系列找最接近的值
+    standard = min(e24_values, key=lambda x: abs(x - r))
     
     return {
         "input_voltage": f"{voltage}V",

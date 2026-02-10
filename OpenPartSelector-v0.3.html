@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 OpenPartSelector v0.2 - AI电子元器件选型</title>
+    <title>🤖 OpenPartSelector v0.3 - AI电子元器件选型</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -98,7 +98,7 @@
     <div class="container">
         <div class="header">
             <div class="logo">🤖</div>
-            <h1>OpenPartSelector v0.2</h1>
+            <h1>OpenPartSelector v0.3</h1>
             <p>AI电子元器件智能选型引擎 | 开源免费 | 立即可用</p>
         </div>
 
@@ -108,6 +108,7 @@
                 <div class="tab" onclick="switchTab('bom')">📋 BOM分析</div>
                 <div class="tab" onclick="switchTab('eol')">🚨 EOL预警</div>
                 <div class="tab" onclick="switchTab('cad')">🔌 CAD库</div>
+                <div class="tab" onclick="switchTab('favorites')">❤️ 收藏</div>
             </div>
 
             <!-- 选型面板 -->
@@ -128,6 +129,9 @@
                     <button class="example-btn" onclick="setQuery('USB 转串口芯片')">USB 转串口</button>
                     <button class="example-btn" onclick="setQuery('双运放 低噪声')">双运放</button>
                 </div>
+
+                <!-- 搜索历史 -->
+                <div id="history-list" style="margin:15px 0;"></div>
 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
@@ -239,6 +243,22 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- 收藏面板 -->
+            <div id="panel-favorites" style="display:none;">
+                <h2>❤️ 我的收藏</h2>
+                <p style="color: #8892b0; margin: 10px 0;">收藏感兴趣的器件，方便随时查看</p>
+                
+                <div id="favorites-list">
+                    <div style="text-align:center;padding:40px;color:#8892b0;">
+                        <p style="font-size:48px;margin-bottom:15px;">💔</p>
+                        <p>暂无收藏</p>
+                        <p style="font-size:13px;margin-top:10px;">点击结果卡片上的 ❤️ 添加收藏</p>
+                    </div>
+                </div>
+                
+                <button class="example-btn" onclick="clearFavorites()" style="width:100%;margin-top:15px;">🗑️ 清空收藏</button>
+            </div>
         </div>
 
         <div class="card">
@@ -278,11 +298,11 @@
         </div>
 
         <div class="footer">
-            <p>🤖 <strong>OpenPartSelector v0.2</strong> | 开源免费 | MIT License</p>
+            <p>🤖 <strong>OpenPartSelector v0.3</strong> | 开源免费 | MIT License</p>
             <p style="margin-top:10px;">
                 📦 <a href="https://github.com/KINGSTON-115/OpenPartSelector" target="_blank">GitHub</a> | 
                 📧 <a href="mailto:zhenweisi@openclaw.ai">反馈</a> |
-                📄 <a href="#" onclick="alert('版本: 0.2.0\n\n核心模块:\n- Agent: AI选型\n- BOM: 完整分析\n- EOL: 停产预警\n- CAD: 库集成')">关于</a>
+                📄 <a href="#" onclick="alert('版本: 0.3.0\n\n核心模块:\n- Agent: AI选型\n- BOM: 完整分析\n- EOL: 停产预警\n- CAD: 库集成\n- Favorites: 收藏功能\n\n更新日志 v0.3:\n- ✨ 新增收藏功能\n- ✨ 新增搜索历史\n- ✨ 增强搜索算法\n- ✨ 扩充器件数据库\n- 🐛 修复bug')">关于</a>
             </p>
         </div>
     </div>
@@ -293,28 +313,55 @@
             '找一个 3.3v ldo': [
                 { part: 'LD1117V33', mfr: 'STMicroelectronics', desc: 'LDO Voltage Regulator 3.3V 1A', price: 0.15, stock: 365000, score: 100, voltage: '3.3V', current: '1A', package: 'SOT-223' },
                 { part: 'AMS1117-3.3', mfr: 'Advanced Monolithic', desc: 'LDO稳压器 3.3V 1A SOT-223', price: 0.08, stock: 750000, score: 100, voltage: '3.3V', current: '1A', package: 'SOT-223' },
-                { part: 'ME6211C33', mfr: 'Midsummer', desc: 'LDO 3.3V 500mA SOT-23-5', price: 0.04, stock: 1500000, score: 90, voltage: '3.3V', current: '500mA', package: 'SOT-23-5' }
+                { part: 'ME6211C33', mfr: 'Midsummer', desc: 'LDO 3.3V 500mA SOT-23-5', price: 0.04, stock: 1500000, score: 90, voltage: '3.3V', current: '500mA', package: 'SOT-23-5' },
+                { part: 'SPX5205', mfr: 'Maxlinear', desc: 'LDO 3.3V 500mA 低压差', price: 0.12, stock: 180000, score: 85, voltage: '3.3V', current: '500mA', package: 'SOT-23-5' }
             ],
             'stm32 单片机': [
                 { part: 'STM32F103C8T6', mfr: 'STMicroelectronics', desc: 'ARM Cortex-M3 64KB Flash 20KB RAM', price: 0.95, stock: 15000, score: 85, voltage: '3.3V', package: 'LQFP-48' },
-                { part: 'GD32F103C8T6', mfr: '兆易创新', desc: '国产替代 100%兼容', price: 0.85, stock: 30000, score: 90, voltage: '3.3V', package: 'LQFP-48', alt: '✅ GD32国产替代，便宜10%' }
+                { part: 'GD32F103C8T6', mfr: '兆易创新', desc: '国产替代 100%兼容', price: 0.85, stock: 30000, score: 90, voltage: '3.3V', package: 'LQFP-48', alt: '✅ GD32国产替代，便宜10%' },
+                { part: 'STM32G431CBU6', mfr: 'STMicroelectronics', desc: 'Cortex-M4 128KB Flash 更强性能', price: 1.85, stock: 8500, score: 80, voltage: '3.3V', package: 'UFQFPN-32' }
             ],
             'esp32 wifi 模块': [
                 { part: 'ESP32-WROOM-32', mfr: '乐鑫', desc: 'WiFi+BT Module 4MB Flash', price: 1.85, stock: 290000, score: 95, voltage: '3.3V', package: 'Module' },
-                { part: 'ESP32-C3FH4', mfr: '乐鑫', desc: 'RISC-V内核 更省电', price: 0.95, stock: 85000, score: 85, voltage: '3.3V', package: 'QFN-32' }
+                { part: 'ESP32-C3FH4', mfr: '乐鑫', desc: 'RISC-V内核 更省电', price: 0.95, stock: 85000, score: 85, voltage: '3.3V', package: 'QFN-32' },
+                { part: 'ESP32-S3-WROOM', mfr: '乐鑫', desc: '双核 AI加速', price: 2.45, stock: 45000, score: 75, voltage: '3.3V', package: 'Module' }
             ],
             'usb 转串口': [
                 { part: 'CH340G', mfr: '沁恒', desc: 'USB to UART Converter', price: 0.18, stock: 52000, score: 95, voltage: '5V/3.3V', package: 'SOP-16' },
-                { part: 'CP2102N', mfr: 'Silicon Labs', desc: 'USB to UART Bridge', price: 1.45, stock: 12000, score: 80, voltage: '3.3V', package: 'QFN-24' }
+                { part: 'CP2102N', mfr: 'Silicon Labs', desc: 'USB to UART Bridge', price: 1.45, stock: 12000, score: 80, voltage: '3.3V', package: 'QFN-24' },
+                { part: 'FT232R', mfr: 'FTDI', desc: 'USB UART IC', price: 3.20, stock: 8000, score: 70, voltage: '3.3V', package: 'SSOP-28' }
             ],
             '双运放': [
                 { part: 'LM358', mfr: 'TI', desc: 'Dual Op-Amp Low Power', price: 0.06, stock: 200000, score: 95, voltage: '3-32V', package: 'SOP-8' },
                 { part: 'TL072', mfr: 'TI', desc: 'Dual Low-Noise JFET Op-Amp', price: 0.08, stock: 80000, score: 90, voltage: '±6~18V', package: 'SOP-8' },
-                { part: 'NE5532', mfr: 'TI', desc: 'Low Noise Dual Op-Amp', price: 0.25, stock: 30000, score: 85, voltage: '±5~22V', package: 'SOP-8' }
+                { part: 'NE5532', mfr: 'TI', desc: 'Low Noise Dual Op-Amp', price: 0.25, stock: 30000, score: 85, voltage: '±5~22V', package: 'SOP-8' },
+                { part: 'MCP6002', mfr: 'Microchip', desc: '1MHz Low Power Dual Op-Amp', price: 0.22, stock: 42000, score: 80, voltage: '1.8-6V', package: 'SOP-8' }
             ],
             'stm32 国产替代': [
                 { part: 'GD32F103C8T6', mfr: '兆易创新', desc: '国产替代 100%兼容', price: 0.85, stock: 30000, score: 95, voltage: '3.3V', package: 'LQFP-48', alt: '✅ 价格便宜10%，性能更强' },
-                { part: 'HK32F103C8T6', mfr: '航顺微', desc: '国产替代 95%兼容', price: 0.80, stock: 18000, score: 85, voltage: '3.3V', package: 'LQFP-48', alt: '⚠️ ADC精度略有差异' }
+                { part: 'HK32F103C8T6', mfr: '航顺微', desc: '国产替代 95%兼容', price: 0.80, stock: 18000, score: 85, voltage: '3.3V', package: 'LQFP-48', alt: '⚠️ ADC精度略有差异' },
+                { part: 'APM32F103', mfr: '极海', desc: '国产替代 100%兼容', price: 0.88, stock: 22000, score: 88, voltage: '3.3V', package: 'LQFP-48' }
+            ],
+            '5v ldo': [
+                { part: 'LM7805', mfr: 'TI', desc: 'LDO 5V 1.5A', price: 0.12, stock: 150000, score: 95, voltage: '5V', current: '1.5A', package: 'TO-220' },
+                { part: 'AMS1117-5.0', mfr: 'Advanced Monolithic', desc: 'LDO 5V 1A', price: 0.07, stock: 680000, score: 90, voltage: '5V', current: '1A', package: 'SOT-223' },
+                { part: 'LD1117V50', mfr: 'STMicroelectronics', desc: 'LDO 5V 1A', price: 0.18, stock: 120000, score: 85, voltage: '5V', current: '1A', package: 'SOT-223' }
+            ],
+            '电源芯片': [
+                { part: 'LM2596S-5.0', mfr: 'TI', desc: '降压电源模块 5V 3A', price: 0.45, stock: 95000, score: 95, voltage: '5V', current: '3A', package: 'TO-263' },
+                { part: 'MP2359', mfr: 'MPS', desc: '降压IC 1.2A', price: 0.35, stock: 48000, score: 85, voltage: '可调', current: '1.2A', package: 'SOT-23-6' },
+                { part: 'TPS63020', mfr: 'TI', desc: '升降压 96%效率', price: 1.20, stock: 18000, score: 75, voltage: '1.8-5.5V', current: '3A', package: 'QFN-20' }
+            ],
+            '存储器': [
+                { part: 'W25Q128', mfr: 'Winbond', desc: 'SPI Flash 128Mbit', price: 0.85, stock: 65000, score: 95, voltage: '3.3V', package: 'SOIC-8' },
+                { part: 'AT24C256', mfr: 'Microchip', desc: 'I2C EEPROM 256Kb', price: 0.22, stock: 120000, score: 90, voltage: '1.8-5.5V', package: 'SOP-8' },
+                { part: 'FM24C256', mfr: '复旦微', desc: '国产EEPROM 256Kb', price: 0.18, stock: 85000, score: 85, voltage: '3.3V', package: 'SOP-8' }
+            ],
+            '传感器': [
+                { part: 'BME280', mfr: 'Bosch', desc: '温湿度气压传感器', price: 1.85, stock: 35000, score: 90, voltage: '1.8-3.6V', package: 'LGA-8' },
+                { part: 'DHT11', mfr: 'Aosong', desc: '温湿度传感器 模块', price: 0.45, stock: 180000, score: 85, voltage: '3.3-5V', package: 'Module' },
+                { part: 'MPU6050', mfr: 'TDK Invensense', desc: '6轴加速度计陀螺仪', price: 0.95, stock: 48000, score: 88, voltage: '3.3V', package: 'QFN-16' },
+                { part: 'SGP30', mfr: 'Sensirion', desc: 'VOC传感器', price: 2.45, stock: 12000, score: 80, voltage: '3.3V', package: 'LGA-16' }
             ]
         };
 
@@ -324,8 +371,98 @@
             { ref: 'U2', part: 'CH340C', qty: 1, price: 0.18, status: 'Active', risk: 'low', cad: '✅' },
             { ref: 'U3', part: 'AMS1117-3.3', qty: 1, price: 0.08, status: 'Active', risk: 'low', cad: '✅' },
             { ref: 'U4', part: 'ESP32-WROOM-32', qty: 1, price: 1.85, status: 'Active', risk: 'low', cad: '✅' },
-            { ref: 'U5', part: 'LM358', qty: 1, price: 0.06, status: 'Active', risk: 'low', cad: '✅' }
+            { ref: 'U5', part: 'LM358', qty: 1, price: 0.06, status: 'Active', risk: 'low', cad: '✅' },
+            { ref: 'C1', part: '10uF/10V', qty: 5, price: 0.01, status: 'Active', risk: 'low', cad: '✅' },
+            { ref: 'R1', part: '10K 0805', qty: 10, price: 0.005, status: 'Active', risk: 'low', cad: '✅' }
         ];
+
+        // 收藏列表和搜索历史
+        let favorites = JSON.parse(localStorage.getItem('openpart_favorites') || '[]');
+        let searchHistory = JSON.parse(localStorage.getItem('openpart_history') || '[]');
+
+        function saveFavorites() {
+            localStorage.setItem('openpart_favorites', JSON.stringify(favorites));
+            renderFavorites();
+        }
+
+        function saveHistory() {
+            localStorage.setItem('openpart_history', JSON.stringify(searchHistory));
+        }
+
+        function toggleFavorite(part, mfr, desc, price, voltage, package) {
+            const idx = favorites.findIndex(f => f.part === part);
+            if (idx >= 0) {
+                favorites.splice(idx, 1);
+            } else {
+                favorites.push({ part, mfr, desc, price, voltage, package, time: Date.now() });
+            }
+            saveFavorites();
+            
+            // 更新所有结果卡片的收藏按钮状态
+            document.querySelectorAll('.fav-btn').forEach(btn => {
+                const btnPart = btn.dataset.part;
+                btn.textContent = favorites.some(f => f.part === btnPart) ? '❤️' : '🤍';
+            });
+        }
+
+        function renderFavorites() {
+            const container = document.getElementById('favorites-list');
+            if (favorites.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center;padding:40px;color:#8892b0;">
+                        <p style="font-size:48px;margin-bottom:15px;">💔</p>
+                        <p>暂无收藏</p>
+                        <p style="font-size:13px;margin-top:10px;">点击结果卡片上的 ❤️ 添加收藏</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            favorites.forEach((r, i) => {
+                html += `
+                    <div class="result">
+                        <h3>📦 ${r.part}</h3>
+                        <p>${r.mfr} | ${r.desc}</p>
+                        <div class="tags">
+                            <span class="tag price">💰 ¥${r.price.toFixed(2)}</span>
+                            <span class="tag">⚡ ${r.voltage}</span>
+                            <span class="tag">🔌 ${r.package}</span>
+                            <span class="tag warning" onclick="toggleFavorite('${r.part}','${r.mfr}','${r.desc}',${r.price},'${r.voltage}','${r.package}')" style="cursor:pointer;">💔 移除</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function clearFavorites() {
+            if (confirm('确定清空所有收藏？')) {
+                favorites = [];
+                saveFavorites();
+            }
+        }
+
+        function addToHistory(query) {
+            const idx = searchHistory.indexOf(query);
+            if (idx >= 0) searchHistory.splice(idx, 1);
+            searchHistory.unshift(query);
+            if (searchHistory.length > 10) searchHistory.pop();
+            saveHistory();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            if (searchHistory.length === 0) {
+                container.innerHTML = '<p style="color:#8892b0;font-size:13px;padding:10px;">暂无搜索历史</p>';
+                return;
+            }
+            
+            container.innerHTML = searchHistory.map((q, i) => 
+                `<button class="example-btn" onclick="setQuery('${q}')">${i+1}. ${q}</button>`
+            ).join('');
+        }
 
         function setQuery(text) {
             document.getElementById('searchInput').value = text;
@@ -336,7 +473,7 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
             
-            ['select', 'bom', 'eol', 'cad'].forEach(p => {
+            ['select', 'bom', 'eol', 'cad', 'favorites'].forEach(p => {
                 document.getElementById('panel-' + p).style.display = p === tab ? 'block' : 'none';
             });
         }
@@ -344,6 +481,9 @@
         function search() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!query) return alert('请输入搜索内容');
+            
+            // 添加到历史记录
+            addToHistory(query);
             
             const loading = document.getElementById('loading');
             const results = document.getElementById('results');
@@ -354,40 +494,108 @@
             // 模拟搜索延迟
             setTimeout(() => {
                 let matched = null;
+                let matchType = '';
                 
-                // 关键词匹配
+                // 关键词匹配 - 增强版
                 for (const key in database) {
-                    if (query.includes(key) || key.includes(query) || 
-                        query.includes(key.replace(/找一个|单片机|模块/g,'').trim())) {
+                    if (query === key || query.includes(key) || key.includes(query)) {
                         matched = database[key];
+                        matchType = '精确匹配';
                         break;
                     }
                 }
                 
-                // 默认返回LDO结果
+                // 部分匹配
                 if (!matched) {
-                    matched = database['找一个 3.3v ldo'];
+                    for (const key in database) {
+                        const keywords = key.split(/[\s,，、]+/);
+                        for (const kw of keywords) {
+                            if (kw.length > 2 && (query.includes(kw) || kw.includes(query))) {
+                                matched = database[key];
+                                matchType = '关键词匹配';
+                                break;
+                            }
+                        }
+                        if (matched) break;
+                    }
                 }
                 
-                let html = `<h3 style="margin:20px 0 10px;">📦 推荐结果 (${matched.length} 个)</h3>`;
+                // 默认返回多个相关结果
+                if (!matched) {
+                    // 返回所有相关类别
+                    const related = [];
+                    for (const [key, items] of Object.entries(database)) {
+                        for (const item of items) {
+                            const searchText = (item.part + item.mfr + item.desc).toLowerCase();
+                            if (searchText.includes(query) || query.split(/[\s,，]+/).some(q => searchText.includes(q))) {
+                                related.push(item);
+                            }
+                        }
+                    }
+                    
+                    if (related.length > 0) {
+                        matched = related.slice(0, 6); // 最多6个
+                        matchType = '智能推荐';
+                    }
+                }
+                
+                // 如果还是没有，提示
+                if (!matched || matched.length === 0) {
+                    results.innerHTML = `
+                        <div class="warning-box">
+                            <h4>🔍 未找到匹配结果</h4>
+                            <p>尝试以下方式：</p>
+                            <ul>
+                                <li>简化搜索词，如 "stm32"、"ldo"、"运放"</li>
+                                <li>使用通用描述，如 "电源芯片"、"传感器"</li>
+                                <li>查看下方热门搜索</li>
+                            </ul>
+                        </div>
+                    `;
+                    loading.classList.remove('show');
+                    return;
+                }
+                
+                let html = `<h3 style="margin:20px 0 10px;">📦 推荐结果 - ${matchType} (${matched.length} 个)</h3>`;
                 
                 matched.forEach((r, i) => {
                     const statusClass = r.score >= 95 ? 'success' : r.score >= 80 ? 'warning' : '';
+                    const isFav = favorites.some(f => f.part === r.part);
                     html += `
-                        <div class="result">
+                        <div class="result" style="position:relative;">
                             <h3>${i+1}. 📦 ${r.part}</h3>
                             <p>${r.mfr} | ${r.desc}</p>
                             <div class="tags">
                                 <span class="tag price">💰 ¥${r.price.toFixed(2)}</span>
                                 <span class="tag">📦 ${r.stock.toLocaleString()}件</span>
                                 <span class="tag ${statusClass}">🎯 匹配度 ${r.score}%</span>
-                                <span class="tag">⚡ ${r.voltage}</span>
+                                <span class="tag">⚡ ${r.voltage || 'N/A'}</span>
                                 <span class="tag">🔌 ${r.package}</span>
                                 ${r.alt ? `<span class="tag warning">${r.alt}</span>` : ''}
+                                <span class="fav-btn tag ${isFav ? 'warning' : ''}" 
+                                      data-part="${r.part}"
+                                      onclick="toggleFavorite('${r.part}','${r.mfr}','${r.desc}',${r.price},'${r.voltage || 'N/A'}','${r.package}')"
+                                      style="cursor:pointer;">
+                                    ${isFav ? '❤️' : '🤍'}
+                                </span>
                             </div>
                         </div>
                     `;
                 });
+                
+                // 智能推荐提示
+                if (matched.length >= 3) {
+                    html += `
+                        <div class="warning-box" style="background: rgba(0,210,255,0.1);border-color:rgba(0,210,255,0.3);">
+                            <h4>💡 选型建议</h4>
+                            <ul>
+                                <li>${matched[0].part} - 性价比首选，库存充足</li>
+                                ${matched[1] ? `<li>${matched[1].part} - ${matched[1].alt || '备选方案'}</li>` : ''}
+                                <li>点击 ❤️ 收藏器件，方便后续查看</li>
+                            </ul>
+                        </div>
+                    `;
+                }
                 
                 results.innerHTML = html;
                 loading.classList.remove('show');
@@ -395,7 +603,7 @@
                 // 切换到选型面板
                 switchTab('select');
                 document.querySelector('.tab').click();
-            }, 800);
+            }, 600);
         }
 
         function loadBOM() {
@@ -408,7 +616,7 @@
                 save += item.price * item.qty * 0.3;
                 
                 const riskClass = item.risk === 'medium' ? 'warning' : 'success';
-                const statusIcon = item.status === 'NRND' ? '⚠️ NRND' : '✅ Active';
+                const statusIcon = item.status === 'NRND' ? '⚠️ NRND' : item.status === 'LastTimeBuy' ? '🔴 LastTimeBuy' : '✅ Active';
                 
                 return `<tr>
                     <td>${item.ref}</td>
@@ -431,8 +639,12 @@
             if (e.key === 'Enter') search();
         });
 
-        // 初始加载示例BOM
-        setTimeout(loadBOM, 500);
+        // 初始加载
+        setTimeout(() => {
+            loadBOM();
+            renderFavorites();
+            renderHistory();
+        }, 500);
     </script>
 </body>
 </html>
