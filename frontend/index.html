@@ -287,12 +287,27 @@
             .search-box{flex-direction:column}
             .features{grid-template-columns:1fr}
         }
+    
+    /* 深色模式 */
+    body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important;color:#fff !important}
+    body.dark-mode .card{background:#1a1a2e !important;border:1px solid rgba(255,255,255,0.1) !important}
+    body.dark-mode .card h2{color:#fff !important}
+    body.dark-mode .result{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important}
+    body.dark-mode .feature{background:rgba(255,255,255,0.05) !important}
+    body.dark-mode .search-wrapper{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important}
+    body.dark-mode .download-section{background:#1a1a2e !important}
     </style>
 </head>
 <body>
     <!-- 头部 -->
+    <button id="darkToggle" onclick="toggleDark()" style="
+        position:fixed;top:20px;right:20px;z-index:9999;
+        padding:10px 20px;background:rgba(255,255,255,0.2);
+        border:none;border-radius:25px;color:#fff;cursor:pointer;font-size:14px;">
+        🌙 深色
+    </button>
+    
     <div class="hero">
-        <div class="hero-logo">🔌</div>
         <h1>OpenPartSelector</h1>
         <p>专为电子类专业大学生打造的元器件选型神器 🚀</p>
         <div class="hero-tags">
@@ -452,6 +467,75 @@
     </div>
 
     <script>
+    // 深色模式
+    let isDark = false;
+    function toggleDark(){
+        isDark = !isDark;
+        document.body.classList.toggle('dark-mode');
+        document.getElementById('darkToggle').innerHTML = isDark ? '☀️ 浅色' : '🌙 深色';
+        localStorage.setItem('darkMode', isDark);
+    }
+    // 恢复深色模式
+    if(localStorage.getItem('darkMode') === 'true'){
+        isDark = true;
+        document.body.classList.add('dark-mode');
+        document.getElementById('darkToggle').innerHTML = '☀️ 浅色';
+    }
+    
+    // 搜索历史
+    function saveSearch(query){
+        if(!query) return;
+        let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+        history = [query, ...history.filter(h => h !== query)].slice(0, 10);
+        localStorage.setItem('searchHistory', JSON.stringify(history));
+    }
+    
+    function showHistory(){
+        const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+        if(history.length === 0) return;
+        const html = '<div style="margin:15px 0;padding:15px;background:rgba(255,255,255,0.1);border-radius:12px;"><p style="color:#fff;margin-bottom:10px;">📜 历史记录：</p>' + 
+            history.map(h => `<button onclick="setQuery('${h}')" style="margin:5px;padding:8px 15px;background:rgba(255,255,255,0.2);border:none;border-radius:20px;color:#fff;cursor:pointer;">${h}</button>`).join('') +
+            '<button onclick="clearHistory()" style="margin-left:10px;padding:5px 10px;background:rgba(255,0,0,0.3);border:none;border-radius:10px;color:#fff;cursor:pointer;">清空</button></div>';
+        return html;
+    }
+    
+    function clearHistory(){
+        localStorage.removeItem('searchHistory');
+        document.getElementById('historyDiv').innerHTML = '';
+    }
+    
+    // 本地收藏
+    function addFav(part, mfr){
+        let favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+        if(!favs.find(f => f.part === part)){
+            favs.push({part, mfr, time: new Date().toLocaleString()});
+            localStorage.setItem('favorites', JSON.stringify(favs));
+            alert('⭐ 已收藏！');
+        }
+    }
+    
+    function showFavs(){
+        const favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+        if(favs.length === 0) return '<p style="color:#a0aec0;text-align:center;padding:20px;">暂无收藏</p>';
+        return '<div style="padding:20px;"><h4 style="color:#fff;margin-bottom:15px;">⭐ 我的收藏</h4>' +
+            favs.map(f => `<div style="padding:10px;background:rgba(255,255,255,0.1);border-radius:10px;margin-bottom:10px;color:#fff;">
+                <strong>${f.part}</strong> - ${f.mfr}<br>
+                <small style="color:#a0aec0;">${f.time}</small>
+                <button onclick="addFav('${f.part}','${f.mfr}')" style="float:right;padding:5px 10px;background:#667eea;border:none;border-radius:8px;color:#fff;cursor:pointer;">+</button>
+            </div>`).join('') + '</div>';
+    }
+    
+    // 快捷键
+    document.addEventListener('keydown', e => {
+        if(e.key === '/' && document.activeElement.tagName !== 'INPUT'){
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+        if(e.key === 'Escape'){
+            document.getElementById('searchInput').blur();
+        }
+    });
+
     // 器件数据库 - 支持 100+ 型号
     const partsDB = {
         'STM32': {
