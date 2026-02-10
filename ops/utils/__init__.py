@@ -163,8 +163,6 @@ def estimate_price(part_number: str = "", quantity: int = 1) -> Dict[str, Any]:
             "price_tier": str         # 价格区间
         }
     """
-    import re
-    
     # 器件类型基础价格映射
     BASE_PRICES = {
         # MCU/Processor

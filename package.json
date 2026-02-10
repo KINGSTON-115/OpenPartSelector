@@ -1,6 +1,6 @@
 {
   "name": "OpenPartSelector",
-  "version": "1.1.9",
+  "version": "1.1.11",
   "description": "AI-Driven Open-Source Electronic Component Selection Engine",
   "entry_points": {
     "cli": "tools.cli:main",

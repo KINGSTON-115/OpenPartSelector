@@ -1,8 +1,20 @@
-# OpenPartSelector v1.1.10 🚀🤖🔌
+# OpenPartSelector v1.1.11 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
 > **核心价值**：用 AI Agent 自动化解决电子工程师的元器件选型痛点——搜索、对比、验证、一键生成采购清单
+
+---
+
+## ✨ v1.1.11 更新日志 (2026-02-10)
+
+| 功能 | 说明 |
+|------|------|
+| 🔧 **工具模块增强** | 修复 import re PEP8 违规 (移至文件顶部) |
+| 📐 **阻值解析** | 新增 parse_resistance() 阻值解析函数 |
+| 🌡️ **温度转换** | 新增 celsius_to_fahrenheit() / fahrenheit_to_celsius() |
+| 🧪 **测试覆盖** | 新增 5 个单元测试覆盖新功能 |
+| ✅ **全部通过** | 96 个测试全部通过 |
 
 ---
 
