@@ -6,6 +6,39 @@ from dataclasses import dataclass
 import json
 
 
+# ==================== 0. 共享常量 (E24标准电阻系列) ====================
+E24_RESISTORS = [
+    10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
+    33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
+    100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
+    330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
+    1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
+    3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
+    10000, 11000, 12000, 13000, 15000, 16000, 18000, 20000, 22000, 24000, 27000, 30000,
+    33000, 36000, 39000, 43000, 47000, 51000, 56000, 62000, 68000, 75000, 82000, 91000,
+    100000, 110000, 120000, 130000, 150000, 160000, 180000, 200000, 220000, 240000, 270000, 300000,
+    330000, 360000, 390000, 430000, 470000, 510000, 560000, 620000, 680000, 750000, 820000, 910000,
+    1000000
+]
+
+
+def find_e24_closest(value: float) -> int:
+    """查找最接近的 E24 标准值"""
+    return min(E24_RESISTORS, key=lambda x: abs(x - value))
+
+
+def find_e24_nearby(value: float, count: int = 3) -> List[str]:
+    """查找最接近的 N 个 E24 标准值"""
+    sorted_values = sorted(E24_RESISTORS, key=lambda x: abs(x - value))
+    result = []
+    for v in sorted_values[:count]:
+        if v >= 1000:
+            result.append(f"{v/1000:.1f}KΩ")
+        else:
+            result.append(f"{v}Ω")
+    return result
+
+
 # ==================== 1. 国产替代推荐 ====================
 # 中国工程师和学生最需要的！
 
@@ -453,7 +486,7 @@ def calculate_resistor_for_led(
     led_voltage: float = 2.0,
     led_current: float = 0.02
 ) -> Dict:
-    """计算LED限流电阻 (改进版 - 完整E24系列)"""
+    """计算LED限流电阻 (统一版 - 复用E24标准值)"""
     v_r = voltage - led_voltage
     if v_r <= 0:
         return {"error": "输入电压必须大于LED压降"}
@@ -461,25 +494,8 @@ def calculate_resistor_for_led(
     r = v_r / led_current
     power = v_r * led_current
     
-    # 完整E24标准电阻系列 (10Ω ~ 1MΩ)
-    e24_values = [
-        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
-        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
-        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
-        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
-        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
-        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
-        10000, 11000, 12000, 13000, 15000, 16000, 18000, 20000, 22000, 24000, 27000, 30000,
-        33000, 36000, 39000, 43000, 47000, 51000, 56000, 62000, 68000, 75000, 82000, 91000,
-        100000, 110000, 120000, 130000, 150000, 160000, 180000, 200000, 220000, 240000, 270000, 300000,
-        330000, 360000, 390000, 430000, 470000, 510000, 560000, 620000, 680000, 750000, 820000, 910000,
-        1000000
-    ]
-    
-    # 使用E24系列找最接近的值
-    standard = min(e24_values, key=lambda x: abs(x - r))
-    
-    # 计算实际功率
+    # 使用共享的E24标准值
+    standard = find_e24_closest(r)
     actual_power = (v_r ** 2) / standard
     
     return {
@@ -492,7 +508,7 @@ def calculate_resistor_for_led(
         "power_dissipation": f"{actual_power*1000:.1f}mW",
         "power_rating": _get_power_rating(actual_power),
         "formula": f"R = (Vcc - Vled) / Iled = ({voltage}V - {led_voltage}V) / {led_current*1000:.0f}mA",
-        "nearby_standard_values": _find_nearby_standards(r, e24_values)
+        "nearby_standard_values": find_e24_nearby(r)
     }
 
 
@@ -512,10 +528,7 @@ def _get_power_rating(power_watts: float) -> str:
         return f"{int(power_watts)}W+ (大功率电阻)"
 
 
-def _find_nearby_standards(calculated: float, e24_series: list) -> list:
-    """找到最接近的标准值列表"""
-    sorted_values = sorted(e24_series, key=lambda x: abs(x - calculated))
-    return [f"{v}Ω" for v in sorted_values[:3]]
+# 函数已合并到共享模块，使用 find_e24_nearby()
 
 
 def calculate_voltage_divider(
@@ -523,7 +536,7 @@ def calculate_voltage_divider(
     v_out: float = 3.3,
     r1: float = None  # 如果为None则自动计算
 ) -> Dict:
-    """计算分压电阻 (改进版 - 完整E24系列)"""
+    """计算分压电阻 (复用E24标准值)"""
     if r1 is None:
         # 假设R2=10K，计算R1
         r2 = 10000
@@ -531,24 +544,9 @@ def calculate_voltage_divider(
     else:
         r2 = r1 * v_out / (v_in - v_out)
     
-    # 完整E24标准电阻系列 (用于标准化)
-    e24_values = [
-        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
-        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
-        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
-        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
-        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
-        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
-        10000, 11000, 12000, 13000, 15000, 16000, 18000, 20000, 22000, 24000, 27000, 30000,
-        33000, 36000, 39000, 43000, 47000, 51000, 56000, 62000, 68000, 75000, 82000, 91000,
-        100000, 110000, 120000, 130000, 150000, 160000, 180000, 200000, 220000, 240000, 270000, 300000,
-        330000, 360000, 390000, 430000, 470000, 510000, 560000, 620000, 680000, 750000, 820000, 910000,
-        1000000
-    ]
-    
-    # 查找最接近的标准值
-    r1_std = min(e24_values, key=lambda x: abs(x - r1))
-    r2_std = min(e24_values, key=lambda x: abs(x - r2))
+    # 使用共享的E24标准值
+    r1_std = find_e24_closest(r1)
+    r2_std = find_e24_closest(r2)
     
     actual_vout = v_in * r2_std / (r1_std + r2_std)
     
@@ -595,7 +593,7 @@ def calculate_led_resistor(
     led_current: float = 0.02  # 20mA
 ) -> Dict:
     """
-    计算LED限流电阻 (改进版)
+    计算LED限流电阻 (统一版)
     
     Args:
         voltage: 输入电压 (V)
@@ -613,19 +611,8 @@ def calculate_led_resistor(
     # 计算理想电阻值
     r_ideal = v_resistor / led_current
     
-    # E24标准电阻值
-    e24_values = [
-        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
-        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
-        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
-        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
-        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
-        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
-        10000
-    ]
-    
-    # 查找最接近的标准值
-    r_std = min(e24_values, key=lambda x: abs(x - r_ideal))
+    # 使用共享E24标准值
+    r_std = find_e24_closest(r_ideal)
     
     # 计算实际电流
     i_actual = v_resistor / r_std
@@ -818,7 +805,7 @@ def decode_resistor_4band(
         "resistance": value_str,
         "tolerance": f"±{tol}%",
         "power_rating": "1/4W (常用)",
-        "e24_alternative": _find_e24_alternative(resistance)
+        "e24_alternative": f"{find_e24_closest(resistance)}Ω (E24)"
     }
 
 
@@ -874,26 +861,8 @@ def decode_resistor_5band(
         "resistance": value_str,
         "tolerance": f"±{tol}%",
         "power_rating": "1/8W ~ 1/4W",
-        "e24_alternative": _find_e24_alternative(resistance)
+        "e24_alternative": f"{find_e24_closest(resistance)}Ω (E24)"
     }
-
-
-def _find_e24_alternative(resistance: float) -> str:
-    """查找最接近的 E24 标准值"""
-    e24_values = [
-        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
-        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
-        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
-        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
-    ]
-    
-    # 找到最接近的E24值
-    if resistance >= 10:
-        closest = min(e24_values, key=lambda x: abs(x - resistance))
-        if resistance >= 1000:
-            return f"{closest}KΩ (E24)"
-        return f"{closest}Ω (E24)"
-    return "小于10Ω"
 
 
 def calculate_led_series_resistor(
@@ -902,7 +871,7 @@ def calculate_led_series_resistor(
     led_current: float = 0.02
 ) -> Dict:
     """
-    计算LED串联电阻 (改进版 - 完整参数)
+    计算LED串联电阻 (统一版)
     
     Args:
         supply_voltage: 电源电压 (V)
@@ -919,18 +888,8 @@ def calculate_led_series_resistor(
     
     r_ideal = v_r / led_current
     
-    # 完整E24标准电阻系列
-    e24_values = [
-        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
-        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
-        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
-        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
-        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
-        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
-        10000
-    ]
-    
-    r_std = min(e24_values, key=lambda x: abs(x - r_ideal))
+    # 使用共享E24标准值
+    r_std = find_e24_closest(r_ideal)
     i_actual = v_r / r_std
     power = v_r * i_actual
     
@@ -949,9 +908,6 @@ def calculate_led_series_resistor(
     else:
         package = "1210+ (大功率)"
     
-    # 推荐色环
-    bands = decode_resistor_4band("brown", "black", "brown", "gold")
-    
     return {
         "supply_voltage": f"{supply_voltage}V",
         "led_voltage": f"{led_forward_voltage}V",
@@ -962,6 +918,136 @@ def calculate_led_series_resistor(
         "power_dissipation": f"{power*1000:.1f}mW",
         "recommended_power": f"{recommended_power*1000:.1f}mW",
         "recommended_package": package,
-        "color_bands": bands.get("colors", []),
         "formula": "R = (Vcc - Vled) / Iled"
+    }
+
+
+# ==================== 新增: 电容色环解码器 (v1.1.9) ====================
+
+CAPACITOR_CODES = {
+    # 瓷片电容色环 (前两位数字) - 标准EIA色码
+    "black": 0, "brown": 1, "red": 2, "orange": 3,
+    "yellow": 4, "green": 5, "blue": 6, "violet": 7,
+    "gray": 8, "white": 9,
+}
+
+CAPACITOR_MULTIPLIERS = {
+    # 乘数 (pF单位, EIA标准)
+    # 棕=×10, 红=×100, 橙=×1nF, 黄=×10nF, 绿=×100nF, 蓝=×1μF
+    "black": 1, "brown": 10, "red": 100, "orange": 1000,
+    "yellow": 10000, "green": 100000, "blue": 1000000,
+    "violet": 10000000, "gold": 0.1, "silver": 0.01,
+}
+
+CAPACITOR_TOLERANCES = {
+    "black": "±20%",
+    "brown": "±1%",
+    "red": "±2%",
+    "green": "±5%",
+    "white": "±10%",
+    "gold": "±5%",
+    "silver": "±10%",
+}
+
+
+def decode_capacitor_3band(color1: str, color2: str, color3: str) -> Dict:
+    """
+    解码 3 色环瓷片电容
+    
+    Args:
+        color1: 第1环 (十位数)
+        color2: 第2环 (个位数)
+        color3: 第3环 (乘数)
+    
+    Returns:
+        电容值
+    """
+    color1, color2, color3 = color1.lower(), color2.lower(), color3.lower()
+    
+    v1 = CAPACITOR_CODES.get(color1)
+    v2 = CAPACITOR_CODES.get(color2, 0)
+    mult = CAPACITOR_MULTIPLIERS.get(color3, 1)
+    
+    if v1 is None:
+        return {"error": "无效的颜色代码"}
+    
+    capacitance = (v1 * 10 + v2) * mult
+    
+    # 格式化
+    if capacitance >= 1000000:
+        value_str = f"{capacitance / 1000000:.1f}μF"
+    elif capacitance >= 1000:
+        value_str = f"{capacitance / 1000:.0f}nF"
+    else:
+        value_str = f"{capacitance:.0f}pF"
+    
+    return {
+        "bands": 3,
+        "colors": [color1, color2, color3],
+        "capacitance": value_str,
+        "formula": "C = (第1环×10 + 第2环) × 乘数"
+    }
+
+
+# ==================== 新增: 电感计算器 (v1.1.9) ====================
+
+def calculate_inductor_energy(
+    inductance: float = 0.001,  # 1mH
+    current: float = 0.1  # 100mA
+) -> Dict:
+    """
+    计算电感储能
+    
+    Args:
+        inductance: 电感量 (H)
+        current: 电流 (A)
+    
+    Returns:
+        储能及参数
+    """
+    energy = 0.5 * inductance * current ** 2
+    impedance = 2 * 3.14159 * inductance * 1000  # 假设1kHz
+    
+    return {
+        "inductance": f"{inductance*1000:.1f}mH",
+        "current": f"{current*1000:.0f}mA",
+        "energy": f"{energy*1000000:.1f}μJ",
+        "impedance_1kHz": f"{impedance:.1f}Ω",
+        "formula": "E = ½ × L × I²"
+    }
+
+
+def calculate_rf_attenuator(
+    input_power_dbm: float = 10,  # 10dBm
+    attenuation_db: float = 20  # 20dB
+) -> Dict:
+    """
+    计算射频衰减器输出功率
+    
+    Args:
+        input_power_dbm: 输入功率 (dBm)
+        attenuation_db: 衰减量 (dB)
+    
+    Returns:
+        输出功率及功率值
+    """
+    output_dbm = input_power_dbm - attenuation_db
+    
+    # dBm -> mW
+    input_mw = 10 ** (input_power_dbm / 10)
+    output_mw = 10 ** (output_dbm / 10)
+    
+    # 转换为W
+    input_w = input_mw / 1000
+    output_w = output_mw / 1000
+    
+    return {
+        "input_power_dbm": f"{input_power_dbm:.1f}dBm",
+        "input_power_mw": f"{input_mw:.4f}mW",
+        "input_power_w": f"{input_w:.6f}W",
+        "attenuation": f"{attenuation_db:.1f}dB",
+        "output_power_dbm": f"{output_dbm:.1f}dBm",
+        "output_power_mw": f"{output_mw:.4f}mW",
+        "output_power_w": f"{output_w:.9f}W",
+        "formula": "P_out(dBm) = P_in(dBm) - Attenuation(dB)"
     }

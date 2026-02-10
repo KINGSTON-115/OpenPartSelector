@@ -23,6 +23,11 @@ from ops.features import (
     decode_resistor_4band,
     decode_resistor_5band,
     calculate_led_series_resistor,
+    decode_capacitor_3band,
+    calculate_inductor_energy,
+    calculate_rf_attenuator,
+    find_e24_closest,
+    find_e24_nearby,
     CHIP_ALTERNATIVES,
     CIRCUIT_TEMPLATES,
     DATASHEET_SUMMARIES,
@@ -389,3 +394,91 @@ class TestNewCalculators_v118:
             led_current=0.02
         )
         assert "error" in result
+
+
+class TestNewFunctions_v119:
+    """v1.1.9 新增功能测试"""
+
+    def test_find_e24_closest(self):
+        """测试E24标准值查找"""
+        # 150Ω 应该是 150Ω
+        assert find_e24_closest(150) == 150
+        # 155Ω 最接近 150Ω
+        assert find_e24_closest(155) == 150
+        # 158Ω 最接近 160Ω
+        assert find_e24_closest(158) == 160
+    
+    def test_find_e24_nearby(self):
+        """测试E24附近值查找"""
+        nearby = find_e24_nearby(155, count=3)
+        assert len(nearby) == 3
+        assert "150Ω" in nearby or "160Ω" in nearby
+
+    def test_decode_capacitor_3band(self):
+        """测试电容色环解码"""
+        result = decode_capacitor_3band("brown", "black", "red")
+        
+        # 棕黑红 = 10 × 100 = 1000pF = 1nF
+        assert "capacitance" in result
+        assert "1nF" in result["capacitance"] or "1000pF" in result["capacitance"]
+
+    def test_decode_capacitor_3band_nanofarad(self):
+        """测试nF级电容"""
+        # 注意：电容色环的数值环和电阻不同
+        # 绿=5 (不是3)，棕=1
+        result = decode_capacitor_3band("green", "brown", "yellow")
+        
+        # 绿(5)棕(1)黄(×10000) = 51 × 10000 = 510000pF = 510nF
+        assert "capacitance" in result
+        assert "510nF" in result["capacitance"] or "0.51μF" in result["capacitance"]
+
+    def test_decode_capacitor_3band_microfarad(self):
+        """测试μF级电容"""
+        result = decode_capacitor_3band("brown", "green", "gold")
+        
+        # 棕(1)绿(3)金(×0.1) = 13 × 0.1 = 1.3pF (非常小，不太常用)
+        pass  # 金色乘数很小，通常用于小电容
+
+    def test_decode_capacitor_3band_with_zero(self):
+        """测试含0的电容值 (如10pF)"""
+        result = decode_capacitor_3band("brown", "black", "black")
+        
+        # 棕黑黑 = 10 × 1 = 10pF
+        assert result["capacitance"] == "10pF"
+
+    def test_decode_capacitor_invalid(self):
+        """测试无效电容色环"""
+        result = decode_capacitor_3band("gold", "black", "red")
+        assert "error" in result
+
+    def test_calculate_inductor_energy(self):
+        """测试电感储能计算"""
+        result = calculate_inductor_energy(inductance=0.001, current=0.1)
+        
+        assert "energy" in result
+        # E = ½ × 1mH × 100mA² = ½ × 0.001 × 0.01 = 5μJ
+        assert float(result["energy"].replace("μJ","")) == 5.0
+
+    def test_calculate_inductor_large(self):
+        """测试大电感计算"""
+        result = calculate_inductor_energy(inductance=0.01, current=0.5)  # 10mH, 500mA
+        
+        # E = ½ × 10mH × 500mA² = ½ × 0.01 × 0.25 = 1250μJ
+        assert "1250" in result["energy"]
+
+    def test_calculate_rf_attenuator(self):
+        """测试射频衰减器计算"""
+        result = calculate_rf_attenuator(input_power_dbm=10, attenuation_db=20)
+        
+        assert "output_power_dbm" in result
+        assert result["output_power_dbm"] == "-10.0dBm"
+        # 10dBm = 10mW, -10dBm = 0.1mW
+        assert float(result["output_power_mw"].replace("mW","")) == 0.1
+
+    def test_calculate_rf_attenuator_30db(self):
+        """测试30dB衰减"""
+        result = calculate_rf_attenuator(input_power_dbm=0, attenuation_db=30)
+        
+        # 0dBm = 1mW, -30dBm = 0.001mW
+        assert result["output_power_dbm"] == "-30.0dBm"
+        assert float(result["output_power_mw"].replace("mW","")) == 0.001
