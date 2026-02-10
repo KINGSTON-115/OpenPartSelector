@@ -486,30 +486,20 @@ def calculate_resistor_for_led(
     led_voltage: float = 2.0,
     led_current: float = 0.02
 ) -> Dict:
-    """计算LED限流电阻 (统一版 - 复用E24标准值)"""
-    v_r = voltage - led_voltage
-    if v_r <= 0:
-        return {"error": "输入电压必须大于LED压降"}
+    """
+    计算LED限流电阻
     
-    r = v_r / led_current
-    power = v_r * led_current
+    ⚠️ 已合并到 calculate_led_resistor()，此函数为兼容性保留
     
-    # 使用共享的E24标准值
-    standard = find_e24_closest(r)
-    actual_power = (v_r ** 2) / standard
+    Args:
+        voltage: 输入电压 (V)
+        led_voltage: LED正向压降 (V)
+        led_current: LED工作电流 (A)
     
-    return {
-        "input_voltage": f"{voltage}V",
-        "led_voltage": f"{led_voltage}V",
-        "led_current": f"{led_current*1000:.0f}mA",
-        "voltage_across_resistor": f"{v_r:.1f}V",
-        "calculated_resistance": f"{r:.1f}Ω",
-        "recommended_resistance": f"{standard}Ω",
-        "power_dissipation": f"{actual_power*1000:.1f}mW",
-        "power_rating": _get_power_rating(actual_power),
-        "formula": f"R = (Vcc - Vled) / Iled = ({voltage}V - {led_voltage}V) / {led_current*1000:.0f}mA",
-        "nearby_standard_values": find_e24_nearby(r)
-    }
+    Returns:
+        推荐电阻值及参数
+    """
+    return calculate_led_resistor(voltage=voltage, led_voltage=led_voltage, led_current=led_current)
 
 
 def _get_power_rating(power_watts: float) -> str:
@@ -865,61 +855,7 @@ def decode_resistor_5band(
     }
 
 
-def calculate_led_series_resistor(
-    supply_voltage: float = 5.0,
-    led_forward_voltage: float = 2.0,
-    led_current: float = 0.02
-) -> Dict:
-    """
-    计算LED串联电阻 (统一版)
-    
-    Args:
-        supply_voltage: 电源电压 (V)
-        led_forward_voltage: LED正向压降 (V)
-        led_current: LED工作电流 (A)
-    
-    Returns:
-        推荐电阻值及功率信息
-    """
-    v_r = supply_voltage - led_forward_voltage
-    
-    if v_r <= 0:
-        return {"error": "电源电压必须大于LED压降"}
-    
-    r_ideal = v_r / led_current
-    
-    # 使用共享E24标准值
-    r_std = find_e24_closest(r_ideal)
-    i_actual = v_r / r_std
-    power = v_r * i_actual
-    
-    # 推荐功率 (留50%余量)
-    recommended_power = power * 2
-    
-    # 推荐封装
-    if recommended_power < 0.125:
-        package = "0603 (1/16W)"
-    elif recommended_power < 0.25:
-        package = "0805 (1/8W)"
-    elif recommended_power < 0.5:
-        package = "1206 (1/4W)"
-    elif recommended_power < 1.0:
-        package = "1210 (1/2W)"
-    else:
-        package = "1210+ (大功率)"
-    
-    return {
-        "supply_voltage": f"{supply_voltage}V",
-        "led_voltage": f"{led_forward_voltage}V",
-        "led_current": f"{led_current*1000:.0f}mA",
-        "ideal_resistance": f"{r_ideal:.1f}Ω",
-        "recommended_resistance": f"{r_std}Ω",
-        "actual_current": f"{i_actual*1000:.1f}mA",
-        "power_dissipation": f"{power*1000:.1f}mW",
-        "recommended_power": f"{recommended_power*1000:.1f}mW",
-        "recommended_package": package,
-        "formula": "R = (Vcc - Vled) / Iled"
-    }
+# 已合并到 calculate_led_resistor() - 删除重复代码
 
 
 # ==================== 新增: 电容色环解码器 (v1.1.9) ====================

@@ -26,6 +26,7 @@ from .features import (
     calculate_resistor_for_led, calculate_voltage_divider, calculate_pwm_frequency,
     calculate_led_resistor, calculate_rc_time_constant, calculate_capacitor_ripple
 )
+# 注意: calculate_led_series_resistor 已合并到 calculate_led_resistor()，不再导出
 from .eol import check_component_lifecycle, analyze_bom_risk
 from .cad import search_cad_library, check_cad_availability
 from .bom import analyze_bom_full, quick_bom_check
