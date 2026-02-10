@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.17 🚀🤖🔌
+# OpenPartSelector v1.1.18 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,7 +6,7 @@
 
 ---
 
-## ✨ v1.1.17 更新日志 (2026-02-10)
+## ✨ v1.1.18 更新日志 (2026-02-10)
 
 | 功能 | 说明 |
 |------|------|
@@ -122,8 +122,7 @@
 | 文件 | 说明 | 大小 |
 |------|------|------|
 | [`standalone.html`](standalone.html) | 🌍 完整功能网页版 | 18KB |
-| [`OpenPartSelector-v0.2.html`](OpenPartSelector-v0.2.html) | 完整功能演示版 | 24KB |
-| [`frontend/index.html`](frontend/index.html) | 前端完整版 | 40KB |
+| [`frontend/index.html`](frontend/index.html) | 前端完整版 | 68KB |
 
 **使用方法:**
 1. 下载 `standalone.html`
@@ -227,8 +226,7 @@ smt = calculate_jlc_smt(bom)
 | 文件 | 说明 | 大小 |
 |------|------|------|
 | [`standalone.html`](standalone.html) | 🌍 单文件完整版 | ~18KB |
-| [`OpenPartSelector-v0.2.html`](OpenPartSelector-v0.2.html) | 完整功能演示版 | ~24KB |
-| [`frontend/index.html`](frontend/index.html) | 前端完整版 | ~40KB |
+| [`frontend/index.html`](frontend/index.html) | 前端完整版 | ~68KB |
 
 ### 💻 安装方式
 
@@ -323,10 +321,10 @@ print(result.compatibility_analysis)
 
 ```
 OpenPartSelector/
-├── frontend/                      # 前端界面 (1078行)
+├── frontend/                      # 前端界面 (~2000行)
 │   └── index.html               # 主界面
-├── standalone.html              # 单文件版本 (243行)
-├── OpenPartSelector-v0.2.html   # 完整演示版
+├── standalone.html              # 单文件版本 (218行精简版)
+├──    # 完整演示版
 ├── ops/                          # 核心模块
 │   ├── __init__.py              # API 导出
 │   ├── agent.py                 # AI Agent 主逻辑
