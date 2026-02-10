@@ -1,8 +1,21 @@
-# OpenPartSelector v1.0 🚀🤖🔌
+# OpenPartSelector v1.1 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
 > **核心价值**：用 AI Agent 自动化解决电子工程师的元器件选型痛点——搜索、对比、验证、一键生成采购清单
+
+---
+
+## ✨ v1.1 更新日志 (2026-02-10)
+
+| 功能 | 说明 |
+|------|------|
+| 🔧 **增强稳定性** | Agent 错误处理改进，搜索失败时返回友好提示 |
+| 📦 **依赖优化** | requirements.txt 区分核心/可选依赖，按需安装 |
+| 🧪 **测试覆盖** | 新增完整集成测试 (test_full_flow.py) |
+| 📖 **贡献指南** | 新增 CONTRIBUTING.md，欢迎社区贡献 |
+| 🔍 **搜索增强** | 搜索引擎模块完整实现，支持多源合并 |
+| 📄 **解析增强** | Datasheet 解析器完整实现 |
 
 ---
 

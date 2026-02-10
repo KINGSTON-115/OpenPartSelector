@@ -211,58 +211,82 @@ class Agent:
         Returns:
             SelectionResult: 选型结果
         """
-        if not self._initialized:
-            await self.initialize()
+        try:
+            if not self._initialized:
+                await self.initialize()
+        except Exception as init_error:
+            logger.warning(f"Agent initialization warning: {init_error}")
+            # 继续执行，使用内置数据库
         
-        # 1. 解析查询
-        parsed_query = self.parse_query(query)
-        if constraints:
-            parsed_query["constraints"].update(constraints)
-        
-        logger.info(f"Parsed query: {json.dumps(parsed_query, ensure_ascii=False)}")
-        
-        # 构建搜索关键词 - 使用解析后的关键词
-        search_query = " ".join(parsed_query.get("search_keywords", [])) or parsed_query.get("original_query", "")
-        
-        # 构建搜索约束
-        search_constraints = {}
-        if parsed_query.get("target_voltage"):
-            search_constraints["voltage"] = parsed_query["target_voltage"]
-        if parsed_query.get("target_package"):
-            search_constraints["package"] = parsed_query["target_package"]
-        
-        logger.info(f"Search query: '{search_query}', constraints: {search_constraints}")
-        
-        # 3. 搜索候选元器件
-        candidates = await self.search_engine.search(
-            query=search_query,
-            category=parsed_query.get("category_hint"),
-            constraints=search_constraints,
-            limit=top_k * 3
-        )
-        
-        # 4. 分析与排序
-        results = await self._analyze_and_rank(candidates, parsed_query)
-        
-        # 5. 获取替代料
-        for result in results:
-            alternatives = await self.search_engine.get_alternatives(result.part_number)
-            result.alternatives = [a["part_number"] for a in alternatives[:3]]
-        
-        # 6. 生成分析报告
-        report = self._generate_report(results[:top_k], query)
-        
-        # 7. 生成 BOM
-        bom = self._generate_bom(results[:top_k])
-        
-        return SelectionResult(
-            query=query,
-            recommended_parts=results[:top_k],
-            analysis_report=report,
-            compatibility_warnings=self._check_compatibility(results[:top_k], parsed_query),
-            bom_items=bom,
-            generated_at=self._timestamp()
-        )
+        try:
+            # 1. 解析查询
+            parsed_query = self.parse_query(query)
+            if constraints:
+                parsed_query["constraints"].update(constraints)
+            
+            logger.info(f"Parsed query: {json.dumps(parsed_query, ensure_ascii=False)}")
+            
+            # 构建搜索关键词 - 使用解析后的关键词
+            search_query = " ".join(parsed_query.get("search_keywords", [])) or parsed_query.get("original_query", "")
+            
+            # 构建搜索约束
+            search_constraints = {}
+            if parsed_query.get("target_voltage"):
+                search_constraints["voltage"] = parsed_query["target_voltage"]
+            if parsed_query.get("target_package"):
+                search_constraints["package"] = parsed_query["target_package"]
+            
+            logger.info(f"Search query: '{search_query}', constraints: {search_constraints}")
+            
+            # 2. 搜索候选元器件 (增加错误处理)
+            try:
+                candidates = await self.search_engine.search(
+                    query=search_query,
+                    category=parsed_query.get("category_hint"),
+                    constraints=search_constraints,
+                    limit=top_k * 3
+                )
+            except Exception as search_error:
+                logger.error(f"Search failed: {search_error}")
+                candidates = []
+            
+            # 3. 分析与排序
+            results = await self._analyze_and_rank(candidates, parsed_query)
+            
+            # 4. 获取替代料
+            for result in results:
+                try:
+                    alternatives = await self.search_engine.get_alternatives(result.part_number)
+                    result.alternatives = [a["part_number"] for a in alternatives[:3]]
+                except Exception as alt_error:
+                    logger.debug(f"Could not fetch alternatives: {alt_error}")
+            
+            # 5. 生成分析报告
+            report = self._generate_report(results[:top_k], query)
+            
+            # 6. 生成 BOM
+            bom = self._generate_bom(results[:top_k])
+            
+            return SelectionResult(
+                query=query,
+                recommended_parts=results[:top_k],
+                analysis_report=report,
+                compatibility_warnings=self._check_compatibility(results[:top_k], parsed_query),
+                bom_items=bom,
+                generated_at=self._timestamp()
+            )
+            
+        except Exception as e:
+            logger.error(f"Selection failed: {e}")
+            # 返回空结果而不是崩溃
+            return SelectionResult(
+                query=query,
+                recommended_parts=[],
+                analysis_report=f"❌ 选型失败: {str(e)}\n\n请尝试简化搜索关键词。",
+                compatibility_warnings=[],
+                bom_items=[],
+                generated_at=self._timestamp()
+            )
     
     async def _analyze_and_rank(
         self, 
