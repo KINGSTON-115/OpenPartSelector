@@ -24,13 +24,21 @@
 
 | 文件 | 说明 | 大小 |
 |------|------|------|
-| [`standalone.html`](standalone.html) | 🌍 完整功能网页版 | 12KB |
+| [`standalone.html`](standalone.html) | 🌍 完整功能网页版 | 18KB |
 | [`OpenPartSelector-v0.2.html`](OpenPartSelector-v0.2.html) | 完整功能演示版 | 24KB |
+| [`frontend/index.html`](frontend/index.html) | 前端完整版 | 40KB |
 
 **使用方法:**
 1. 下载 `standalone.html`
 2. 双击用浏览器打开
 3. 立即使用 AI 选型功能！
+
+**功能特性:**
+- ✅ 智能搜索 + 自动补全
+- ✅ 收藏器件
+- ✅ 搜索历史
+- ✅ 国产替代推荐
+- ✅ 全网比价链接
 
 ### 💻 **Windows 桌面版**
 ```bash
@@ -115,15 +123,59 @@ smt = calculate_jlc_smt(bom)
 
 ## 🚀 快速开始
 
-### 安装
+### 📄 网页版 (推荐! 无需安装)
+
+双击打开即可使用所有功能：
+
+| 文件 | 说明 | 大小 |
+|------|------|------|
+| [`standalone.html`](standalone.html) | 🌍 单文件完整版 | ~18KB |
+| [`OpenPartSelector-v0.2.html`](OpenPartSelector-v0.2.html) | 完整功能演示版 | ~24KB |
+| [`frontend/index.html`](frontend/index.html) | 前端完整版 | ~40KB |
+
+### 💻 安装方式
 
 ```bash
+# 方式1: pip 安装 (推荐)
+pip install openpartselector
+
+# 方式2: 源码运行
 git clone https://github.com/KINGSTON-115/OpenPartSelector.git
 cd OpenPartSelector
-pip install -r requirements.txt
+pip install -e .
+python desktop_app.py
 ```
 
-### 配置 API Keys
+### 🔍 搜索示例
+
+```bash
+# 基础搜索
+python -m ops search "STM32F103C8T6"
+
+# 自然语言查询
+python -m ops select "为 ESP32 项目找一个 3.3V LDO，输出电流 500mA"
+
+# 价格对比
+python -m ops price "ESP32 CH340N"
+
+# 国产替代
+python -m ops alternative "STM32F103"
+```
+
+### 💡 更多使用技巧
+
+```bash
+# 组合查询
+python -m ops search "STM32F103 --替代 GD32"
+
+# 导出 BOM
+python -m ops bom --add STM32F103:10 CH340N:5
+
+# 查看库存
+python -m ops stock "ESP32"
+```
+
+### 🛠️ 配置 API Keys (可选)
 
 ```bash
 cp .env.example .env
@@ -357,5 +409,26 @@ led = calculate_resistor_for_led(voltage=5.0, led_voltage=2.0, led_current=0.02)
 div = calculate_voltage_divider(v_in=5.0, v_out=3.3)
 # → 推荐 R1=10K, R2=10KΩ
 ```
+
+---
+
+## ⌨️ 快捷键 (网页版)
+
+| 快捷键 | 功能 |
+|--------|------|
+| `/` | 聚焦搜索框 |
+| `Esc` | 取消聚焦 |
+| `Enter` | 执行搜索 |
+
+## 💡 使用技巧
+
+1. **搜索历史**: 自动记录搜索历史，快速重复搜索
+2. **收藏器件**: 点击 ⭐ 收藏常用器件，随时查看
+3. **国产替代**: 搜索时自动显示国产替代型号
+4. **一键比价**: 搜索结果直接跳转各平台比价
+
+## 📱 浏览器书签
+
+将 `standalone.html` 拖入浏览器书签栏，随时访问！
 
 ---

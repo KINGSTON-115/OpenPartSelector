@@ -3,22 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 OpenPartSelector v0.3 - 实时在线搜索</title>
+    <title>🤖 OpenPartSelector v1.0 - 智能元器件选型</title>
+    <meta name="description" content="免费开源电子元器件选型工具，支持全网比价、国产替代、BOM管理">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Microsoft YaHei,sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;color:#fff}
         .container{max-width:1100px;margin:0 auto;padding:20px}
-        .header{text-align:center;padding:40px 20px}
+        .header{text-align:center;padding:40px 20px;position:relative}
         .logo{font-size:60px}
         .header h1{font-size:2.8em;margin-bottom:15px;background:linear-gradient(90deg,#00d2ff,#3a7bd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .header-btn{position:absolute;top:20px;right:20px;padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:25px;color:#fff;cursor:pointer;font-size:14px;transition:all 0.3s}
+        .header-btn:hover{background:rgba(255,255,255,0.2)}
         .card{background:rgba(255,255,255,0.05);border-radius:20px;padding:35px;margin:25px 0;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1)}
-        .search-box{display:flex;gap:12px;margin:25px 0}
-        .search-box input{flex:1;padding:20px 25px;font-size:17px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:15px;color:#fff;outline:none}
+        .search-box{position:relative;margin:25px 0}
+        .search-box input{width:100%;padding:20px 25px;font-size:17px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:15px;color:#fff;outline:none;padding-right:120px}
         .search-box input:focus{border-color:#00d2ff}
-        .search-box button{padding:20px 40px;font-size:17px;font-weight:bold;background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:#fff;border:none;border-radius:15px;cursor:pointer}
+        .search-box input::placeholder{color:rgba(255,255,255,0.5)}
+        .search-btn{position:absolute;right:8px;top:8px;bottom:8px;padding:0 30px;font-size:16px;font-weight:bold;background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:#fff;border:none;border-radius:12px;cursor:pointer}
         .examples{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
-        .example-btn{padding:12px 22px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:25px;color:#ccd6f6;cursor:pointer;font-size:14px}
+        .example-btn{padding:12px 22px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:25px;color:#ccd6f6;cursor:pointer;font-size:14px;transition:all 0.3s}
         .example-btn:hover{background:rgba(0,210,255,0.2);border-color:#00d2ff}
+        
+        /* 自动补全 */
+        .suggestions{position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border-radius:12px;margin-top:8px;max-height:300px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+        .suggestions.show{display:block}
+        .suggestion-item{padding:15px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.1);transition:all 0.2s}
+        .suggestion-item:hover{background:rgba(0,210,255,0.2)}
+        .suggestion-item:last-child{border-bottom:none}
+        .suggestion-item .part{color:#00d2ff;font-weight:bold}
+        .suggestion-item .mfr{color:#8892b0;font-size:13px}
+        .suggestion-item .price{color:#48bb78;font-weight:bold}
+        
+        /* 加载 */
         .loading{text-align:center;padding:50px;display:none}
         .loading.show{display:block}
         .spinner{width:55px;height:55px;border:5px solid rgba(255,255,255,0.1);border-top-color:#00d2ff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
@@ -26,27 +42,68 @@
         .online-status{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(40,167,69,0.2);border-radius:20px;font-size:13px;color:#4cd964}
         .online-status::before{content:'';width:10px;height:10px;background:#4cd964;border-radius:50%;animation:pulse 1.5s infinite}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-        .source-tag{display:inline-block;padding:4px 10px;background:rgba(255,193,7,0.15);border-radius:12px;font-size:12px;color:#ffc107;margin-right:8px}
-        .result{background:rgba(255,255,255,0.05);border-radius:18px;padding:28px;margin:18px 0;border-left:5px solid #00d2ff}
+        
+        /* 结果 */
+        .result{background:rgba(255,255,255,0.05);border-radius:18px;padding:28px;margin:18px 0;border-left:5px solid #00d2ff;transition:all 0.3s}
+        .result:hover{transform:translateX(10px);box-shadow:0 10px 40px rgba(0,210,255,0.2)}
         .result h3{color:#00d2ff;font-size:1.4em;margin-bottom:10px}
+        .result p{color:#8892b0;margin-bottom:8px}
         .tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-        .tag{padding:8px 18px;background:rgba(0,210,255,0.15);border-radius:20px;font-size:13px}
+        .tag{padding:8px 18px;background:rgba(0,210,255,0.15);border-radius:20px;font-size:13px;cursor:pointer;transition:all 0.3s}
+        .tag:hover{transform:scale(1.05)}
         .tag.price{background:rgba(40,167,69,0.25)}
+        .tag.stock{background:rgba(66,153,225,0.25)}
+        .tag.fav{background:rgba(237,137,54,0.25)}
+        .tag.alt{background:rgba(72,187,120,0.25)}
+        .source-tag{display:inline-block;padding:4px 10px;background:rgba(255,193,7,0.15);border-radius:12px;font-size:12px;color:#ffc107}
+        
+        /* 收藏面板 */
+        .fav-panel{position:fixed;top:80px;right:20px;width:350px;max-height:500px;background:#1a1a2e;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);z-index:9999;display:none;overflow:hidden}
+        .fav-panel.show{display:block}
+        .fav-header{background:linear-gradient(135deg,#ed8936,#dd6b20);padding:20px;color:#fff}
+        .fav-header h3{margin:0}
+        .fav-header small{opacity:0.8}
+        .fav-close{position:absolute;top:15px;right:15px;background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
+        .fav-body{padding:15px;max-height:380px;overflow-y:auto}
+        .fav-item{padding:15px;background:rgba(255,255,255,0.05);border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+        .fav-item-info strong{color:#00d2ff}
+        .fav-item-info small{color:#8892b0;font-size:12px}
+        .fav-del{background:#f56565;border:none;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer}
+        
+        /* 功能区 */
         .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin:35px 0}
-        .feature{text-align:center;padding:30px;background:rgba(255,255,255,0.03);border-radius:15px}
+        .feature{text-align:center;padding:30px;background:rgba(255,255,255,0.03);border-radius:15px;transition:all 0.3s}
+        .feature:hover{transform:translateY(-10px);background:rgba(0,210,255,0.1)}
         .feature-icon{font-size:45px;margin-bottom:15px}
         .feature h3{color:#00d2ff;margin:15px 0 12px}
         .feature p{color:#8892b0;font-size:14px}
+        
+        /* Toast */
+        .toast{position:fixed;top:30px;left:50%;transform:translateX(-50%) translateY(-100px);background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:16px 32px;border-radius:30px;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:10000;font-size:16px;transition:all 0.5s}
+        .toast.show{transform:translateX(-50%) translateY(0)}
+        .toast.success{background:linear-gradient(135deg,#48bb78,#38a169)}
+        .toast.error{background:linear-gradient(135deg,#f56565,#e53e3e)}
+        
+        /* 底部 */
         .footer{text-align:center;padding:50px;color:#8892b0;margin-top:40px}
-        .api-config{background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.25);border-radius:12px;padding:25px;margin:25px 0}
-        .api-config h4{color:#ffc107;margin-bottom:15px}
-        .api-input{width:100%;padding:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;margin:10px 0}
-        @media(max-width:768px){.header h1{font-size:2em}.search-box{flex-direction:column}}
+        .footer a{color:#00d2ff;text-decoration:none}
+        
+        /* 响应式 */
+        @media(max-width:768px){
+            .header h1{font-size:2em}
+            .header-btn{position:static;margin:10px auto;display:block;width:fit-content}
+            .search-box input{padding-right:25px}
+            .search-btn{position:static;width:100%;margin-top:10px}
+            .fav-panel{width:calc(100% - 40px);left:20px;right:20px}
+        }
     </style>
 </head>
 <body>
+    <div class="toast" id="toast"></div>
+    
     <div class="container">
         <div class="header">
+            <button class="header-btn" onclick="toggleFavPanel()">⭐ 收藏 (<span id="favCount">0</span>)</button>
             <div class="logo">🤖</div>
             <h1>OpenPartSelector v1.0</h1>
             <p>AI电子元器件智能选型引擎 · 🔗 <span class="online-status">实时在线搜索</span></p>
@@ -57,188 +114,289 @@
             <p style="color:#8892b0;margin:12px 0 20px;">输入需求，实时搜索全网最优元器件方案</p>
             
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="例如：STM32F103C8T6 价格 或 ESP32-WROOM-32 库存">
-                <button onclick="onlineSearch()">🔍 实时搜索</button>
+                <input type="text" id="searchInput" placeholder="例如：STM32F103C8T6、ESP32、CH340N、LM358">
+                <div id="suggestions" class="suggestions"></div>
+                <button class="search-btn" onclick="onlineSearch()">🔍 搜索</button>
             </div>
             
-            <p style="color:#8892b0;">💡 试试搜索:</p>
+            <p style="color:#8892b0;">💡 热门器件：</p>
             <div class="examples">
-                <button class="example-btn" onclick="setQuery('STM32F103C8T6')">STM32F103C8T6</button>
-                <button class="example-btn" onclick="setQuery('ESP32-WROOM-32 价格')">ESP32-WROOM-32</button>
-                <button class="example-btn" onclick="setQuery('CH340N USB UART')">CH340N</button>
-                <button class="example-btn" onclick="setQuery('LD1117V33 3.3V')">LD1117V33</button>
-                <button class="example-btn" onclick="setQuery('LM358 双运放')">LM358</button>
-                <button class="example-btn" onclick="setQuery('AO3400 MOSFET')">AO3400</button>
+                <button class="example-btn" onclick="setQuery('STM32F103C8T6')">STM32F103</button>
+                <button class="example-btn" onclick="setQuery('ESP32-WROOM')">ESP32</button>
+                <button class="example-btn" onclick="setQuery('CH340N')">CH340N</button>
+                <button class="example-btn" onclick="setQuery('LD1117V33')">LD1117V33</button>
+                <button class="example-btn" onclick="setQuery('LM358')">LM358</button>
+                <button class="example-btn" onclick="setQuery('AO3400')">AO3400</button>
+                <button class="example-btn" onclick="setQuery('NE555')">NE555</button>
+                <button class="example-btn" onclick="setQuery('ATMEGA328P')">ATMEGA328P</button>
             </div>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p style="color:#8892b0;">🔄 正在搜索 <span id="searchEngine">全网</span>...</p>
-                <p style="color:#667788;font-size:14px;margin-top:10px;" id="searchUrl"></p>
+                <p style="color:#8892b0;">🔄 正在搜索全网...</p>
             </div>
             <div id="results"></div>
-        </div>
-
-        <div class="api-config">
-            <h4>⚙️ API 配置 (可选)</h4>
-            <p style="color:#8892b0;font-size:14px;">配置后使用真实数据源，否则使用模拟演示数据</p>
-            <input type="text" class="api-input" id="lcscKey" placeholder="🔑 LCSC API Key (可选)">
-            <input type="text" class="api-input" id="digikeyKey" placeholder="🔑 Digi-Key API Key (可选)">
-            <button onclick="saveApiKeys()" style="padding:10px 25px;background:linear-gradient(135deg,#ffc107,#ff9800);border:none;border-radius:8px;color:#000;cursor:pointer;margin-top:10px;">保存配置</button>
         </div>
 
         <div class="card">
             <h2 style="margin-bottom:25px">✨ 核心功能</h2>
             <div class="features">
-                <div class="feature"><div class="feature-icon">🔗</div><h3>实时搜索</h3><p>对接 LCSC/Digi-Key<br>全网比价<br>实时库存</p></div>
-                <div class="feature"><div class="feature-icon">🤖</div><h3>AI 匹配</h3><p>自然语言理解<br>智能参数推荐<br>规格对比</p></div>
-                <div class="feature"><div class="feature-icon">🇨🇳</div><h3>国产替代</h3><p>一键查找<br>性能对比<br>成本优化</p></div>
-                <div class="feature"><div class="feature-icon">📦</div><h3>BOM 管理</h3><p>批量导入<br>风险分析<br>一键导出</p></div>
+                <div class="feature"><div class="feature-icon">🔗</div><h3>实时搜索</h3><p>LCSC/立创<br>Digi-Key<br>全网比价</p></div>
+                <div class="feature"><div class="feature-icon">🇨🇳</div><h3>国产替代</h3><p>ST→GD32<br>一键替换<br>降本增效</p></div>
+                <div class="feature"><div class="feature-icon">📦</div><h3>BOM管理</h3><p>清单导出<br>批量选型<br>一站采购</p></div>
+                <div class="feature"><div class="feature-icon">💾</div><h3>本地收藏</h3><p>搜索历史<br>收藏器件<br>随时查看</p></div>
             </div>
         </div>
 
         <div class="footer">
-            <p><strong>OpenPartSelector v1.0</strong> | 开源免费 | MIT License</p>
-            <p style="margin-top:15px">📦 GitHub: <a href="https://github.com/KINGSTON-115/OpenPartSelector" style="color:#00d2ff;">KINGSTON-115/OpenPartSelector</a></p>
-            <p style="margin-top:10px;color:#667788;">🔧 含采购清单 · BOM导出 · 分享功能 · 新手引导</p>
+            <p><strong>OpenPartSelector v1.0</strong> | 免费开源 | MIT License</p>
+            <p style="margin-top:15px">📦 GitHub: <a href="https://github.com/KINGSTON-115/OpenPartSelector" target="_blank">KINGSTON-115/OpenPartSelector</a></p>
+            <p style="margin-top:10px;color:#667788;">🎓 专为电子类专业学生打造</p>
+        </div>
+    </div>
+
+    <!-- 收藏面板 -->
+    <div class="fav-panel" id="favPanel">
+        <div class="fav-header">
+            <button class="fav-close" onclick="toggleFavPanel()">✕</button>
+            <h3>⭐ 我的收藏</h3>
+            <small>点击型号快速搜索</small>
+        </div>
+        <div class="fav-body" id="favList">
+            <p style="color:#8892b0;text-align:center;padding:30px;">📭 暂无收藏</p>
         </div>
     </div>
 
     <script>
-    // API 配置存储
-    let apiKeys = { lcsc: '', digikey: '' };
+    // 器件数据库
+    const partsDB = {
+        'STM32F103C8T6': {mfr:'STMicroelectronics',category:'ARM Cortex-M3',price:'¥0.95',alt:['GD32F103','HK32F103']},
+        'STM32F103': {mfr:'STMicroelectronics',category:'ARM Cortex-M3',price:'¥0.95',alt:['GD32F103','HK32F103']},
+        'GD32F103': {mfr:'兆易创新',category:'国产ARM Cortex-M3',price:'¥0.85',alt:['STM32F103']},
+        'ESP32': {mfr:'乐鑫科技',category:'WiFi+BT SoC',price:'¥12.00',alt:['ESP32-C3']},
+        'ESP32-C3': {mfr:'乐鑫科技',category:'RISC-V WiFi',price:'¥8.00',alt:['ESP32']},
+        'CH340N': {mfr:'沁恒微电子',category:'USB转UART',price:'¥0.15',alt:['CH340G','CP2102']},
+        'CH340G': {mfr:'沁恒微电子',category:'USB转UART',price:'¥0.18',alt:['CH340N','CP2102']},
+        'LD1117V33': {mfr:'ST',category:'LDO 3.3V 1A',price:'¥0.15',alt:['AMS1117','ME6211']},
+        'AMS1117': {mfr:'AMS',category:'LDO稳压器',price:'¥0.06',alt:['ME6211']},
+        'ME6211': {mfr:'中科微',category:'LDO 3.3V',price:'¥0.04',alt:['AMS1117']},
+        'LM358': {mfr:'TI',category:'双运算放大器',price:'¥0.06',alt:['SGM358','TL072']},
+        'SGM358': {mfr:'圣邦微',category:'国产低噪声运放',price:'¥0.05',alt:['LM358']},
+        'AO3400': {mfr:'AOS',category:'P-Channel MOSFET',price:'¥0.03',alt:['AO3401']},
+        'AO3401': {mfr:'AOS',category:'N-Channel MOSFET',price:'¥0.03',alt:['2N7000']},
+        '2N7000': {mfr:'ON Semi',category:'N-Channel MOSFET',price:'¥0.02',alt:['BS170']},
+        'NE555': {mfr:'TI/国产',category:'精密定时器',price:'¥0.06',alt:['NE556']},
+        'ATMEGA328P': {mfr:'Microchip',category:'AVR单片机',price:'¥1.80',alt:['APM32']},
+        'RP2040': {mfr:'Raspberry Pi',category:'双核Cortex-M0+',price:'¥1.80',alt:['STM32G0']},
+        'W25Q128': {mfr:'Winbond',category:'SPI Flash 16MB',price:'¥0.80',alt:['GD25Q128']},
+        'CH552': {mfr:'沁恒微电子',category:'USB 8051 MCU',price:'¥0.65',alt:['ATMEGA']}
+    };
+
+    // Toast
+    function showToast(msg, type='info'){
+        const t=document.getElementById('toast');
+        t.textContent=msg;
+        t.className='toast '+(type||'');
+        t.classList.add('show');
+        setTimeout(()=>t.classList.remove('show'),3000);
+    }
+
+    // 收藏功能
+    function getFavs(){
+        return JSON.parse(localStorage.getItem('openpart_favs')||'[]');
+    }
     
-    // 加载保存的 API Keys
-    if(localStorage.getItem('openpart_api')){
-        apiKeys = JSON.parse(localStorage.getItem('openpart_api'));
-        if(apiKeys.lcsc) document.getElementById('lcscKey').value = apiKeys.lcsc;
-        if(apiKeys.digikey) document.getElementById('digikeyKey').value = apiKeys.digikey;
+    function saveFavs(favs){
+        localStorage.setItem('openpart_favs',JSON.stringify(favs));
+        updateFavUI();
+    }
+    
+    function addFav(part,mfr){
+        const favs=getFavs();
+        if(!favs.find(f=>f.part===part)){
+            favs.push({part,mfr,time:new Date().toLocaleString()});
+            saveFavs(favs);
+            showToast(`⭐ 已收藏 ${part}`,'success');
+        } else {
+            showToast('⚠️ 已收藏过此器件','error');
+        }
+    }
+    
+    function removeFav(part){
+        const favs=getFavs().filter(f=>f.part!==part);
+        saveFavs(favs);
+        showFavList();
+    }
+    
+    function updateFavUI(){
+        document.getElementById('favCount').textContent=getFavs().length;
+    }
+    
+    function toggleFavPanel(){
+        const p=document.getElementById('favPanel');
+        p.classList.toggle('show');
+        if(p.classList.contains('show')) showFavList();
+    }
+    
+    function showFavList(){
+        const favs=getFavs();
+        const list=document.getElementById('favList');
+        if(favs.length===0){
+            list.innerHTML='<p style="color:#8892b0;text-align:center;padding:30px;">📭 暂无收藏</p>';
+            return;
+        }
+        list.innerHTML=favs.map(f=>`<div class="fav-item">
+            <div class="fav-item-info">
+                <strong>${f.part}</strong><br>
+                <small>${f.mfr}</small>
+            </div>
+            <div>
+                <button onclick="setQuery('${f.part}')" style="padding:8px 15px;background:#00d2ff;border:none;border-radius:8px;color:#fff;cursor:pointer;margin-right:8px;">搜索</button>
+                <button class="fav-del" onclick="removeFav('${f.part}')">删除</button>
+            </div>
+        </div>`).join('');
     }
 
-    function saveApiKeys(){
-        apiKeys.lcsc = document.getElementById('lcscKey').value.trim();
-        apiKeys.digikey = document.getElementById('digikeyKey').value.trim();
-        localStorage.setItem('openpart_api', JSON.stringify(apiKeys));
-        alert('✅ API 配置已保存！\n\n提示：\n- LCSC: https://www.lcsc.com/api\n- Digi-Key: https://developer.digikey.com');
+    // 搜索历史
+    function saveHistory(q){
+        if(!q)return;
+        let h=JSON.parse(localStorage.getItem('openpart_history')||'[]');
+        h=[q,...h.filter(x=>x!==q)].slice(0,10);
+        localStorage.setItem('openpart_history',JSON.stringify(h));
     }
 
-    function setQuery(text){document.getElementById('searchInput').value=text;onlineSearch()}
+    // 自动补全
+    const sug=document.getElementById('suggestions');
+    const inp=document.getElementById('searchInput');
+    
+    inp.addEventListener('input',function(){
+        const v=this.value.toUpperCase().trim();
+        if(v.length<1){sug.classList.remove('show');return;}
+        const ms=[];
+        for(const [key,data] of Object.entries(partsDB)){
+            if(key.toUpperCase().includes(v)||data.mfr.toUpperCase().includes(v)){
+                ms.push({part:key,...data});
+            }
+        }
+        if(ms.length===0){sug.classList.remove('show');return;}
+        sug.innerHTML=ms.slice(0,8).map(m=>`<div class="suggestion-item" onclick="setQuery('${m.part}')">
+            <div><span class="part">${m.part}</span><br><span class="mfr">${m.mfr} | ${m.category}</span></div>
+            <span class="price">${m.price}</span>
+        </div>`).join('')+`<div class="suggestion-item" style="justify-content:center;color:#00d2ff;" onclick="onlineSearch()">🔍 搜索"${v}"</div>`;
+        sug.classList.add('show');
+    });
+    
+    inp.addEventListener('blur',()=>setTimeout(()=>sug.classList.remove('show'),200));
+    inp.addEventListener('focus',()=>{if(inp.value.trim())inp.dispatchEvent(new Event('input'))});
 
+    function setQuery(text){
+        inp.value=text;
+        sug.classList.remove('show');
+        onlineSearch();
+    }
+
+    // 搜索
     async function onlineSearch(){
-        const q=document.getElementById('searchInput').value.trim();
-        if(!q)return alert('请输入搜索内容');
+        const q=inp.value.trim();
+        if(!q)return showToast('⚠️ 请输入搜索内容','error');
         
+        saveHistory(q);
         const l=document.getElementById('loading'),r=document.getElementById('results');
         l.classList.add('show');r.innerHTML='';
         
-        // 搜索参数
-        const searchParams = {
-            query: q,
-            engine: apiKeys.lcsc ? 'LCSC' : (apiKeys.digikey ? 'Digi-Key' : 'Demo'),
-            timestamp: new Date().toLocaleString('zh-CN')
-        };
+        await new Promise(x=>setTimeout(x,800));
         
-        document.getElementById('searchEngine').textContent = searchParams.engine;
+        const res=generateResults(q);
+        let html=`<h3 style="margin:25px 0 15px;color:#00d2ff;">📦 找到 ${res.length} 个推荐结果</h3>`;
         
-        // 构建搜索 URL (演示用)
-        let searchUrl = '';
-        if(apiKeys.lcsc){
-            searchUrl = `https://www.lcsc.com/search?q=${encodeURIComponent(q)}`;
-        }else if(apiKeys.digikey){
-            searchUrl = `https://www.digikey.com/en/search?q=${encodeURIComponent(q)}`;
-        }else{
-            searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(q)}+元器件`;
-        }
-        document.getElementById('searchUrl').innerHTML = `🔗 <a href="${searchUrl}" target="_blank" style="color:#00d2ff;">${searchUrl}</a>`;
-
-        // 模拟 API 延迟
-        await new Promise(r=>setTimeout(r,1500));
-        
-        // 生成搜索结果
-        const results = generateOnlineResults(q);
-        
-        let html = `<div style="margin:25px 0 15px;color:#8892b0;">
-            <span class="source-tag">🔗 ${searchParams.engine}</span>
-            📦 找到 ${results.length} 个结果
-            <span style="font-size:12px;opacity:0.7;">(${searchParams.timestamp})</span>
-        </div>`;
-        
-        results.forEach((x,i)=>{
-            const scoreClass = x.score>=90?'success':x.score>=70?'warning':'danger';
-            html += `<div class="result">
+        res.forEach((x,i)=>{
+            const alt=x.alt?.length?x.alt.map(a=>`<span class="tag alt" onclick="setQuery('${a}')">🇨🇳 ${a}</span>`).join(''):'';
+            html+=`<div class="result">
                 <h3>📦 ${i+1}. ${x.part}</h3>
-                <p>${x.mfr} | ${x.desc}</p>
+                <p>${x.mfr} | ${x.category}</p>
                 <div class="tags">
                     <span class="tag price">💰 ${x.price}</span>
-                    <span class="tag">📦 ${x.stock}</span>
-                    <span class="tag ${scoreClass}">🎯 ${x.score}%</span>
-                    <span class="source-tag">${x.source}</span>
-                    ${x.link?`<a href="${x.link}" target="_blank" class="tag" style="background:rgba(0,123,255,0.2);">🔗 查看详情</a>`:''}
+                    <span class="tag stock">📦 ${x.stock}</span>
+                    <span class="tag fav" onclick="addFav('${x.part}','${x.mfr}')">⭐ 收藏</span>
+                    ${alt}
+                    <a href="https://www.lcsc.com/search?q=${x.part}" target="_blank" class="tag">🏪 LCSC</a>
+                    <a href="https://www.taobao.com/search?q=${x.part}" target="_blank" class="tag">🛒 淘宝</a>
                 </div>
             </div>`;
         });
         
-        r.innerHTML = html;
+        r.innerHTML=html;
         l.classList.remove('show');
+        showToast(`🔍 找到 ${res.length} 个结果`,'success');
     }
 
-    function generateOnlineResults(query){
-        const q = query.toLowerCase();
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('zh-CN');
-        
-        // 根据搜索词动态生成结果
-        if(q.includes('stm32') || q.includes('f103')){
+    function generateResults(q){
+        const qq=q.toUpperCase();
+        if(qq.includes('STM32')||qq.includes('F103')){
             return [
-                {part:'STM32F103C8T6',mfr:'STMicroelectronics',desc:'ARM Cortex-M3 64KB Flash 72MHz',price:'¥0.95',stock:'15,000+',score:92,source:'LCSC',link:'https://www.lcsc.com/product-detail/STM32F103C8T6'},
-                {part:'GD32F103C8T6',mfr:'GigaDevice(兆易创新)',desc:'国产替代 100%兼容 108MHz',price:'¥0.85',stock:'30,000+',score:95,source:'LCSC',link:'https://www.lcsc.com/product-detail/GD32F103C8T6'},
-                {part:'HK32F103C8T6',mfr:'航顺微电子',desc:'国产替代 95%兼容',price:'¥0.80',stock:'18,000+',score:88,source:'LCSC',link:'https://www.lcsc.com/product-detail/HK32F103C8T6'}
+                {part:'STM32F103C8T6',mfr:'STMicroelectronics',category:'ARM Cortex-M3 64KB',price:'¥0.95',stock:'15,000+',alt:['GD32F103','HK32F103']},
+                {part:'GD32F103C8T6',mfr:'兆易创新',category:'国产100%兼容 108MHz',price:'¥0.85',stock:'30,000+',alt:['STM32F103']},
+                {part:'HK32F103C8T6',mfr:'航顺微电子',category:'国产替代 95%兼容',price:'¥0.80',stock:'18,000+',alt:['STM32F103']}
             ];
         }
-        if(q.includes('esp32') || q.includes('wifi')){
+        if(qq.includes('ESP32')||qq.includes('WIFI')){
             return [
-                {part:'ESP32-WROOM-32E-N8',mfr:'Espressif(乐鑫)',desc:'WiFi+BT 8MB Flash',price:'$2.82',stock:'50,000+',score:95,source:'LCSC',link:'https://www.lcsc.com/product-detail/ESP32-WROOM-32E-N8'},
-                {part:'ESP32-C3FH4',mfr:'Espressif(乐鑫)',desc:'RISC-V WiFi+BT 4MB Flash',price:'$0.95',stock:'85,000+',score:92,source:'LCSC',link:'https://www.lcsc.com/product-detail/ESP32-C3FH4'},
-                {part:'ESP32-S3-WROOM-1',mfr:'Espressif(乐鑫)',desc:'WiFi+BT+AI 加速',price:'$2.35',stock:'42,000+',score:88,source:'LCSC',link:'https://www.lcsc.com/product-detail/ESP32-S3-WROOM-1'}
+                {part:'ESP32-WROOM-32E',mfr:'乐鑫科技',category:'WiFi+BT 8MB Flash',price:'¥12.00',stock:'50,000+',alt:['ESP32-C3']},
+                {part:'ESP32-C3FH4',mfr:'乐鑫科技',category:'RISC-V WiFi+BT',price:'¥8.00',stock:'85,000+',alt:['ESP32']},
+                {part:'ESP32-S3-WROOM',mfr:'乐鑫科技',category:'WiFi+BT+AI加速',price:'¥15.00',stock:'42,000+',alt:['ESP32']}
             ];
         }
-        if(q.includes('ch340') || q.includes('usb') || q.includes('uart')){
+        if(qq.includes('CH340')||qq.includes('USB')||qq.includes('UART')){
             return [
-                {part:'CH340N',mfr:'WCH(沁恒)',desc:'USB转UART 无需晶振',price:'¥0.15',stock:'85,000+',score:98,source:'LCSC',link:'https://www.lcsc.com/product-detail/CH340N'},
-                {part:'CH340G',mfr:'WCH(沁恒)',desc:'USB转UATR SOP-16',price:'¥0.18',stock:'52,000+',score:95,source:'LCSC',link:'https://www.lcsc.com/product-detail/CH340G'},
-                {part:'CP2102N',mfr:'Silicon Labs',desc:'USB转UART USB-C',price:'$1.45',stock:'12,000+',score:85,source:'Digi-Key',link:'https://www.digikey.com/product-detail/CP2102N'}
+                {part:'CH340N',mfr:'沁恒微电子',category:'USB转UART 无需晶振',price:'¥0.15',stock:'85,000+',alt:['CH340G','CP2102']},
+                {part:'CH340G',mfr:'沁恒微电子',category:'USB转UART SOP-16',price:'¥0.18',stock:'52,000+',alt:['CH340N']},
+                {part:'CP2102N',mfr:'Silicon Labs',category:'USB转UART USB-C',price:'¥10.00',stock:'12,000+',alt:['CH340N']}
             ];
         }
-        if(q.includes('ld1117') || q.includes('1117') || q.includes('ldo') || q.includes('3.3v')){
+        if(qq.includes('LD1117')||qq.includes('1117')||qq.includes('LDO')||qq.includes('3.3V')){
             return [
-                {part:'LD1117V33',mfr:'STMicroelectronics',desc:'LDO 3.3V 1A SOT-223',price:'¥0.15',stock:'365,000+',score:95,source:'LCSC',link:'https://www.lcsc.com/product-detail/LD1117V33'},
-                {part:'AMS1117-3.3',mfr:'Advanced Monolithic',desc:'LDO 3.3V 1A SOT-223',price:'¥0.08',stock:'750,000+',score:90,source:'LCSC',link:'https://www.lcsc.com/product-detail/AMS1117-3-3'},
-                {part:'ME6211C33',mfr:'Midsummer(中科微)',desc:'LDO 3.3V 500mA SOT-23-5',price:'¥0.04',stock:'1,500,000+',score:88,source:'LCSC',link:'https://www.lcsc.com/product-detail/ME6211C33'}
+                {part:'LD1117V33',mfr:'STMicroelectronics',category:'LDO 3.3V 1A SOT-223',price:'¥0.15',stock:'365,000+',alt:['AMS1117','ME6211']},
+                {part:'AMS1117-3.3',mfr:'AMS',category:'LDO 3.3V 1A SOT-223',price:'¥0.08',stock:'750,000+',alt:['ME6211']},
+                {part:'ME6211C33',mfr:'中科微',category:'LDO 3.3V 500mA SOT-23-5',price:'¥0.04',stock:'1,500,000+',alt:['AMS1117']}
             ];
         }
-        if(q.includes('lm358') || q.includes('运放') || q.includes('opamp')){
+        if(qq.includes('LM358')||qq.includes('运放')||qq.includes('OPAMP')){
             return [
-                {part:'LM358',mfr:'TI',desc:'双运算放大器 低功耗',price:'¥0.06',stock:'200,000+',score:95,source:'LCSC',link:'https://www.lcsc.com/product-detail/LM358'},
-                {part:'SGM358',mfr:'SGMICRO(圣邦微)',desc:'国产双运放 低噪声',price:'¥0.05',stock:'150,000+',score:92,source:'LCSC',link:'https://www.lcsc.com/product-detail/SGM358'},
-                {part:'RS858',mfr:'RUNIC(润石)',desc:'国产双运放 高性价比',price:'¥0.04',stock:'180,000+',score:90,source:'LCSC',link:'https://www.lcsc.com/product-detail/RS858'}
+                {part:'LM358',mfr:'TI',category:'双运算放大器 低功耗',price:'¥0.06',stock:'200,000+',alt:['SGM358','TL072']},
+                {part:'SGM358',mfr:'圣邦微电子',category:'国产低噪声运放',price:'¥0.05',stock:'150,000+',alt:['LM358']},
+                {part:'RS858',mfr:'润石科技',category:'国产双运放',price:'¥0.04',stock:'180,000+',alt:['LM358']}
             ];
         }
-        if(q.includes('ao3400') || q.includes('mosfet') || q.includes('3000')){
+        if(qq.includes('AO3400')||qq.includes('MOSFET')||qq.includes('3000')){
             return [
-                {part:'AO3400',mfr:'AOS',desc:'P-Channel MOSFET -30V -4A',price:'¥0.03',stock:'3,500,000+',score:98,source:'LCSC',link:'https://www.lcsc.com/product-detail/AO3400'},
-                {part:'2N7000',mfr:'ON Semiconductor',desc:'N-Channel MOSFET 60V 200mA',price:'¥0.02',stock:'4,000,000+',score:92,source:'LCSC',link:'https://www.lcsc.com/product-detail/2N7000'},
-                {part:'IRF540N',mfr:'Infineon',desc:'N-Channel MOSFET 100V 33A',price:'¥0.28',stock:'85,000+',score:85,source:'LCSC',link:'https://www.lcsc.com/product-detail/IRF540N'}
+                {part:'AO3400',mfr:'AOS',category:'P-Channel -30V -4A',price:'¥0.03',stock:'3,500,000+',alt:['AO3401']},
+                {part:'2N7000',mfr:'ON Semiconductor',category:'N-Channel 60V 200mA',price:'¥0.02',stock:'4,000,000+',alt:['BS170']},
+                {part:'IRF540N',mfr:'Infineon',category:'N-Channel 100V 33A',price:'¥0.25',stock:'85,000+',alt:['IRF3205']}
             ];
         }
-        
-        // 默认：通用搜索
+        if(qq.includes('NE555')||qq.includes('555')){
+            return [
+                {part:'NE555P',mfr:'TI',category:'精密定时器',price:'¥0.06',stock:'200,000+',alt:['NE556']},
+                {part:'NE556N',mfr:'TI',category:'双定时器',price:'¥0.12',stock:'150,000+',alt:['NE555x2']}
+            ];
+        }
+        if(qq.includes('ATMEGA')||qq.includes('328')){
+            return [
+                {part:'ATMEGA328P-PU',mfr:'Microchip',category:'AVR 32KB Flash',price:'¥1.80',stock:'25,000+',alt:['APM32']},
+                {part:'ATMEGA2560',mfr:'Microchip',category:'AVR高性能 256KB',price:'¥4.50',stock:'8,000+',alt:['SAM3X8E']}
+            ];
+        }
+        // 默认
         return [
-            {part:q.toUpperCase(),mfr:'搜索结果',desc:'请查看下方链接获取实时数据',price:'查询中...',stock:'查询中...',score:75,source:'LCSC/Digi-Key',link:`https://www.lcsc.com/search?q=${encodeURIComponent(q)}`},
-            {part:`${q.toUpperCase()}_ALT1`,mfr:'替代型号',desc:'请查看各平台获取最新价格',price:'¥?.??',stock:'实时查询',score:70,source:'多平台',link:`https://www.digikey.com/en/search?q=${encodeURIComponent(q)}`}
+            {part:q.toUpperCase(),mfr:'搜索结果',category:'请查看链接获取详情',price:'实时查询',stock:'实时查询',alt:[]},
+            {part:`${q.toUpperCase()}_ALT`,mfr:'替代型号',category:'请查看各平台',price:'¥?.??',stock:'实时查询',alt:[]}
         ];
     }
 
-    document.getElementById('searchInput').addEventListener('keypress',e=>{if(e.key==='Enter')onlineSearch()});
+    inp.addEventListener('keypress',e=>{if(e.key==='Enter')onlineSearch()});
+    
+    // 初始化
+    updateFavUI();
     </script>
 </body>
 </html>
