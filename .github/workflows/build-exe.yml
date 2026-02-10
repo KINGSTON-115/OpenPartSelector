@@ -6,8 +6,46 @@ on:
     branches: [main]
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -e .
+        pip install pytest pytest-asyncio
+    
+    - name: Run Python tests
+      run: |
+        pytest tests/ -v --cov=ops
+    
+    - name: Setup Node.js for frontend tests
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install and run frontend tests
+      working-directory: ./frontend/__tests__
+      run: |
+        npm install
+        npm test -- --coverage
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/lcov.info
+        fail_ci_if_error: false
+  
   build:
     runs-on: windows-latest
+    needs: test
     
     steps:
     - uses: actions/checkout@v4

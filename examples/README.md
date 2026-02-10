@@ -1,128 +1,132 @@
-# OpenPartSelector Examples
+# OpenPartSelector 使用示例
 
-## API 使用示例
+本目录包含各种使用场景的示例代码。
 
-### Python API 示例
+## 快速示例
+
+### 1. 基础选型查询
 
 ```python
-from openpartselector import Agent, Config
+from openpartselector import Agent
 
-# 创建 Agent
-config = Config.load()
-agent = Agent(config)
+agent = Agent()
 
+# 自然语言查询
+result = agent.select("找一个 3.3V LDO，输出电流 500mA")
+print(result.recommended_parts)
+```
+
+### 2. 批量 BOM 生成
+
+```python
+from ops.bom import BOMBuilder
+
+bom = BOMBuilder()
+bom.add_part("STM32F103C8T6", quantity=5)
+bom.add_part("CH340N", quantity=5)
+bom.add_part("AMS1117-3.3", quantity=5)
+
+# 导出 CSV
+bom.export_csv("bom.csv")
+
+# 导出 Excel
+bom.export_excel("bom.xlsx")
+```
+
+### 3. 国产替代查询
+
+```python
+from ops.features import find_alternatives
+
+# 查找国产替代
+alts = find_alternatives("STM32F103C8T6")
+for alt in alts:
+    print(f"{alt.name}: {alt.compatibility}% 兼容, ¥{alt.price}")
+```
+
+### 4. 立创商城搜索
+
+```python
+from ops.jlc import search_jlc
+
+# 搜索器件
+results = search_jlc("ESP32")
+for r in results:
+    print(f"{r.part_number}: ¥{r.price} (库存: {r.stock})")
+```
+
+### 5. CLI 使用
+
+```bash
 # 自然语言选型
-result = await agent.select(
-    query="为 Arduino 项目找一个 USB-UART 转换芯片",
-    constraints={
-        "voltage": "5V",
-        "package": "TSSOP-20"
-    }
-)
+ops select "ESP32 最小系统需要哪些器件"
 
-print(result.analysis_report)
-```
-
-### 比价查询
-
-```python
-prices = await agent.search_engine.compare_prices("STM32F103C8T6")
-print(f"最佳价格: {prices['best_price']}")
-```
-
-### BOM 生成
-
-```python
-bom = agent._generate_bom(results[:5])
-for item in bom["items"]:
-    print(f"{item['reference']}: {item['part_number']}")
-```
-
----
-
-## CLI 使用示例
-
-### 选型查询
-
-```bash
-# 基础查询
-python -m ops select "找一个 3.3V LDO，输出电流 500mA"
-
-# 带约束查询
-python -m ops select "STM32 单片机" --top 10
-```
-
-### 比价查询
-
-```bash
-python -m ops price "ESP32-WROOM"
-python -m ops price "STM32F103C8T6" --quantity 100
-```
-
-### Datasheet 解析
-
-```bash
-python -m ops parse "datasheet.pdf"
-python -m ops parse "https://example.com/datasheet.pdf"
-```
-
-### BOM 生成
-
-```bash
-# 从元器件列表生成
-python -m ops bom --parts "LD1117-3.3,ESP32,CH340G"
-
-# 从 JSON 文件生成
-python -m ops bom --file circuit.json
-```
-
----
-
-## API 服务示例
-
-### 启动服务
-
-```bash
-uvicorn api.main:app --reload --port 8000
-```
-
-### curl 调用示例
-
-```bash
-# 选型查询
-curl -X POST "http://localhost:8000/api/v1/select" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "找一个 3.3V LDO"}'
-
-# 比价查询
-curl "http://localhost:8000/api/v1/price/STM32F103C8T6"
+# 价格对比
+ops price "STM32F103C8T6"
 
 # 生成 BOM
-curl -X POST "http://localhost:8000/api/v1/bom/generate" \
-  -H "Content-Type: application/json" \
-  -d '{"parts": ["LD1117", "ESP32", "CH340G"]}'
+ops bom --add "LD1117:10" "ESP32:5"
+
+# 导出 BOM
+ops bom --export csv --file my_bom.csv
 ```
 
----
+## 高级用法
 
-## 配置文件示例
+### 自定义搜索约束
 
-### config.yaml
+```python
+from openpartselector import Agent, PartCriteria
 
-```yaml
-api_keys:
-  openai: "sk-xxx"
-  deepseek: "xxx"
+agent = Agent()
 
-search:
-  max_results: 20
-  timeout: 30
+criteria = PartCriteria(
+    voltage="3.3V",
+    current="500mA",
+    package="SOP-8",
+    price_max=2.0,
+    in_stock=True
+)
 
-llm:
-  default: "deepseek"
-  temperature: 0.1
-
-cache:
-  enabled: true
-  ttl_hours: 24
+result = agent.select("LDO 稳压器", constraints=criteria)
 ```
+
+### 批量查询
+
+```python
+from ops.database import PartDatabase
+
+db = PartDatabase()
+
+# 批量搜索
+queries = ["STM32F103", "ESP32", "CH340N"]
+results = db.batch_search(queries)
+
+for q, parts in results.items():
+    print(f"{q}: {len(parts)} 个结果")
+```
+
+### 导出格式
+
+```python
+from ops.bom import BOMBuilder
+
+bom = BOMBuilder()
+bom.add("STM32F_part103", quantity=10)
+
+# 支持多种格式
+bom.export_csv("bom.csv")
+bom.export_excel("bom.xlsx")
+bom.export_json("bom.json")
+bom.export_markdown("bom.md")
+```
+
+## 示例文件
+
+| 文件 | 说明 |
+|------|------|
+| `basic_usage.py` | 基础使用示例 |
+| `batch_query.py` | 批量查询示例 |
+| `bom_export.py` | BOM 导出示例 |
+| `jlc_search.py` | 立创商城搜索示例 |
+| `alternatives.py` | 国产替代查询示例 |

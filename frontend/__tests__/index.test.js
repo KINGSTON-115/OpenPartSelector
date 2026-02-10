@@ -147,4 +147,77 @@ describe('Search History Limit Tests', () => {
     });
 });
 
+// Test: Component Validation
+describe('Component Validation Tests', () => {
+    test('voltage parsing', () => {
+        const voltages = ['3.3V', '5V', '12V', '1.8V'];
+        voltages.forEach(v => {
+            expect(v).toMatch(/^\d+(\.\d+)?V$/);
+        });
+    });
+    
+    test('package validation', () => {
+        const packages = ['SOP-8', 'QFN-24', 'LQFP-48', 'SOT-223'];
+        packages.forEach(pkg => {
+            expect(pkg).toMatch(/^[A-Z]+-\d+$/);
+        });
+    });
+});
+
+// Test: Price Formatting
+describe('Price Formatting Tests', () => {
+    test('parse price from string', () => {
+        const priceStr = '¥0.95';
+        const price = parseFloat(priceStr.replace('¥', ''));
+        expect(price).toBe(0.95);
+    });
+    
+    test('format price with currency', () => {
+        const price = 1.50;
+        const formatted = `¥${price.toFixed(2)}`;
+        expect(formatted).toBe('¥1.50');
+    });
+});
+
+// Test: BOM Summary Generation
+describe('BOM Summary Tests', () => {
+    test('calculate total BOM cost', () => {
+        const bom = [
+            { part: 'STM32F103', qty: 2, price: 0.95 },
+            { part: 'CH340N', qty: 5, price: 0.15 },
+            { part: 'AMS1117', qty: 3, price: 0.10 }
+        ];
+        
+        const total = bom.reduce((sum, item) => sum + (item.qty * item.price), 0);
+        expect(total).toBe((2 * 0.95) + (5 * 0.15) + (3 * 0.10));
+    });
+    
+    test('count unique parts', () => {
+        const bom = [
+            { part: 'STM32F103' },
+            { part: 'CH340N' },
+            { part: 'STM32F103' },
+            { part: 'ESP32' }
+        ];
+        
+        const unique = new Set(bom.map(item => item.part));
+        expect(unique.size).toBe(3);
+    });
+});
+
+// Test: Export CSV Format
+describe('CSV Export Tests', () {
+    test('CSV header generation', () => {
+        const headers = ['型号', '制造商', '数量', '单价', '小计'];
+        const csvHeader = headers.join(',');
+        expect(csvHeader).toBe('型号,制造商,数量,单价,小计');
+    });
+    
+    test('CSV row escaping', () => {
+        const value = 'Test, Inc.'; // Comma in value
+        const escaped = `"${value}"`;
+        expect(escaped).toBe('"Test, Inc."');
+    });
+});
+
 // Run tests with: npm test
