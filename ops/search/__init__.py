@@ -166,8 +166,8 @@ class SearchEngine:
     async def get_alternatives(self, part_number: str) -> List[Dict]:
         """获取替代料"""
         try:
-            from .database import get_alternatives as db_get_alts
-            return db_get_alts(part_number)
+            from ops.database import get_alternatives
+            return get_alternatives(part_number)
         except Exception as e:
             print(f"获取替代料失败: {e}")
             return []
