@@ -296,6 +296,10 @@
     body.dark-mode .feature{background:rgba(255,255,255,0.05) !important}
     body.dark-mode .search-wrapper{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important}
     body.dark-mode .download-section{background:#1a1a2e !important}
+    
+    /* 骨架屏加载 */
+    .skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.1) 25%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.1) 75%);background-size:200% 100%;animation:skeleton 1.5s infinite;border-radius:10px;}
+    @keyframes skeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
     </style>
 </head>
 <body>
@@ -764,6 +768,80 @@
     document.getElementById('searchInput').addEventListener('keypress', e => {
         if(e.key === 'Enter') search();
     });
+    
+    // 新手引导
+    function startTour(){
+        const steps = [
+            {el: '#searchInput', text: '🔍 输入器件型号开始搜索'},
+            {el: '.hot-tags', text: '🔥 点击热门搜索快速开始'},
+            {el: '.features', text: '✨ 查看所有功能'},
+            {el: '.download-section', text: '📥 下载离线版本'}
+        ];
+        let current = 0;
+        function showStep(){
+            if(current >= steps.length){
+                alert('🎉 引导完成！开始使用吧！');
+                return;
+            }
+            const step = steps[current];
+            const el = document.querySelector(step.el);
+            if(el){
+                el.scrollIntoView({behavior: 'smooth'});
+                const highlight = document.createElement('div');
+                highlight.id = 'tourHighlight';
+                highlight.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;pointer-events:none;';
+                document.body.appendChild(highlight);
+                alert(step.text + '
+
+点击确定进入下一步');
+                highlight.remove();
+                current++;
+                showStep();
+            }
+        }
+        showStep();
+    }
+    
+    // 使用统计
+    function trackEvent(action){
+        let stats = JSON.parse(localStorage.getItem('stats') || '{}');
+        const date = new Date().toDateString();
+        stats[date] = (stats[date] || 0) + 1;
+        localStorage.setItem('stats', JSON.stringify(stats));
+        // 发送统计
+        console.log('📊 Event:', action, 'Date:', date);
+    }
+    
+    // 显示统计
+    function showStats(){
+        const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+        const days = Object.keys(stats).length;
+        const total = Object.values(stats).reduce((a,b)=>a+b,0);
+        alert(`📊 使用统计
+
+📅 使用天数: ${days}天
+🔍 搜索次数: ${total}次`);
+    }
+    
+    // 版本检查
+    async function checkVersion(){
+        try{
+            const r = await fetch('https://api.github.com/repos/KINGSTON-115/OpenPartSelector/releases/latest');
+            const data = await r.json();
+            const latest = data.tag_name;
+            const current = 'v0.7';
+            if(latest !== current){
+                const update = confirm(`📦 发现新版本 ${latest}！\n当前版本: ${current}\n\n是否前往下载？`);
+                if(update){
+                    window.open(data.html_url, '_blank');
+                }
+            }
+        }catch(e){
+            console.log('版本检查失败');
+        }
+    }
+    // 页面加载后检查
+    window.addEventListener('load', checkVersion);
     </script>
 </body>
 </html>
