@@ -398,6 +398,35 @@
         body.dark-mode .download-section{background:#1a1a2e !important}
         
         /* 响应式 */
+/* 移动端优化 */
+@media(max-width:768px){
+    .hero{padding:40px 15px;border-radius:0 0 30px 30px}
+    .hero h1{font-size:2em}
+    .hero p{font-size:1em}
+    .hero-logo{font-size:60px}
+    .container{padding:10px}
+    .card{padding:20px;border-radius:15px}
+    .card h2{font-size:1.4em}
+    .search-wrapper{padding:20px;border-radius:15px}
+    .search-box{flex-direction:column;padding:10px;border-radius:12px}
+    .search-box input{padding:15px;font-size:16px}
+    .search-box button{padding:15px;font-size:16px;border-radius:10px}
+    .hot-tags{gap:8px}
+    .hot-tag{padding:10px 15px;font-size:13px}
+    .result{padding:20px;border-radius:12px}
+    .result h3{font-size:1.2em}
+    .features{grid-template-columns:1fr;gap:15px}
+    .feature{padding:25px 20px}
+    .download-section{padding:30px 20px;border-radius:15px}
+    .download-buttons{gap:10px}
+    .download-btn{padding:15px 25px;font-size:15px}
+    .shops{gap:10px}
+    .shop-link{padding:12px 20px;font-size:14px}
+    .status-bar{gap:15px;padding:15px}
+    .cart-panel{width:100% !important;right:0 !important;border-radius:15px 15px 0 0 !important}
+    .dark-toggle{top:10px;right:10px;padding:8px 15px;font-size:12px}
+}
+
         @media(max-width:768px){
             .hero h1{font-size:2em}
             .search-box{flex-direction:column}
@@ -419,7 +448,26 @@
         }
         .footer a{color:#667eea;text-decoration:none}
         .footer a:hover{text-decoration:underline}
-    </style>
+    
+/* 暗黑模式 */
+body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important;color:#e2e8f0 !important}
+body.dark-mode .card{background:#1e1e3f !important;border:1px solid rgba(102,126,234,0.3) !important}
+body.dark-mode .card h2{color:#e2e8f0 !important}
+body.dark-mode .card p{color:#a0aec0 !important}
+body.dark-mode .hero{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%) !important}
+body.dark-mode .search-wrapper{background:linear-gradient(135deg,rgba(30,30,63,0.95) 0%,rgba(22,33,62,0.95) 100%) !important}
+body.dark-mode .search-box input{background:#1e1e3f !important;color:#fff !important}
+body.dark-mode .suggestions{background:#1e1e3f !important}
+body.dark-mode .suggestion-item{border-color:rgba(102,126,234,0.2) !important}
+body.dark-mode .suggestion-item:hover{background:rgba(102,126,234,0.3) !important}
+body.dark-mode .result{background:linear-gradient(135deg,#1e1e3f 0%,#16213e 100%) !important}
+body.dark-mode .download-section{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%) !important}
+body.dark-mode .feature{background:rgba(102,126,234,0.1) !important}
+body.dark-mode .feature:hover{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important}
+body.dark-mode .footer{color:#718096 !important}
+body.dark-mode a{color:#667eea !important}
+body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
+</style>
 </head>
 <body>
     <!-- Toast 容器 -->
@@ -468,7 +516,7 @@
                 </div>
             </div>
 
-            <div id="cartPanel" style="display:none;position:fixed;top:80px;right:20px;width:350px;max-height:500px;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:9999;overflow:hidden;">
+            <div id="comparePanel" style="display:none;position:fixed;bottom:80px;left:20px;right:20px;max-width:800px;margin:0 auto;background:#fff;border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:9999;overflow:hidden;"><div style="padding:15px;background:linear-gradient(135deg,#805ad5,#6b46c1);color:#fff;"><h4 style="margin:0;">⚖️ 器件对比</h4></div></div><div id="cartPanel" style="display:none;position:fixed;top:80px;right:20px;width:350px;max-height:500px;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:9999;overflow:hidden;">
         <div style="padding:20px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;">
             <h3 style="margin:0;">🛒 我的清单</h3>
             <small>点击器件查看详情</small>
