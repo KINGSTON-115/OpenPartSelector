@@ -12,6 +12,7 @@
             background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
             min-height:100vh;
             color:#2d3748;
+            overflow-x:hidden;
         }
         .container{max-width:1200px;margin:0 auto;padding:20px}
         
@@ -24,22 +25,26 @@
             margin-bottom:40px;
             box-shadow:0 20px 60px rgba(0,0,0,0.3);
         }
-        .hero-logo{font-size:80px;margin-bottom:20px}
+        .hero-logo{font-size:80px;margin-bottom:20px;animation:bounce 2s infinite}
+        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
         .hero h1{
             font-size:3em;
             background:linear-gradient(90deg,#00d2ff,#3a7bd5);
             -webkit-background-clip:text;
             -webkit-text-fill-color:transparent;
-            margin-bottom:15px
+            margin-bottom:15px;
+            animation:fadeInUp 1s ease
         }
-        .hero p{color:#a0aec0;font-size:1.3em;margin-bottom:25px}
-        .hero-tags{display:flex;flex-wrap:wrap;justify:center;gap:12px}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        .hero p{color:#a0aec0;font-size:1.3em;margin-bottom:25px;animation:fadeInUp 1s ease 0.2s both}
+        .hero-tags{display:flex;flex-wrap:wrap;justify:center;gap:12px;animation:fadeInUp 1s ease 0.4s both}
         .hero-tag{
             padding:8px 20px;
             background:rgba(255,255,255,0.1);
             border-radius:25px;
             color:#fff;
             font-size:14px;
+            backdrop-filter:blur(10px)
         }
         
         /* 卡片 */
@@ -49,11 +54,14 @@
             padding:35px;
             margin:25px 0;
             box-shadow:0 10px 40px rgba(0,0,0,0.1);
-            transition:transform 0.3s,box-shadow 0.3s;
+            transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+            opacity:0;
+            transform:translateY(30px);
         }
+        .card.visible{opacity:1;transform:translateY(0)}
         .card:hover{
-            transform:translateY(-5px);
-            box-shadow:0 20px 60px rgba(0,0,0,0.15);
+            transform:translateY(-8px);
+            box-shadow:0 25px 80px rgba(0,0,0,0.15);
         }
         .card h2{
             font-size:1.8em;
@@ -66,10 +74,11 @@
         
         /* 搜索框 */
         .search-wrapper{
-            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            background:linear-gradient(135deg,rgba(102,126,234,0.9) 0%,rgba(118,75,162,0.9) 100%);
             border-radius:20px;
             padding:30px;
             margin:30px 0;
+            box-shadow:0 20px 60px rgba(102,126,234,0.3)
         }
         .search-box{
             display:flex;
@@ -77,6 +86,7 @@
             background:#fff;
             border-radius:15px;
             padding:10px;
+            box-shadow:0 10px 40px rgba(0,0,0,0.2)
         }
         .search-box input{
             flex:1;
@@ -85,6 +95,10 @@
             border:none;
             outline:none;
             border-radius:10px;
+            transition:all 0.3s
+        }
+        .search-box input:focus{
+            box-shadow:0 0 0 4px rgba(102,126,234,0.3)
         }
         .search-box button{
             padding:18px 40px;
@@ -96,11 +110,16 @@
             border-radius:12px;
             cursor:pointer;
             transition:all 0.3s;
+            position:relative;
+            overflow:hidden
         }
-        .search-box button:hover{
-            transform:scale(1.05);
-            box-shadow:0 10px 30px rgba(102,126,234,0.4);
+        .search-box button::before{
+            content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
+            transition:left 0.5s
         }
+        .search-box button:hover::before{left:100%}
+        .search-box button:hover{transform:scale(1.05);box-shadow:0 15px 40px rgba(102,126,234,0.5)}
         
         /* 热门搜索 */
         .hot-tags{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
@@ -112,24 +131,29 @@
             cursor:pointer;
             font-size:15px;
             transition:all 0.3s;
+            backdrop-filter:blur(10px)
         }
         .hot-tag:hover{
             background:rgba(255,255,255,0.3);
-            transform:scale(1.05);
+            transform:scale(1.1) translateY(-3px);
+            box-shadow:0 10px 30px rgba(0,0,0,0.2)
         }
         
         /* 结果卡片 */
         .result{
-            background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+            background:linear-gradient(135deg,#f5f7fa 0%,#e4e8eb 100%);
             border-radius:18px;
             padding:28px;
             margin:18px 0;
             border-left:6px solid #667eea;
-            transition:all 0.3s;
+            transition:all 0.4s;
+            opacity:0;
+            transform:translateX(-30px)
         }
+        .result.visible{opacity:1;transform:translateX(0)}
         .result:hover{
-            transform:translateX(10px);
-            box-shadow:0 10px 30px rgba(102,126,234,0.2);
+            transform:translateX(15px) scale(1.02);
+            box-shadow:0 15px 50px rgba(102,126,234,0.2)
         }
         .result h3{
             color:#667eea;
@@ -148,7 +172,10 @@
             border-radius:20px;
             font-size:14px;
             color:#4a5568;
+            transition:all 0.3s;
+            cursor:pointer;
         }
+        .meta-tag:hover{transform:scale(1.05)}
         .meta-tag.price{
             background:linear-gradient(135deg,#48bb78 0%,#38a169 100%);
             color:#fff;
@@ -156,6 +183,10 @@
         }
         .meta-tag.stock{
             background:linear-gradient(135deg,#4299e1 0%,#3182ce 100%);
+            color:#fff;
+        }
+        .meta-tag.fav{
+            background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%);
             color:#fff;
         }
         
@@ -171,15 +202,23 @@
             padding:40px 30px;
             background:linear-gradient(135deg,#f5f7fa 0%,#e4e8eb 100%);
             border-radius:20px;
-            transition:all 0.3s;
+            transition:all 0.4s;
+            position:relative;
+            overflow:hidden
         }
+        .feature::before{
+            content:'';position:absolute;top:0;left:0;right:0;height:5px;
+            background:linear-gradient(90deg,#667eea,#764ba2);
+            transform:scaleX(0);
+            transition:transform 0.4s
+        }
+        .feature:hover::before{transform:scaleX(1)}
         .feature:hover{
             transform:translateY(-10px);
             background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-            color:#fff;
         }
-        .feature:hover .feature-icon{transform:scale(1.2)}
-        .feature-icon{font-size:60px;margin-bottom:20px;transition:transform 0.3s}
+        .feature:hover .feature-icon{transform:scale(1.2) rotate(5deg)}
+        .feature-icon{font-size:60px;margin-bottom:20px;transition:all 0.4s}
         .feature h3{font-size:1.4em;margin:15px 0;color:#2d3748}
         .feature:hover h3{color:#fff}
         .feature p{color:#718096;font-size:15px;line-height:1.6}
@@ -207,16 +246,19 @@
             border-radius:30px;
             font-size:18px;
             font-weight:bold;
-            transition:all 0.3s;
+            transition:all 0.4s;
+            position:relative;
+            overflow:hidden
         }
         .download-btn:hover{
-            transform:scale(1.1);
-            box-shadow:0 15px 40px rgba(102,126,234,0.5);
+            transform:scale(1.1) translateY(-5px);
+            box-shadow:0 20px 60px rgba(102,126,234,0.5);
         }
         .download-btn.secondary{
             background:rgba(255,255,255,0.1);
             border:2px solid rgba(255,255,255,0.3);
         }
+        .download-btn.secondary:hover{background:rgba(255,255,255,0.2)}
         
         /* 商城链接 */
         .shops{display:flex;flex-wrap:wrap;justify:center;gap:20px;margin-top:30px}
@@ -232,7 +274,7 @@
             font-size:16px;
             transition:all 0.3s;
         }
-        .shop-link:hover{background:rgba(255,255,255,0.2)}
+        .shop-link:hover{background:rgba(255,255,255,0.2);transform:translateY(-3px)}
         
         /* 状态指示 */
         .status-bar{
@@ -243,6 +285,7 @@
             background:rgba(0,0,0,0.2);
             border-radius:15px;
             margin:25px 0;
+            flex-wrap:wrap
         }
         .status-item{
             display:flex;
@@ -255,17 +298,33 @@
             height:12px;
             background:#48bb78;
             border-radius:50%;
-            animation:pulse 2s infinite;
+            animation:pulse 2s infinite
         }
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.2)}}
         
-        /* 页脚 */
-        .footer{
-            text-align:center;
-            padding:50px;
-            color:#a0aec0;
+        /* Toast 提示 */
+        .toast{
+            position:fixed;
+            top:30px;
+            left:50%;
+            transform:translateX(-50%) translateY(-100px);
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff;
+            padding:16px 32px;
+            border-radius:30px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.3);
+            z-index:10000;
+            font-size:16px;
+            font-weight:500;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            transition:all 0.5s cubic-bezier(0.4,0,0.2,1);
+            backdrop-filter:blur(10px)
         }
-        .footer a{color:#667eea;text-decoration:none}
+        .toast.show{transform:translateX(-50%) translateY(0)}
+        .toast.success{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
+        .toast.error{background:linear-gradient(135deg,#f56565 0%,#e53e3e 100%)}
         
         /* 加载动画 */
         .loading{text-align:center;padding:50px;display:none}
@@ -277,41 +336,58 @@
             border-top-color:#667eea;
             border-radius:50%;
             animation:spin 1s linear infinite;
-            margin:0 auto 20px;
+            margin:0 auto 20px
         }
         @keyframes spin{to{transform:rotate(360deg)}}
+        
+        /* 深色模式切换 */
+        .dark-toggle{
+            position:fixed;
+            top:20px;
+            right:20px;
+            z-index:9999;
+            padding:12px 20px;
+            background:rgba(255,255,255,0.2);
+            border:none;
+            border-radius:25px;
+            color:#fff;
+            cursor:pointer;
+            font-size:14px;
+            backdrop-filter:blur(10px);
+            transition:all 0.3s
+        }
+        .dark-toggle:hover{background:rgba(255,255,255,0.3);transform:scale(1.05)}
+        
+        /* 深色模式 */
+        body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important;color:#fff !important}
+        body.dark-mode .card{background:#1a1a2e !important;border:1px solid rgba(255,255,255,0.1) !important}
+        body.dark-mode .card h2{color:#fff !important}
+        body.dark-mode .result{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important}
+        body.dark-mode .feature{background:rgba(255,255,255,0.05) !important}
+        body.dark-mode .search-wrapper{background:linear-gradient(135deg,rgba(26,26,46,0.95) 0%,rgba(22,33,62,0.95) 100%) !important}
+        body.dark-mode .download-section{background:#1a1a2e !important}
         
         /* 响应式 */
         @media(max-width:768px){
             .hero h1{font-size:2em}
             .search-box{flex-direction:column}
             .features{grid-template-columns:1fr}
+            .hero{border-radius:0 0 30px 30px}
+            .status-bar{gap:15px}
+            .download-buttons{gap:10px}
+            .download-btn{padding:15px 25px;font-size:16px}
         }
-    
-    /* 深色模式 */
-    body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important;color:#fff !important}
-    body.dark-mode .card{background:#1a1a2e !important;border:1px solid rgba(255,255,255,0.1) !important}
-    body.dark-mode .card h2{color:#fff !important}
-    body.dark-mode .result{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%) !important}
-    body.dark-mode .feature{background:rgba(255,255,255,0.05) !important}
-    body.dark-mode .search-wrapper{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important}
-    body.dark-mode .download-section{background:#1a1a2e !important}
-    
-    /* 骨架屏加载 */
-    .skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.1) 25%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.1) 75%);background-size:200% 100%;animation:skeleton 1.5s infinite;border-radius:10px;}
-    @keyframes skeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
     </style>
 </head>
 <body>
+    <!-- Toast 容器 -->
+    <div id="toast" class="toast"></div>
+    
     <!-- 头部 -->
-    <button id="darkToggle" onclick="toggleDark()" style="
-        position:fixed;top:20px;right:20px;z-index:9999;
-        padding:10px 20px;background:rgba(255,255,255,0.2);
-        border:none;border-radius:25px;color:#fff;cursor:pointer;font-size:14px;">
-        🌙 深色
-    </button>
+    <button class="dark-toggle" onclick="toggleDark()">🌙 深色</button>
     
     <div class="hero">
+        <div class="hero-logo">🔌</div>
         <h1>OpenPartSelector</h1>
         <p>专为电子类专业大学生打造的元器件选型神器 🚀</p>
         <div class="hero-tags">
@@ -471,19 +547,28 @@
     </div>
 
     <script>
+    // Toast 提示函数
+    function showToast(msg, type = 'info'){
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = 'toast ' + type;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
     // 深色模式
     let isDark = false;
     function toggleDark(){
         isDark = !isDark;
         document.body.classList.toggle('dark-mode');
-        document.getElementById('darkToggle').innerHTML = isDark ? '☀️ 浅色' : '🌙 深色';
+        document.querySelector('.dark-toggle').innerHTML = isDark ? '☀️ 浅色' : '🌙 深色';
         localStorage.setItem('darkMode', isDark);
+        showToast(isDark ? '🌙 已切换深色模式' : '☀️ 已切换浅色模式', 'success');
     }
-    // 恢复深色模式
     if(localStorage.getItem('darkMode') === 'true'){
         isDark = true;
         document.body.classList.add('dark-mode');
-        document.getElementById('darkToggle').innerHTML = '☀️ 浅色';
+        document.querySelector('.dark-toggle').innerHTML = '☀️ 浅色';
     }
     
     // 搜索历史
@@ -494,38 +579,39 @@
         localStorage.setItem('searchHistory', JSON.stringify(history));
     }
     
-    function showHistory(){
-        const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-        if(history.length === 0) return;
-        const html = '<div style="margin:15px 0;padding:15px;background:rgba(255,255,255,0.1);border-radius:12px;"><p style="color:#fff;margin-bottom:10px;">📜 历史记录：</p>' + 
-            history.map(h => `<button onclick="setQuery('${h}')" style="margin:5px;padding:8px 15px;background:rgba(255,255,255,0.2);border:none;border-radius:20px;color:#fff;cursor:pointer;">${h}</button>`).join('') +
-            '<button onclick="clearHistory()" style="margin-left:10px;padding:5px 10px;background:rgba(255,0,0,0.3);border:none;border-radius:10px;color:#fff;cursor:pointer;">清空</button></div>';
-        return html;
-    }
-    
-    function clearHistory(){
-        localStorage.removeItem('searchHistory');
-        document.getElementById('historyDiv').innerHTML = '';
-    }
-    
     // 本地收藏
     function addFav(part, mfr){
         let favs = JSON.parse(localStorage.getItem('favorites') || '[]');
         if(!favs.find(f => f.part === part)){
             favs.push({part, mfr, time: new Date().toLocaleString()});
             localStorage.setItem('favorites', JSON.stringify(favs));
-            alert('⭐ 已收藏！');
+            showToast(`⭐ 已收藏 ${part}`, 'success');
+        } else {
+            showToast('⚠️ 已收藏过此器件', 'error');
         }
+    }
+    
+    function removeFav(part){
+        let favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+        favs = favs.filter(f => f.part !== part);
+        localStorage.setItem('favorites', JSON.stringify(favs));
+        showFavs();
     }
     
     function showFavs(){
         const favs = JSON.parse(localStorage.getItem('favorites') || '[]');
-        if(favs.length === 0) return '<p style="color:#a0aec0;text-align:center;padding:20px;">暂无收藏</p>';
-        return '<div style="padding:20px;"><h4 style="color:#fff;margin-bottom:15px;">⭐ 我的收藏</h4>' +
-            favs.map(f => `<div style="padding:10px;background:rgba(255,255,255,0.1);border-radius:10px;margin-bottom:10px;color:#fff;">
-                <strong>${f.part}</strong> - ${f.mfr}<br>
-                <small style="color:#a0aec0;">${f.time}</small>
-                <button onclick="addFav('${f.part}','${f.mfr}')" style="float:right;padding:5px 10px;background:#667eea;border:none;border-radius:8px;color:#fff;cursor:pointer;">+</button>
+        const container = document.getElementById('favoritesContainer');
+        if(!container) return;
+        
+        if(favs.length === 0){
+            container.innerHTML = '<p style="color:#a0aec0;text-align:center;padding:30px;">📭 暂无收藏，点击⭐添加</p>';
+            return;
+        }
+        
+        container.innerHTML = '<div style="display:grid;gap:15px;">' + 
+            favs.map(f => `<div style="padding:15px;background:rgba(102,126,234,0.1);border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+                <div><strong style="color:#667eea;">${f.part}</strong><br><small style="color:#718096;">${f.mfr}</small></div>
+                <button onclick="removeFav('${f.part}')" style="padding:8px 15px;background:#f56565;border:none;border-radius:8px;color:#fff;cursor:pointer;">删除</button>
             </div>`).join('') + '</div>';
     }
     
@@ -540,98 +626,18 @@
         }
     });
 
-    // 器件数据库 - 支持 100+ 型号
+    // 器件数据库
     const partsDB = {
-        'STM32': {
-            mfr: 'STMicroelectronics',
-            category: 'ARM Cortex-M',
-            type: 'MCU',
-            series: ['F103', 'F407', 'G431', 'H743'],
-            alternatives: ['GD32F103', 'HK32F103', 'APM32F103'],
-            price: '¥0.95-8.00',
-            links: ['lcsc', 'taobao', 'jd']
-        },
-        'GD32': {
-            mfr: '兆易创新',
-            category: '国产ARM',
-            type: 'MCU',
-            series: ['F103', 'F303', 'E103'],
-            alternatives: ['STM32F103'],
-            price: '¥0.80-2.50',
-            links: ['lcsc', 'taobao']
-        },
-        'ESP32': {
-            mfr: '乐鑫科技',
-            category: 'WiFi+BT',
-            type: 'Wireless SoC',
-            series: ['WROOM', 'C3', 'S3'],
-            alternatives: ['ESP8266', 'CC3220'],
-            price: '¥8.00-25.00',
-            links: ['lcsc', 'taobao']
-        },
-        'STC89': {
-            mfr: '宏晶科技',
-            category: '8051单片机',
-            type: 'MCU',
-            series: ['C51', 'C52', 'A8K'],
-            alternatives: ['AT89S52', 'N76E003'],
-            price: '¥0.50-1.50',
-            links: ['lcsc', 'taobao']
-        },
-        'ATMEGA': {
-            mfr: 'Microchip',
-            category: 'AVR单片机',
-            type: 'MCU',
-            series: ['328P', '2560', '32U4'],
-            alternatives: ['AT90USB', 'APM32'],
-            price: '¥1.50-8.00',
-            links: ['lcsc', 'jd', 'digikey']
-        },
-        'CH340': {
-            mfr: '沁恒微电子',
-            category: 'USB转UART',
-            type: 'Interface',
-            series: ['G', 'N', 'C'],
-            alternatives: ['CP2102', 'PL2303'],
-            price: '¥0.15-0.30',
-            links: ['lcsc', 'taobao']
-        },
-        'NE555': {
-            mfr: 'TI/国产',
-            category: '定时器',
-            type: 'Analog',
-            series: ['555'],
-            alternatives: ['NE556', 'LM555'],
-            price: '¥0.04-0.15',
-            links: ['lcsc', 'taobao']
-        },
-        'RP2040': {
-            mfr: 'Raspberry Pi',
-            category: '双核M0+',
-            type: 'MCU',
-            series: ['RP2040'],
-            alternatives: ['STM32G0', 'EFM32'],
-            price: '¥1.80-5.00',
-            links: ['lcsc', 'jd']
-        },
-        'NRF52': {
-            mfr: 'Nordic',
-            category: 'BLE+ARM',
-            type: 'Wireless',
-            series: ['52810', '52832', '52840'],
-            alternatives: ['ESP32', 'CC2640'],
-            price: '¥2.50-8.00',
-            links: ['lcsc', 'digikey']
-        },
-        '74HC': {
-            mfr: 'NXP/国产',
-            category: 'CMOS逻辑',
-            type: 'Logic',
-            series: ['00', '04', '08', '595', '165'],
-            alternatives: ['74LS', 'CD40'],
-            price: '¥0.05-0.30',
-            links: ['lcsc', 'taobao']
-        }
+        'STM32': {mfr: 'STMicroelectronics', category: 'ARM Cortex-M', type: 'MCU', alternatives: ['GD32F103', 'HK32F103'], price: '¥0.95-8.00'},
+        'GD32': {mfr: '兆易创新', category: '国产ARM', type: 'MCU', alternatives: ['STM32F103'], price: '¥0.80-2.50'},
+        'ESP32': {mfr: '乐鑫科技', category: 'WiFi+BT', type: 'Wireless SoC', alternatives: ['ESP8266'], price: '¥8.00-25.00'},
+        'STC89': {mfr: '宏晶科技', category: '8051单片机', type: 'MCU', alternatives: ['AT89S52'], price: '¥0.50-1.50'},
+        'ATMEGA': {mfr: 'Microchip', category: 'AVR单片机', type: 'MCU', alternatives: ['APM32'], price: '¥1.50-8.00'},
+        'CH340': {mfr: '沁恒微电子', category: 'USB转UART', type: 'Interface', alternatives: ['CP2102'], price: '¥0.15-0.30'},
+        'NE555': {mfr: 'TI/国产', category: '定时器', type: 'Analog', alternatives: ['NE556'], price: '¥0.04-0.15'},
+        'RP2040': {mfr: 'Raspberry Pi', category: '双核M0+', type: 'MCU', alternatives: ['STM32G0'], price: '¥1.80-5.00'},
+        'NRF52': {mfr: 'Nordic', category: 'BLE+ARM', type: 'Wireless', alternatives: ['ESP32'], price: '¥2.50-8.00'},
+        '74HC': {mfr: 'NXP/国产', category: 'CMOS逻辑', type: 'Logic', alternatives: ['74LS'], price: '¥0.05-0.30'}
     };
 
     function setQuery(text){
@@ -641,8 +647,12 @@
 
     function search(){
         const q = document.getElementById('searchInput').value.trim();
-        if(!q) return alert('请输入搜索内容！');
+        if(!q){
+            showToast('⚠️ 请输入搜索内容', 'error');
+            return;
+        }
         
+        saveSearch(q);
         const l = document.getElementById('loading');
         const r = document.getElementById('results');
         l.classList.add('show');
@@ -652,196 +662,87 @@
             const results = findParts(q);
             renderResults(results, q);
             l.classList.remove('show');
-        }, 800);
+            showToast(`🔍 找到 ${results.length} 个结果`, 'success');
+        }, 500);
     }
 
     function findParts(query){
         const q = query.toUpperCase();
         let results = [];
-        
-        // 精确匹配
         for(const [key, data] of Object.entries(partsDB)){
             if(q.includes(key)){
-                results.push({
-                    part: q,
-                    mfr: data.mfr,
-                    category: data.category,
-                    type: data.type,
-                    series: data.series,
-                    alternatives: data.alternatives,
-                    price: data.price,
-                    links: data.links,
-                    score: 100
-                });
+                results.push({part: q, ...data, links: ['lcsc', 'taobao', 'jd'], score: 100});
             }
         }
-        
-        // 模糊匹配
         if(results.length === 0){
-            const keywords = ['单片机', 'MCU', 'ARM', 'WiFi', '蓝牙', 'USB', '运放', '电源'];
-            for(const keyword of keywords){
-                if(q.includes(keyword.toUpperCase())){
-                    results.push({
-                        part: q,
-                        mfr: '待确认',
-                        category: '搜索结果',
-                        type: '请选择',
-                        series: [],
-                        alternatives: [],
-                        price: '实时查询',
-                        links: ['lcsc', 'taobao'],
-                        score: 70
-                    });
-                    break;
-                }
-            }
+            results.push({part: q, mfr: '待确认', category: '搜索结果', type: '请选择', alternatives: [], price: '实时查询', links: ['lcsc', 'taobao'], score: 70});
         }
-        
         return results;
     }
 
     function renderResults(results, query){
         const r = document.getElementById('results');
-        
-        if(results.length === 0){
-            r.innerHTML = `
-                <div class="result">
-                    <h3>🔍 未找到 "${query}"</h3>
-                    <p>请尝试以下方式：</p>
-                    <div class="result-meta">
-                        <a href="https://www.lcsc.com/search?q=${encodeURIComponent(query)}" 
-                           target="_blank" class="meta-tag" style="background:#667eea;color:#fff;">
-                            🔗 立创商城搜索
-                        </a>
-                        <a href="https://s.taobao.com/search?q=${encodeURIComponent(query)}" 
-                           target="_blank" class="meta-tag" style="background:#ff6700;color:#fff;">
-                            🛒 淘宝搜索
-                        </a>
-                        <a href="https://search.jd.com/Search?keyword=${encodeURIComponent(query)}" 
-                           target="_blank" class="meta-tag" style="background:#e4393c;color:#fff;">
-                            📦 京东搜索
-                        </a>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = `<h3 style="margin:25px 0 15px;color:#667eea;font-size:1.3em;">
-            📦 找到 ${results.length} 个推荐结果
-        </h3>`;
+        let html = `<h3 style="margin:25px 0 15px;color:#667eea;font-size:1.3em;">📦 找到 ${results.length} 个推荐结果</h3>`;
         
         results.forEach((item, i) => {
-            const linksHtml = item.links.map(link => {
+            const linksHtml = ['lcsc','taobao','jd','digikey'].map(link => {
                 const names = {lcsc: '🏪 立创', taobao: '🛒 淘宝', jd: '📦 京东', digikey: '🌍 Digi-Key'};
-                const urls = {
-                    lcsc: `https://www.lcsc.com/search?q=${encodeURIComponent(item.part)}`,
-                    taobao: `https://s.taobao.com/search?q=${encodeURIComponent(item.part)}`,
-                    jd: `https://search.jd.com/Search?keyword=${encodeURIComponent(item.part)}`,
-                    digikey: `https://www.digikey.com/en/search?q=${encodeURIComponent(item.part)}`
-                };
+                const urls = {lcsc:`https://www.lcsc.com/search?q=${item.part}`, taobao:`https://s.taobao.com/search?q=${item.part}`, jd:`https://search.jd.com/Search?keyword=${item.part}`, digikey:`https://www.digikey.com/en/search?q=${item.part}`};
                 return `<a href="${urls[link]}" target="_blank" class="meta-tag">${names[link]}</a>`;
             }).join('');
             
-            const altHtml = item.alternatives.length > 0 
-                ? `<span class="meta-tag" style="background:#48bb78;color:#fff;">🇨🇳 替代: ${item.alternatives.join(', ')}</span>`
-                : '';
+            const altHtml = item.alternatives?.length ? `<span class="meta-tag" style="background:#48bb78;color:#fff;">🇨🇳 替代: ${item.alternatives.join(', ')}</span>` : '';
             
-            html += `
-                <div class="result">
-                    <h3>📦 ${i+1}. ${item.part}</h3>
-                    <p style="font-size:1.1em;color:#4a5568;">${item.mfr} | ${item.category}</p>
-                    <div class="result-meta">
-                        <span class="meta-tag price">💰 ${item.price}</span>
-                        <span class="meta-tag stock">📦 ${item.type}</span>
-                        ${altHtml}
-                        ${linksHtml}
-                    </div>
-                </div>
-            `;
+            html += `<div class="result"><h3>📦 ${i+1}. ${item.part}</h3>
+                <p style="font-size:1.1em;color:#4a5568;">${item.mfr} | ${item.category}</p>
+                <div class="result-meta">
+                    <span class="meta-tag price">💰 ${item.price}</span>
+                    <span class="meta-tag stock">📦 ${item.type}</span>
+                    ${altHtml}
+                    <span class="meta-tag fav" onclick="addFav('${item.part}','${item.mfr}')">⭐ 收藏</span>
+                    ${linksHtml}
+                </div></div>`;
         });
-        
         r.innerHTML = html;
+        // 动画
+        setTimeout(() => {
+            document.querySelectorAll('.result').forEach((el, i) => {
+                setTimeout(() => el.classList.add('visible'), i * 100);
+            });
+        }, 100);
     }
 
-    // 回车搜索
     document.getElementById('searchInput').addEventListener('keypress', e => {
         if(e.key === 'Enter') search();
     });
     
-    // 新手引导
-    function startTour(){
-        const steps = [
-            {el: '#searchInput', text: '🔍 输入器件型号开始搜索'},
-            {el: '.hot-tags', text: '🔥 点击热门搜索快速开始'},
-            {el: '.features', text: '✨ 查看所有功能'},
-            {el: '.download-section', text: '📥 下载离线版本'}
-        ];
-        let current = 0;
-        function showStep(){
-            if(current >= steps.length){
-                alert('🎉 引导完成！开始使用吧！');
-                return;
-            }
-            const step = steps[current];
-            const el = document.querySelector(step.el);
-            if(el){
-                el.scrollIntoView({behavior: 'smooth'});
-                const highlight = document.createElement('div');
-                highlight.id = 'tourHighlight';
-                highlight.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;pointer-events:none;';
-                document.body.appendChild(highlight);
-                alert(step.text + '
-
-点击确定进入下一步');
-                highlight.remove();
-                current++;
-                showStep();
-            }
-        }
-        showStep();
-    }
+    // 页面滚动动画
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if(entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    }, {threshold: 0.1});
+    document.querySelectorAll('.card').forEach(card => observer.observe(card));
     
     // 使用统计
-    function trackEvent(action){
-        let stats = JSON.parse(localStorage.getItem('stats') || '{}');
+    function trackUsage(){
         const date = new Date().toDateString();
+        let stats = JSON.parse(localStorage.getItem('usageStats') || '{}');
         stats[date] = (stats[date] || 0) + 1;
-        localStorage.setItem('stats', JSON.stringify(stats));
-        // 发送统计
-        console.log('📊 Event:', action, 'Date:', date);
+        localStorage.setItem('usageStats', JSON.stringify(stats));
     }
+    trackUsage();
     
-    // 显示统计
+    // 显示使用统计
     function showStats(){
-        const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+        const stats = JSON.parse(localStorage.getItem('usageStats') || '{}');
         const days = Object.keys(stats).length;
         const total = Object.values(stats).reduce((a,b)=>a+b,0);
-        alert(`📊 使用统计
-
-📅 使用天数: ${days}天
-🔍 搜索次数: ${total}次`);
+        showToast(`📊 已使用 ${days} 天，搜索 ${total} 次`, 'success');
     }
     
-    // 版本检查
-    async function checkVersion(){
-        try{
-            const r = await fetch('https://api.github.com/repos/KINGSTON-115/OpenPartSelector/releases/latest');
-            const data = await r.json();
-            const latest = data.tag_name;
-            const current = 'v0.7';
-            if(latest !== current){
-                const update = confirm(`📦 发现新版本 ${latest}！\n当前版本: ${current}\n\n是否前往下载？`);
-                if(update){
-                    window.open(data.html_url, '_blank');
-                }
-            }
-        }catch(e){
-            console.log('版本检查失败');
-        }
-    }
-    // 页面加载后检查
-    window.addEventListener('load', checkVersion);
+    // 初始化收藏显示
+    if(document.getElementById('favoritesContainer')) showFavs();
     </script>
 </body>
 </html>
