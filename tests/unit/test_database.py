@@ -69,11 +69,13 @@ def test_database_functions():
         get_component_by_partnumber
     )
     
-    # 测试获取所有组件
+    # 测试获取所有组件（按分类）
     all_comps = get_all_components()
-    assert isinstance(all_comps, list)
-    assert len(all_comps) > 0
-    print(f"✅ 总组件数: {len(all_comps)}")
+    assert isinstance(all_comps, dict)
+    assert "power" in all_comps
+    assert "communication" in all_comps
+    assert "sensor" in all_comps
+    print(f"✅ 总组件分类: {list(all_comps.keys())}")
     
     # 测试按类别获取
     power_comps = get_components_by_category("power")

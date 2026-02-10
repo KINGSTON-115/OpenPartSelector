@@ -2,7 +2,7 @@
 内置元器件数据库 - 常见器件数据
 用于演示和离线测试
 """
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from functools import lru_cache
 
 
@@ -784,18 +784,31 @@ SENSORS = [
 ]
 
 # 导出所有器件数据库
-def get_all_components():
-    """获取所有内置器件数据"""
+def get_all_components() -> Dict[str, List[Dict]]:
+    """获取所有内置器件数据（按分类）"""
     return {
         "power": POWER_COMPONENTS,
         "communication": COMMUNICATION_MODULES,
         "sensor": SENSORS,
-        # 合并到主数据库
     }
+
+
+def get_components_by_category(category: str) -> List[Dict]:
+    """按类别获取器件列表"""
+    all_db = get_all_components()
+    return all_db.get(category.lower(), [])
+
+
+def get_component_by_partnumber(part_number: str) -> Optional[Dict]:
+    """根据型号精确获取器件"""
+    return get_component(part_number)
 
 # 将新器件添加到主列表
 _all_db = get_all_components()
+# 修复 2026-02-10: 确保所有分类的器件都添加到主数据库
 for category in ["communication", "sensor"]:
     for item in _all_db.get(category, []):
-        # 更新现有数据库（这里只是扩展，实际使用时从 get_all_components 获取）
-        pass
+        # 检查是否已存在，避免重复
+        exists = any(d["part_number"] == item["part_number"] for d in BUILTIN_DATABASE)
+        if not exists:
+            BUILTIN_DATABASE.append(item)

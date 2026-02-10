@@ -12,8 +12,8 @@ from dataclasses import dataclass
 from ..config import Config
 from ..database import search_components as db_search, get_price_comparison as db_get_price
 
-# 导入 agent.py 中定义的 SearchResult，避免重复定义
-from ..agent import SearchResult as AgentSearchResult
+# SearchResult 定义在 agent.py 中，通过 agent.py 统一导出
+# 这里不需要单独导入，避免循环导入问题
 
 
 class SearchEngine:
