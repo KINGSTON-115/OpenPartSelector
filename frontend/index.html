@@ -746,9 +746,15 @@
         // 接口芯片
         'CH340N': {mfr: '沁恒微电子', category: 'USB转UART', type: 'Interface', alternatives: ['CH340G', 'CP2102'], price: '¥0.15', doc: 'http://www.wch.cn/ch340'},
         'CH340G': {mfr: '沁恒微电子', category: 'USB转UART', type: 'Interface', alternatives: ['CH340N', 'CP2102'], price: '¥0.18', doc: 'http://www.wch.cn/ch340'},
+        'CH340K': {mfr: '沁恒微电子', category: 'USB转UART', type: 'Interface', alternatives: ['CH340N', 'CP2102'], price: '¥0.20', doc: 'http://www.wch.cn/ch340'},
+        'CH341A': {mfr: '沁恒微电子', category: 'USB转UART/SPI/I2C', type: 'Interface', alternatives: ['FT2232'], price: '¥0.35', doc: 'http://www.wch.cn/ch340'},
         'CH552': {mfr: '沁恒微电子', category: 'USB 8051 MCU', type: 'MCU', alternatives: ['ATMEGA'], price: '¥0.65', doc: 'http://www.wch.cn/ch552'},
+        'CH554': {mfr: '沁恒微电子', category: 'USB 8051 MCU', type: 'MCU', alternatives: ['CH552'], price: '¥0.70', doc: 'http://www.wch.cn/ch554'},
+        'CH9141': {mfr: '沁恒微电子', category: 'BLE串口透传', type: 'Wireless', alternatives: ['HC-05'], price: '¥1.50', doc: 'http://www.wch.cn/ch9141'},
         'CP2102': {mfr: 'Silicon Labs', category: 'USB转UART', type: 'Interface', alternatives: ['CH340', 'FT232R'], price: '¥1.20', doc: 'https://www.silabs.com'},
+        'CP2102N': {mfr: 'Silicon Labs', category: 'USB转UART', type: 'Interface', alternatives: ['CH340N'], price: '¥1.50', doc: 'https://www.silabs.com'},
         'FT232R': {mfr: 'FTDI', category: 'USB转UART工业级', type: 'Interface', alternatives: ['CP2102', 'CH340'], price: '¥3.50', doc: 'https://www.ftdichip.com'},
+        'FT2232': {mfr: 'FTDI', category: 'USB转双串口/SPI', type: 'Interface', alternatives: ['CH9141'], price: '¥8.00', doc: 'https://www.ftdichip.com'},
         'PL2303': {mfr: 'Prolific', category: 'USB转UART', type: 'Interface', alternatives: ['CH340'], price: '¥0.50', doc: 'https://www.prolific.com'},
         'MAX232': {mfr: 'Maxim', category: 'RS232收发器', type: 'Interface', alternatives: ['SP232'], price: '¥0.80', doc: 'https://www.maximintegrated.com'},
         'SP3232': {mfr: 'Maxim', category: 'RS232收发器', type: 'Interface', alternatives: ['MAX232'], price: '¥0.60', doc: 'https://www.maximintegrated.com'},
@@ -829,15 +835,44 @@
     }
 
     function findParts(query){
-        const q = query.toUpperCase();
+        const q = query.toUpperCase().trim();
         let results = [];
+        
+        // 1. 精确匹配型号
         for(const [key, data] of Object.entries(partsDB)){
-            if(q.includes(key)){
-                results.push({part: q, ...data, links: ['lcsc', 'taobao', 'jd'], score: 100});
+            if(key === q || key.replace(/-/g,'') === q.replace(/-/g,'')){
+                results.push({part: key, ...data, links: ['lcsc','taobao','jd','digikey'], score: 100});
             }
         }
+        
+        // 2. 分类和关键词匹配（如果没找到精确匹配）
         if(results.length === 0){
-            results.push({part: q, mfr: '待确认', category: '搜索结果', type: '请选择', alternatives: [], price: '实时查询', links: ['lcsc', 'taobao'], score: 70});
+            const keywords = q.split(/\s+/);
+            for(const [key, data] of Object.entries(partsDB)){
+                let score = 0;
+                // 型号包含
+                if(key.toUpperCase().includes(q)) score += 50;
+                // 制造商匹配
+                if(data.mfr.toUpperCase().includes(q)) score += 30;
+                // 分类匹配
+                if(data.category.toUpperCase().includes(q)) score += 25;
+                // 关键词匹配
+                for(const kw of keywords){
+                    if(kw.length > 2 && (key.toUpperCase().includes(kw) || data.mfr.toUpperCase().includes(kw) || data.category.toUpperCase().includes(kw))){
+                        score += 10;
+                    }
+                }
+                if(score > 15){
+                    results.push({part: key, ...data, links: ['lcsc','taobao','jd'], score: score});
+                }
+            }
+            results.sort((a,b) => b.score - a.score);
+            results = results.slice(0, 10);
+        }
+        
+        // 3. 如果还是没有结果，显示引导
+        if(results.length === 0){
+            results.push({part: q, mfr: '待确认', category: '未找到匹配器件', type: '提示', alternatives: [], price: '请尝试', links: ['lcsc'], score: 0});
         }
         return results;
     }
