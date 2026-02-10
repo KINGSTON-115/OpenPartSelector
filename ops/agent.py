@@ -122,6 +122,7 @@ class Agent:
             "sop-8": "SOP-8", "sop-16": "SOP-16", "qfn": "QFN", "bga": "BGA",
             "dip": "DIP", "soic": "SOIC", "sot-23": "SOT-23", "sot-223": "SOT-223",
             "lqfp-48": "LQFP-48", "qfn-24": "QFN-24", "vson-14": "VSON-14",
+            "sop-8": "SOP-8", "sot-223": "SOT-223",
             # 品类关键词 - 英文
             "ldo": "ldo", "dc-dc": "dc-dc", "power": "power",
             "mcu": "mcu", "microcontroller": "mcu",
@@ -132,6 +133,9 @@ class Agent:
             "mosfet": "mosfet", "三极管": "transistor", "flash": "flash",
             # 中文品类
             "单片机": "单片机", "传感器": "传感器", "电源": "电源",
+            # 中文关键词映射
+            "稳压器": "ldo", "低压差": "ldo", "升压": "boost", "降压": "buck",
+            "存储": "memory", "闪存": "flash", "存储器": "memory",
         }
         
         # 品类映射 - 英文缩写到标准分类
@@ -178,6 +182,18 @@ class Agent:
                 elif eng_kw == "运放":
                     parsed["category_hint"] = "analog"
                     parsed["search_keywords"].append("opamp")
+                elif eng_kw == "稳压器" or eng_kw == "低压差":
+                    parsed["category_hint"] = "power"
+                    parsed["search_keywords"].append("ldo")
+                elif eng_kw == "升压":
+                    parsed["category_hint"] = "power"
+                    parsed["search_keywords"].append("boost")
+                elif eng_kw == "降压":
+                    parsed["category_hint"] = "power"
+                    parsed["search_keywords"].append("buck")
+                elif eng_kw == "存储" or eng_kw == "存储器":
+                    parsed["category_hint"] = "memory"
+                    parsed["search_keywords"].append("memory")
         
         # 特殊处理常见型号
         model_patterns = ["stm32", "esp32", "ch340", "rp2040", "ld1117", "ams1117", "lm358", "ao3400"]
@@ -300,8 +316,8 @@ class Agent:
             specs_dict = candidate.get("specs", {})
             specs = self._parse_specs_dict(specs_dict)
             
-            # 获取价格信息
-            price_info = await self.search_engine.compare_prices(candidate.get("part_number", ""))
+            # 获取价格信息 (带超时)
+            price_info = await self._get_price_with_timeout(candidate.get("part_number", ""))
             price = price_info.get("best_price")
             stock = price_info.get("total_stock", 0)
             
@@ -327,6 +343,21 @@ class Agent:
         results.sort(key=lambda x: x.compatibility_score, reverse=True)
         
         return results
+    
+    async def _get_price_with_timeout(self, part_number: str, timeout: float = 2.0) -> Dict:
+        """带超时的价格获取"""
+        try:
+            import asyncio
+            return await asyncio.wait_for(
+                self.search_engine.compare_prices(part_number),
+                timeout=timeout
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"Price lookup timeout for {part_number}")
+            return {"best_price": None, "total_stock": 0}
+        except Exception as e:
+            logger.debug(f"Price lookup error: {e}")
+            return {"best_price": None, "total_stock": 0}
     
     def _parse_specs_dict(self, specs_dict: Dict) -> PartSpec:
         """解析规格字典"""
@@ -507,11 +538,19 @@ def quick_select(query: str, top_k: int = 5) -> SelectionResult:
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            # 在已有循环中，创建新任务
+            # 在已有循环中，使用 ensure_future
             async def do_select():
-                await agent.initialize()
+                try:
+                    await agent.initialize()
+                except Exception:
+                    pass  # 忽略初始化错误
                 return await agent.select(query, top_k=top_k)
-            return asyncio.run_coroutine_threadsafe(do_select(), loop).result()
+            
+            # 在新线程中运行
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, do_select())
+                return future.result()
     except RuntimeError:
         # 无运行中的循环，直接使用 run
         pass

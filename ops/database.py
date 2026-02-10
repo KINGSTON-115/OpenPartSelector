@@ -4,6 +4,8 @@
 """
 from typing import Dict, List, Any
 from dataclasses import dataclass, asdict
+from functools import lru_cache
+import json
 
 
 # 常见电源管理芯片
@@ -347,13 +349,39 @@ BUILTIN_DATABASE = (
     DISCRETE_COMPONENTS
 )
 
+# 简单内存缓存
+_CACHE = {}
 
-def search_components(
-    query: str = None,
-    category: str = None,
-    constraints: dict = None,
-    limit: int = 10
-) -> List[Dict]:
+
+@lru_cache(maxsize=128)
+def _get_component_cached(part_number: str) -> tuple:
+    """带缓存的组件查找 (返回tuple以便缓存)"""
+    for component in BUILTIN_DATABASE:
+        if component["part_number"].upper() == part_number.upper():
+            return tuple(sorted(component.items()))
+    return None
+
+
+def get_component(part_number: str) -> Dict:
+    """根据型号获取元器件详情 (带缓存)"""
+    key = part_number.upper()
+    
+    # 先查缓存
+    if key in _CACHE:
+        cached = _CACHE[key]
+        if cached:
+            return dict(cached)
+        return None
+    
+    # 查找并缓存
+    result = None
+    for component in BUILTIN_DATABASE:
+        if component["part_number"].upper() == part_number.upper():
+            result = component
+            break
+    
+    _CACHE[key] = tuple(sorted(result.items())) if result else None
+    return result
     """
     内置数据库搜索
     

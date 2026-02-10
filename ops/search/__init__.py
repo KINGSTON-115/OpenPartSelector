@@ -10,24 +10,10 @@ Multi-Source Search Engine
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from ..config import Config
-from ..database import search_components as db_search
+from ..database import search_components as db_search, get_price_comparison as db_get_price
 
-
-@dataclass
-class SearchResult:
-    """搜索结果"""
-    part_number: str
-    description: str
-    manufacturer: str
-    category: str
-    voltage: Optional[str] = None
-    current: Optional[str] = None
-    package: Optional[str] = None
-    price: Optional[float] = None
-    stock: Optional[int] = None
-    vendors: List[Dict] = None
-    datasheet_url: Optional[str] = None
-    score: float = 0.0
+# 导入 agent.py 中定义的 SearchResult，避免重复定义
+from ..agent import SearchResult as AgentSearchResult
 
 
 class SearchEngine:
@@ -154,13 +140,14 @@ class SearchEngine:
         """比价查询"""
         # 从数据库获取价格
         try:
-            prices = get_price_comparison(part_number)
-            if prices:
+            price_data = db_get_price(part_number)
+            if price_data and price_data.get("prices"):
                 return {
                     "part_number": part_number,
-                    "prices": prices,
-                    "best_price": min(p.get("price", float("inf")) for p in prices) if prices else None,
-                    "total_stock": sum(p.get("stock", 0) for p in prices)
+                    "prices": price_data["prices"],
+                    "best_price": price_data.get("best_price"),
+                    "best_vendor": price_data.get("best_vendor"),
+                    "total_stock": price_data.get("total_stock", 0)
                 }
         except Exception as e:
             print(f"比价失败: {e}")
