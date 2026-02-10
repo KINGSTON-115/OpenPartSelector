@@ -26,6 +26,15 @@ class SearchEngine:
             "digikey": self.config.api_keys.digikey,
             "mouser": self.config.api_keys.mouser,
         }
+        self._initialized = False
+    
+    async def initialize(self) -> None:
+        """初始化搜索引擎"""
+        self._initialized = True
+    
+    async def close(self) -> None:
+        """关闭搜索引擎"""
+        self._initialized = False
     
     async def search(
         self,

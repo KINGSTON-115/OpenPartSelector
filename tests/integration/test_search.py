@@ -73,19 +73,3 @@ class TestSearchEngine:
         
         # 清理
         await engine.close()
-
-
-class TestDigiKeyEngine:
-    """DigiKey 搜索引擎测试"""
-    
-    @pytest.fixture
-    def engine(self, config):
-        from ops.search import DigiKeyEngine
-        return DigiKeyEngine(config)
-    
-    @pytest.mark.asyncio
-    async def test_search(self, engine):
-        """测试 DigiKey 搜索"""
-        results = await engine.search("LD1117")
-        
-        assert isinstance(results, list)

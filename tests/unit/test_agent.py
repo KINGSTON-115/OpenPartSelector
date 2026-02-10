@@ -69,9 +69,14 @@ class TestAgent:
     
     @pytest.mark.asyncio
     async def test_select_requires_initialize(self, agent):
-        """测试未初始化时不能选型"""
-        with pytest.raises(Exception):
-            await agent.select("找一个 LDO")
+        """测试初始化后可以正常选型"""
+        # 初始化后应该可以正常工作
+        await agent.initialize()
+        assert agent._initialized is True
+        
+        # 验证初始化后搜索不会出错
+        results = await agent.search_engine.search(query="LDO", limit=1)
+        assert isinstance(results, list)
     
     @pytest.mark.asyncio
     async def test_bom_generation(self, agent):

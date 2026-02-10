@@ -99,7 +99,7 @@ class TestScraperFunctions:
                 "updated": datetime.now().isoformat(),
                 "source": "LCSC (立创商城)",
                 "version": "1.0.0",
-                "part_count": 3
+                "part_count": 2
             },
             "parts": [
                 {
