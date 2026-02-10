@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.7 🚀🤖🔌
+# OpenPartSelector v1.1.10 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,7 +6,7 @@
 
 ---
 
-## ✨ v1.1.7 更新日志 (2026-02-10)
+## ✨ v1.1.10 更新日志 (2026-02-10)
 
 | 功能 | 说明 |
 |------|------|

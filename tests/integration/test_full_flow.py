@@ -9,6 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+
 @pytest.mark.asyncio
 async def test_quick_select_basic():
     """测试基础快速选型"""
@@ -27,6 +28,7 @@ async def test_quick_select_basic():
     print(f"✅ 查询: {result.query}")
     print(f"✅ 推荐数量: {len(result.recommended_parts)}")
     print(f"✅ 报告长度: {len(result.analysis_report)}")
+
 
 
 @pytest.mark.asyncio
@@ -49,6 +51,7 @@ async def test_quick_select_with_constraints():
     print(f"✅ 带约束选型完成，推荐 {len(result.recommended_parts)} 个器件")
 
 
+
 @pytest.mark.asyncio
 async def test_search_engine():
     """测试搜索引擎"""
@@ -62,6 +65,7 @@ async def test_search_engine():
     assert isinstance(results, list)
     
     print(f"✅ 搜索引擎返回 {len(results)} 个结果")
+
 
 
 @pytest.mark.asyncio
@@ -119,6 +123,7 @@ async def test_features():
     print(f"✅ 分压计算: R1={div_calc['recommended_r1']}")
 
 
+@pytest.mark.asyncio
 async def test_jlc_features():
     """测试嘉立创功能"""
     try:
@@ -133,6 +138,7 @@ async def test_jlc_features():
         print(f"⚠️ JLC功能测试跳过: {e}")
 
 
+@pytest.mark.asyncio
 async def test_bom_analysis():
     """测试BOM分析"""
     from ops.bom import analyze_bom_full

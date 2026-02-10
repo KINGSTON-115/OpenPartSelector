@@ -30,7 +30,7 @@ from .eol import check_component_lifecycle, analyze_bom_risk
 from .cad import search_cad_library, check_cad_availability
 from .bom import analyze_bom_full, quick_bom_check
 
-__version__ = "1.1.9"
+__version__ = "1.1.10"
 __author__ = "KINGSTON-115"
 
 __all__ = [
