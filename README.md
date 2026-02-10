@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.22 🚀🤖🔌
+# OpenPartSelector v1.1.23 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,10 +6,16 @@
 
 ---
 
-## ✨ v1.1.22 更新日志 (2026-02-10)
+## ✨ v1.1.23 更新日志 (2026-02-10)
 
 ### 🔧 版本统一
-- 统一版本号：standalone.html/frontend v1.1.20 → v1.1.22
+- 统一版本号：standalone.html v1.1.20 → v1.1.23
+
+### 🆕 新增传感器
+- SGP30: VOC/CO2 传感器 (Sensirion)
+- VL53L0X: 激光测距传感器 (ST)
+- ADXL345: 3轴加速度计 (ADI)
+- SHT30: 高精度温湿度传感器 (Sensirion)
 
 ### 🧪 测试增强
 - 新增单元测试：电压解析、电流解析、价格估算、BOM构建器

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔌 OpenPartSelector v1.1.23 - 电子元器件选型神器</title>
     <meta name="description" content="专为电子类专业大学生打造的元器件选型工具，免费开源">
-    <meta name="version" content="1.1.20">
+    <meta name="version" content="1.1.23">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;min-height:100vh;color:#333}
@@ -58,6 +58,8 @@
                 <span class="hot-tag" onclick="quickSearch('CH340')">CH340</span>
                 <span class="hot-tag" onclick="quickSearch('MOSFET')">MOSFET</span>
                 <span class="hot-tag" onclick="quickSearch('运放')">运放</span>
+                <span class="hot-tag" onclick="quickSearch('SGP30')">SGP30</span>
+                <span class="hot-tag" onclick="quickSearch('VL53L0X')">VL53L0X</span>
             </div>
         </div>
 
@@ -85,7 +87,7 @@
     </div>
 
     <script>
-        // 内置数据库 v1.1.23 (扩展至 40+ 器件)
+        // 内置数据库 v1.1.23 (扩展至 48+ 器件)
         const DATABASE = [
             // === MCU 微控制器 ===
             {pn:'ESP32-WROOM-32',desc:'WiFi+BT模块 4MB Flash',mfr:'Espressif',cat:'mcu',spec:{core:'双核 240MHz',flash:'4MB',wireless:'WiFi+BT'},price:1.85,stock:50000,alt:['ESP32-WROVER','ESP32-C3']},
@@ -139,6 +141,10 @@
             {pn:'BH1750',desc:'数字光照传感器',mfr:'ROHM',cat:'sensor',spec:{range:'1-65535lx',interface:'I2C'},price:2.20,stock:45000,alt:['TSL2561']},
             {pn:'HC-SR501',desc:'人体红外感应',mfr:'HC',cat:'sensor',spec:{range:'3-7m',angle:'120°'},price:2.80,stock:80000,alt:['AM312']},
             {pn:'MQ-2',desc:'气体传感器',mfr:'Winsen',cat:'sensor',spec:{detection:'烟雾/燃气',voltage:'5V'},price:3.50,stock:50000,alt:['MQ-3','MQ-135']},
+            {pn:'SGP30',desc:'VOC/CO2传感器',mfr:'Sensirion',cat:'sensor',spec:{tvoc:'0-600ppb',eco2:'400-60000ppm',interface:'I2C'},price:8.50,stock:15000,alt:['CCS811']},
+            {pn:'VL53L0X',desc:'激光测距传感器',mfr:'ST',cat:'sensor',spec:{range:'0-200cm',accuracy:'±3%',interface:'I2C'},price:6.80,stock:20000,alt:['VL53L1X']},
+            {pn:'ADXL345',desc:'3轴加速度计',mfr:'ADI',cat:'sensor',spec:{range:'±16g',resolution:'13-bit',interface:'I2C/SPI'},price:2.20,stock:35000,alt:['ADXL346']},
+            {pn:'SHT30',desc:'高精度温湿度',mfr:'Sensirion',cat:'sensor',spec:{humidity:'0-100%',temp:'-40~125C',interface:'I2C'},price:4.20,stock:28000,alt:['SHT31','DHT22']},
             
             // === Passive 被动器件 ===
             {pn:'10uF_16V_0805',desc:'MLCC电容 10uF 16V',mfr:'Various',cat:'passive',spec:{cap:'10uF',volt:'16V',pkg:'0805'},price:0.01,stock:500000,alt:['10uF_25V']},
