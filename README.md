@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.21 🚀🤖🔌
+# OpenPartSelector v1.1.22 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,20 +6,14 @@
 
 ---
 
-## ✨ v1.1.21 更新日志 (2026-02-10)
+## ✨ v1.1.22 更新日志 (2026-02-10)
 
-### 🔧 代码质量改进
-- 移除重复的 `import asyncio`
-- 优化 `quick_select` 事件循环处理（使用 ThreadPoolExecutor 替代 create_task）
-- 增强类型注解 (`Dict[str, Any]` 等)
-- `SearchResult` 数据类添加完整文档字符串
+### 🔧 版本统一
+- 统一版本号：standalone.html/frontend v1.1.20 → v1.1.22
 
-### ✨ 新增功能
-- 新增 `quick_search()` 便捷搜索函数（只搜索不分析）
-- Agent 模块添加示例代码和使用文档
-
-### ✅ 测试覆盖
-- 96 个测试全部通过
+### 🧪 测试增强
+- 新增单元测试：电压解析、电流解析、价格估算、BOM构建器
+- 测试覆盖提升：105个测试全部通过
 
 ### 🔧 搜索优化
 - 增强中文关键词映射（稳压器/升压/降压/存储等）
