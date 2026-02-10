@@ -94,23 +94,94 @@ def parse_current(current_str: str) -> Dict[str, float]:
     return {"value": 0.0, "unit": "A"}
 
 
-def estimate_price(quantity: int = 1) -> float:
+def estimate_price(part_number: str = "", quantity: int = 1) -> Dict[str, Any]:
     """
-    估算价格 (基于常见价格曲线)
+    估算器件价格 (基于器件类型和数量)
     
-    TODO: 接入真实价格数据
+    Args:
+        part_number: 器件型号，用于识别器件类型
+        quantity: 采购数量
+        
+    Returns:
+        {
+            "unit_price": float,      # 单价
+            "bulk_price": float,     # 批量价
+            "tier_discount": str,     # 折扣等级
+            "price_tier": str         # 价格区间
+        }
     """
-    base_price = 0.50  # 基础价格
+    import re
     
-    # 简单线性折扣
-    if quantity >= 100:
-        base_price *= 0.7
-    if quantity >= 1000:
-        base_price *= 0.5
+    # 器件类型基础价格映射
+    BASE_PRICES = {
+        # MCU/Processor
+        "esp32": 3.50, "esp8266": 2.00, "stm32": 4.00, "rp2040": 2.50,
+        "atmega": 2.00, "attiny": 1.00, "avr": 1.50, "pic": 2.50,
+        # 电源芯片
+        "lm7805": 0.30, "lm1117": 0.25, " AMS1117": 0.20, "tp4056": 0.50,
+        "lm2596": 0.40, "mp2359": 0.45, "xl6009": 0.55,
+        # 接口芯片
+        "ch340": 0.35, "ch341": 0.50, "cp2102": 0.60, "ft232": 1.20,
+        "pl2303": 0.30, "usb3300": 0.80,
+        # 传感器
+        "dht11": 0.80, "dht22": 1.20, "ds18b20": 0.90, "bmp280": 0.70,
+        "bme280": 1.50, "mpu6050": 1.00, "bh1750": 0.60, "hc-sr04": 0.75,
+        # 通信模块
+        "nrf24": 1.00, "hc-05": 1.20, "hc-06": 1.00, "esp8266": 2.00,
+        "sim800": 3.50, "a6": 2.80,
+        # 显示
+        "oled": 2.00, "lcd1602": 1.50, "tft": 5.00, "ws2812": 0.15,
+        # 被动器件
+        "resistor": 0.01, "capacitor": 0.02, "inductor": 0.05, "led": 0.03,
+    }
+    
+    # 识别器件类型
+    part_lower = (part_number or "").lower()
+    base_price = 0.50  # 默认基础价格
+    
+    for key, price in BASE_PRICES.items():
+        if key in part_lower:
+            base_price = price
+            break
+    
+    # 数量折扣
     if quantity >= 10000:
-        base_price *= 0.3
+        discount = 0.50  # 50% off
+        tier = "大批量"
+    elif quantity >= 1000:
+        discount = 0.65  # 35% off
+        tier = "批量"
+    elif quantity >= 100:
+        discount = 0.80  # 20% off
+        tier = "中量"
+    elif quantity >= 10:
+        discount = 0.90  # 10% off
+        tier = "小量"
+    else:
+        discount = 1.0
+        tier = "零售"
     
-    return base_price * quantity
+    unit_price = round(base_price * discount, 3)
+    bulk_price = round(unit_price * quantity, 2)
+    
+    # 价格区间
+    if unit_price < 0.1:
+        price_range = "低价 (< ¥1)"
+    elif unit_price < 1:
+        price_range = "经济 (¥1-10)"
+    elif unit_price < 5:
+        price_range = "中端 (¥10-50)"
+    else:
+        price_range = "高端 (> ¥50)"
+    
+    return {
+        "unit_price": unit_price,
+        "bulk_price": bulk_price,
+        "tier_discount": f"{int((1-discount)*100)}%",
+        "price_tier": price_range,
+        "quantity": quantity,
+        "part_type_detected": part_lower[:20] if part_lower else "unknown"
+    }
 
 
 def generate_bom_id() -> str:
