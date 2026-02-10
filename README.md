@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.15 🚀🤖🔌
+# OpenPartSelector v1.1.16 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,13 +6,12 @@
 
 ---
 
-## ✨ v1.1.15 更新日志 (2026-02-10)
+## ✨ v1.1.16 更新日志 (2026-02-10)
 
 | 功能 | 说明 |
 |------|------|
-| 🛠️ **standalone.html 修复** | 重新生成单文件版本，解决缺失问题 |
-| 🔧 **版本号统一** | 更新所有版本号为 v1.1.15 |
-| 🐛 **Bug 修复** | 修复多处稳定性问题 |
+| 🔧 **datetime.utcnow 修复** | 修复 3 处弃用警告，使用 timezone.utc |
+| ✅ **测试通过** | 96 个测试全部通过 |
 
 ---
 

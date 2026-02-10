@@ -164,8 +164,8 @@ class VectorStore:
     
     def _timestamp(self) -> str:
         """生成时间戳"""
-        from datetime import datetime
-        return datetime.utcnow().isoformat() + "Z"
+        from datetime import datetime, timezone
+        return datetime.now(timezone.utc).isoformat() + "Z"
     
     async def create_embeddings(self, model: str = "text-embedding-3-small"):
         """

@@ -20,7 +20,8 @@ def setup_logging(
 def format_timestamp(ts: str = None, format: str = "%Y-%m-%d %H:%M:%S UTC") -> str:
     """格式化时间戳"""
     if ts is None:
-        ts = datetime.utcnow()
+        from datetime import timezone
+        ts = datetime.now(timezone.utc)
     elif isinstance(ts, str):
         ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
     
@@ -238,7 +239,8 @@ def estimate_price(part_number: str = "", quantity: int = 1) -> Dict[str, Any]:
 def generate_bom_id() -> str:
     """生成 BOM ID"""
     import hashlib
-    timestamp = str(datetime.utcnow().timestamp())
+    from datetime import timezone
+    timestamp = str(datetime.now(timezone.utc).timestamp())
     return hashlib.md5(timestamp.encode()).hexdigest()[:8].upper()
 
 
