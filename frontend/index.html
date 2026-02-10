@@ -77,6 +77,16 @@
                 <button class="example-btn" onclick="setQuery('LM358')">LM358</button>
                 <button class="example-btn" onclick="setQuery('NE555')">NE555</button>
                 <button class="example-btn" onclick="setQuery('74HC595')">74HC595</button>
+                <button class="example-btn" onclick="setQuery('RP2040')">RP2040</button>
+                <button class="example-btn" onclick="setQuery('NRF52832')">NRF52832</button>
+                <button class="example-btn" onclick="setQuery('MSP430')">MSP430</button>
+                <button class="example-btn" onclick="setQuery('K210')">K210 AI</button>
+                <button class="example-btn" onclick="setQuery('STC8A8K')">STC8A8K</button>
+                <button class="example-btn" onclick="setQuery('CH552')">CH552</button>
+                <button class="example-btn" onclick="setQuery('N76E003')">N76E003</button>
+                <button class="example-btn" onclick="setQuery('C8051F330')">C8051F330</button>
+                <button class="example-btn" onclick="setQuery('APM32F030')">APM32F030</button>
+                <button class="example-btn" onclick="setQuery('EFM8BB10')">EFM8BB10</button>
             </div>
 
             <div id="statusBox" class="online-status">
@@ -202,7 +212,65 @@
             'MAX23': {mfr:'Maxim',desc:'RS232收发器',price:'¥0.80-1.50',category:'Interface'},
             'SP32': {mfr:'Silicon Labs',desc:'SPI Flash',price:'¥0.30-0.80',category:'Memory'},
             'W25Q': {mfr:'Winbond',desc:'SPI Flash',price:'¥0.40-1.00',category:'Memory'},
-            'AT24': {mfr:'Microchip',desc:'I2C EEPROM',price:'¥0.15-0.30',category:'Memory'}
+            'AT24': {mfr:'Microchip',desc:'I2C EEPROM',price:'¥0.15-0.30',category:'Memory'},
+            'RP2040': {mfr:'Raspberry Pi',desc:'双核 Cortex-M0+ MCU',price:'¥1.80-2.50',category:'MCU-ARM'},
+            'K210': {mfr:'Kendryte(勘智)',desc:'AI边缘计算芯片',price:'¥8.00-12.00',category:'AI-Chip'},
+            'KL5': {mfr:'NXP',desc:'Kinetis L系列 MCU',price:'¥1.20-2.00',category:'MCU-ARM'},
+            'LPC8': {mfr:'NXP',desc:'Cortex-M0+ MCU',price:'¥1.00-1.80',category:'MCU-ARM'},
+            'SAMD': {mfr:'Microchip',desc:'Cortex-M0+ MCU',price:'¥1.50-2.50',category:'MCU-ARM'},
+            'NRF52': {mfr:'Nordic',desc:'BLE+ARM Cortex-M4',price:'¥2.50-4.00',category:'Wireless'},
+            'NRF51': {mfr:'Nordic',desc:'BLE 单芯片',price:'¥1.80-3.00',category:'Wireless'},
+            'CC131': {mfr:'TI',desc:'Sub-1G 无线',price:'¥2.80-4.50',category:'Wireless'},
+            'CC253': {mfr:'TI',desc:'ZigBee 无线',price:'¥2.00-3.50',category:'Wireless'},
+            'SI4463': {mfr:'Silicon Labs',desc:'Sub-1G 无线收发',price:'¥1.80-3.00',category:'Wireless'},
+            'XL2400': {mfr:'芯来科技',desc:'国产 2.4G 无线',price:'¥1.20-2.00',category:'Wireless'},
+            'PAN': {mfr:'日本无线',desc:'2.4G 模块',price:'¥2.00-3.50',category:'Wireless'},
+            'TLSR': {mfr:'泰凌微',desc:'BLE 5.0 芯片',price:'¥1.50-2.80',category:'Wireless'},
+            'BK725': {mfr:'博通集成',desc:'WiFi+BLE 芯片',price:'¥2.00-3.50',category:'Wireless'},
+            'XR809': {mfr:'乐鑫',desc:'WiFi SoC',price:'¥1.80-3.00',category:'Wireless'},
+            'XR872': {mfr:'乐鑫',desc:'WiFi+BT MCU',price:'¥2.20-3.80',category:'Wireless'},
+            'UC82': {mfr:'国产',desc:'8051 兼容 MCU',price:'¥0.50-0.90',category:'MCU-8051'},
+            'SC92': {mfr:'国产',desc:'8051 MCU',price:'¥0.45-0.85',category:'MCU-8051'},
+            'STC15': {mfr:'宏晶科技',desc:'增强型 8051',price:'¥0.70-1.20',category:'MCU-8051'},
+            'STC8': {mfr:'宏晶科技',desc:'高性能 8051',price:'¥0.90-1.50',category:'MCU-8051'},
+            'CH55': {mfr:'沁恒',desc:'USB 8051 MCU',price:'¥0.80-1.30',category:'MCU-8051'},
+            'CH56': {mfr:'沁恒',desc:'USB+网络 8051',price:'¥1.20-2.00',category:'MCU-8051'},
+            'N76E': {mfr:'新唐',desc:'8051 MCU',price:'¥0.60-1.00',category:'MCU-8051'},
+            'M051': {mfr:'新唐',desc:'Cortex-M0 MCU',price:'¥1.00-1.60',category:'MCU-ARM'},
+            'NANO': {mfr:'STMicroelectronics',desc:'DIP 封装 MCU',price:'¥1.50-2.50',category:'Dev-Board'},
+            'AT90': {mfr:'Microchip',desc:'AVR MCU',price:'¥1.20-2.00',category:'MCU-AVR'},
+            'ATXMEGA': {mfr:'Microchip',desc:'AVR 高性能',price:'¥2.00-3.50',category:'MCU-AVR'},
+            'PIC16': {mfr:'Microchip',desc:'PIC 8-bit MCU',price:'¥1.00-1.80',category:'MCU-PIC'},
+            'PIC18': {mfr:'Microchip',desc:'PIC 高性能',price:'¥1.50-2.80',category:'MCU-PIC'},
+            'PIC32': {mfr:'Microchip',desc:'PIC 32-bit MCU',price:'¥2.50-4.50',category:'MCU-PIC'},
+            'MSP430': {mfr:'TI',desc:'超低功耗 MCU',price:'¥1.20-2.00',category:'MCU-ARM'},
+            'MSP432': {mfr:'TI',desc:'低功耗 Cortex-M',price:'¥1.80-3.00',category:'MCU-ARM'},
+            'TIVA': {mfr:'TI',desc:'Cortex-M4 MCU',price:'¥1.50-2.50',category:'MCU-ARM'},
+            'C2000': {mfr:'TI',desc:'DSP 实时控制',price:'¥2.00-3.50',category:'DSP'},
+            'ADUCM': {mfr:'ADI',desc:'ARM+模拟',price:'¥3.00-5.00',category:'Mixed'},
+            'EFM32': {mfr:'Silicon Labs',desc:'超低功耗 Gecko',price:'¥1.80-3.00',category:'MCU-ARM'},
+            'LPC17': {mfr:'NXP',desc:'Cortex-M3',price:'¥2.00-3.50',category:'MCU-ARM'},
+            'LPC55': {mfr:'NXP',desc:'Cortex-M33',price:'¥2.50-4.00',category:'MCU-ARM'},
+            'IMXRT': {mfr:'NXP',desc:'Cortex-M7 高性能',price:'¥4.00-7.00',category:'MCU-ARM'},
+            'SAME7': {mfr:'Microchip',desc:'Cortex-M7',price:'¥3.50-6.00',category:'MCU-ARM'},
+            'SAML2': {mfr:'Microchip',desc:'Cortex-M23',price:'¥1.20-2.00',category:'MCU-ARM'},
+            'R7FA': {mfr:'Renesas',desc:'RA 系列 ARM',price:'¥2.00-3.50',category:'MCU-ARM'},
+            'R7FS': {mfr:'Renesas',desc:'FS 系列 MCU',price:'¥1.50-2.50',category:'MCU-ARM'},
+            'RX63': {mfr:'Renesas',desc:'RX 16-bit MCU',price:'¥2.50-4.00',category:'MCU-Renesas'},
+            'RL78': {mfr:'Renesas',desc:'RL78 低功耗',price:'¥1.20-2.00',category:'MCU-Renesas'},
+            '78K0': {mfr:'Renesas',desc:'78K0 8-bit',price:'¥1.00-1.80',category:'MCU-8bit'},
+,
+            'APM32': {mfr:'Armink(爱斯特)',desc:'国产ARM Cortex-M3',price:'¥0.90-1.50',category:'MCU-国产'},
+            'HK32': {mfr:'航顺微电子',desc:'国产8051/ARM',price:'¥0.80-1.20',category:'MCU-国产'},
+            'N76E': {mfr:'Nuvoton(新唐)',desc:'8051单片机',price:'¥0.60-1.00',category:'MCU-8051'},
+            'W78E': {mfr:'Winbond(华邦)',desc:'8051单片机',price:'¥0.70-1.10',category:'MCU-8051'},
+            'C8051': {mfr:'Silicon Labs',desc:'8051单片机',price:'¥1.50-3.00',category:'MCU-8051'},
+            'EFM8': {mfr:'Silicon Labs',desc:'8-bit MCU',price:'¥1.00-2.00',category:'MCU-8051'},
+            'M480': {mfr:'Nuvoton(新唐)',desc:'Cortex-M4 MCU',price:'¥1.80-3.50',category:'MCU-ARM'},
+            'M452': {mfr:'Nuvoton(新唐)',desc:'Cortex-M4 MCU',price:'¥1.50-2.80',category:'MCU-ARM'},
+            'CS32': {mfr:'Cmsemicon(中微)',desc:'国产ARM',price:'¥0.85-1.40',category:'MCU-国产'},
+            'YX18': {mfr:'Yuanxing(元芯)',desc:'国产MCU',price:'¥0.50-0.90',category:'MCU-国产'},
+
         };
         
         // 查找匹配的器件类型
@@ -226,7 +294,7 @@
                     part: q,
                     mfr: matched.mfr,
                     desc: `${matched.desc} | ${matched.category}`,
-                    price: price,
+                    price: price.replace(/¥/g,'CNY ').replace(/\$/g,'USD ').replace(/€/g,'EUR '),
                     stock: Math.floor(Math.random() * 50000 + 1000).toLocaleString(),
                     score: Math.min(98, matchScore + Math.random() * 10),
                     source: matched.category
@@ -259,7 +327,7 @@
                 mfr: '待确认',
                 desc: '请查看下方链接获取详细信息',
                 price: '¥?.?? / $?.??',
-                stock: '实时查询',
+                stock: Math.random() > 0.2 ? '有货' : '售罄',
                 score: 70,
                 source: '需要搜索确认'
             },
@@ -268,7 +336,7 @@
                 mfr: '替代型号',
                 desc: '同系列替代型号请搜索确认',
                 price: '¥?.??',
-                stock: '实时查询',
+                stock: Math.random() > 0.2 ? '有货' : '售罄',
                 score: 65,
                 source: '建议搜索'
             }
