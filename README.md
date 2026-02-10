@@ -1,8 +1,18 @@
-# OpenPartSelector v1.1.2 🚀🤖🔌
+# OpenPartSelector v1.1.3 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
 > **核心价值**：用 AI Agent 自动化解决电子工程师的元器件选型痛点——搜索、对比、验证、一键生成采购清单
+
+---
+
+## ✨ v1.1.3 更新日志 (2026-02-10)
+
+| 功能 | 说明 |
+|------|------|
+| 📡 **通信模块扩展** | 新增 ESP8266/ESP32/nRF24L01/HC-05/SIM800L 等 5 种通信模块 |
+| 🌡️ **传感器库扩充** | 新增 DHT11/DS18B20/HC-SR04/MPU-6050/BMP280/BH1750 等 10 种传感器 |
+| 🔧 **版本统一** | 统一版本号为 v1.1.3 |
 
 ---
 

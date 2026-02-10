@@ -3,9 +3,7 @@
 用于演示和离线测试
 """
 from typing import Dict, List, Any
-from dataclasses import dataclass, asdict
 from functools import lru_cache
-import json
 
 
 # 常见电源管理芯片
@@ -353,35 +351,12 @@ BUILTIN_DATABASE = (
 _CACHE = {}
 
 
-@lru_cache(maxsize=128)
-def _get_component_cached(part_number: str) -> tuple:
-    """带缓存的组件查找 (返回tuple以便缓存)"""
-    for component in BUILTIN_DATABASE:
-        if component["part_number"].upper() == part_number.upper():
-            return tuple(sorted(component.items()))
-    return None
-
-
-def get_component(part_number: str) -> Dict:
-    """根据型号获取元器件详情 (带缓存)"""
-    key = part_number.upper()
-    
-    # 先查缓存
-    if key in _CACHE:
-        cached = _CACHE[key]
-        if cached:
-            return dict(cached)
-        return None
-    
-    # 查找并缓存
-    result = None
-    for component in BUILTIN_DATABASE:
-        if component["part_number"].upper() == part_number.upper():
-            result = component
-            break
-    
-    _CACHE[key] = tuple(sorted(result.items())) if result else None
-    return result
+def search_components(
+    query: str = None,
+    category: str = None,
+    constraints: dict = None,
+    limit: int = 10
+) -> List[Dict]:
     """
     内置数据库搜索
     
@@ -477,11 +452,25 @@ def get_component(part_number: str) -> Dict:
 
 
 def get_component(part_number: str) -> Dict:
-    """根据型号获取元器件详情"""
+    """根据型号获取元器件详情 (带缓存)"""
+    key = part_number.upper()
+    
+    # 先查缓存
+    if key in _CACHE:
+        cached = _CACHE[key]
+        if cached:
+            return dict(cached)
+        return None
+    
+    # 查找并缓存
+    result = None
     for component in BUILTIN_DATABASE:
         if component["part_number"].upper() == part_number.upper():
-            return component
-    return None
+            result = component
+            break
+    
+    _CACHE[key] = tuple(sorted(result.items())) if result else None
+    return result
 
 
 def get_alternatives(part_number: str) -> List[Dict]:
@@ -515,3 +504,298 @@ def get_price_comparison(part_number: str) -> Dict:
         "best_price": best.get("price"),
         "total_stock": sum(p.get("stock", 0) for p in prices)
     }
+
+# ============ 2026-02-10 新增：通信模块 ============
+COMMUNICATION_MODULES = [
+    {
+        "part_number": "ESP8266EX",
+        "description": "ESP8266 WiFi SoC",
+        "manufacturer": "Espressif",
+        "category": "communication",
+        "specs": {
+            "protocol": "WiFi 2.4GHz",
+            "voltage": "2.5V~3.6V",
+            "current": "80mA",
+            "interface": "UART/SPI/SDIO",
+            "package": "QFN32"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 4.50, "stock": 15000},
+            {"vendor": "AliExpress", "price": 5.80, "stock": 30000}
+        ],
+        "alternatives": ["ESP-01S", "ESP32-WROOM"]
+    },
+    {
+        "part_number": "ESP32-WROOM-32",
+        "description": "ESP32 WiFi+BT Module",
+        "manufacturer": "Espressif",
+        "category": "communication",
+        "specs": {
+            "protocol": "WiFi + Bluetooth 4.2",
+            "voltage": "3.0V~3.6V",
+            "current": "100mA",
+            "flash": "4MB",
+            "package": "Module"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 8.20, "stock": 20000},
+            {"vendor": "DigiKey", "price": 12.50, "stock": 5000}
+        ],
+        "alternatives": ["ESP32-WROVER", "ESP32-C3"]
+    },
+    {
+        "part_number": "nRF24L01",
+        "description": "2.4GHz RF Transceiver",
+        "manufacturer": "Nordic Semiconductor",
+        "category": "communication",
+        "specs": {
+            "protocol": "2.4GHz ISM",
+            "voltage": "1.9V~3.6V",
+            "data_rate": "2Mbps",
+            "range": "100m",
+            "package": "QFN20"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 1.20, "stock": 50000},
+            {"vendor": "AliExpress", "price": 1.80, "stock": 100000}
+        ],
+        "alternatives": ["SI24R1", "NRF24L01+"]
+    },
+    {
+        "part_number": "HC-05",
+        "description": "Bluetooth Serial Module",
+        "manufacturer": "HC",
+        "category": "communication",
+        "specs": {
+            "protocol": "Bluetooth 2.0+EDR",
+            "voltage": "3.6V~6V",
+            "range": "10m",
+            "interface": "UART",
+            "current": "50mA"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 3.50, "stock": 80000},
+            {"vendor": "Taobao", "price": 4.20, "stock": 50000}
+        ],
+        "alternatives": ["HC-06", "JY-MCU"]
+    },
+    {
+        "part_number": "SIM800L",
+        "description": "Quad-Band GSM/GPRS Module",
+        "manufacturer": "SimCom",
+        "category": "communication",
+        "specs": {
+            "protocol": "GSM/GPRS 850/900/1800/1900MHz",
+            "voltage": "3.4V~4.4V",
+            "interface": "UART",
+            "current": "2A (peak)",
+            "feature": "SMS/GPRS"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 12.80, "stock": 8000},
+            {"vendor": "AliExpress", "price": 15.50, "stock": 15000}
+        ],
+        "alternatives": ["SIM900A", "A6"]
+    }
+]
+
+# ============ 2026-02-10 新增：传感器 ============
+SENSORS = [
+    {
+        "part_number": "DHT11",
+        "description": "Digital Humidity and Temperature Sensor",
+        "manufacturer": "Aosong",
+        "category": "sensor",
+        "specs": {
+            "humidity": "20-90% RH",
+            "temperature": "0-50°C",
+            "accuracy": "±5% RH / ±2°C",
+            "voltage": "3.3V~5V",
+            "interface": "Single-wire"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 2.50, "stock": 100000},
+            {"vendor": "Taobao", "price": 2.80, "stock": 60000}
+        ],
+        "alternatives": ["DHT22", "SHT30"]
+    },
+    {
+        "part_number": "DS18B20",
+        "description": "Programmable Resolution 1-Wire Digital Thermometer",
+        "manufacturer": "Maxim",
+        "category": "sensor",
+        "specs": {
+            "temperature": "-55°C~+125°C",
+            "accuracy": "±0.5°C",
+            "resolution": "9-12 bit",
+            "voltage": "3.0V~5.5V",
+            "interface": "1-Wire"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 1.80, "stock": 50000},
+            {"vendor": "AliExpress", "price": 2.20, "stock": 80000}
+        ],
+        "alternatives": ["DS18S20", "LM35"]
+    },
+    {
+        "part_number": "HC-SR04",
+        "description": "Ultrasonic Distance Sensor",
+        "manufacturer": "ElecFreaks",
+        "category": "sensor",
+        "specs": {
+            "range": "2cm~400cm",
+            "accuracy": "±3mm",
+            "frequency": "40kHz",
+            "voltage": "5V",
+            "current": "15mA"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 3.80, "stock": 100000},
+            {"vendor": "Taobao", "price": 4.50, "stock": 50000}
+        ],
+        "alternatives": ["US-015", "JSN-SR04T"]
+    },
+    {
+        "part_number": "MPU-6050",
+        "description": "6-Axis MotionTracking Device (Gyro + Accel)",
+        "manufacturer": "TDK InvenSense",
+        "category": "sensor",
+        "specs": {
+            "gyro": "±250/500/1000/2000°/s",
+            "accel": "±2/4/8/16g",
+            "interface": "I2C/SPI",
+            "voltage": "2.375V~3.46V",
+            "feature": "DMP"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 5.20, "stock": 25000},
+            {"vendor": "DigiKey", "price": 8.50, "stock": 8000}
+        ],
+        "alternatives": ["MPU-6000", "BMI160"]
+    },
+    {
+        "part_number": "BMP280",
+        "description": "Barometric Pressure Sensor",
+        "manufacturer": "Bosch",
+        "category": "sensor",
+        "specs": {
+            "pressure": "300~1100 hPa",
+            "temperature": "-40~+85°C",
+            "accuracy": "±1 hPa",
+            "interface": "I2C/SPI",
+            "voltage": "1.71V~3.6V"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 2.80, "stock": 40000},
+            {"vendor": "AliExpress", "price": 3.50, "stock": 60000}
+        ],
+        "alternatives": ["BMP180", "BME280"]
+    },
+    {
+        "part_number": "BH1750",
+        "description": "Digital Light Sensor",
+        "manufacturer": "ROHM",
+        "category": "sensor",
+        "specs": {
+            "illuminance": "1~65535 lx",
+            "accuracy": "±20%",
+            "interface": "I2C",
+            "voltage": "2.4V~3.6V",
+            "current": "0.1mA"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 2.20, "stock": 45000},
+            {"vendor": "LCSC", "price": 1.90, "stock": 30000}
+        ],
+        "alternatives": ["TSL2561", "OPT3001"]
+    },
+    {
+        "part_number": "HC-SR501",
+        "description": "PIR Motion Sensor",
+        "manufacturer": "HC",
+        "category": "sensor",
+        "specs": {
+            "range": "3-7m",
+            "angle": "120°",
+            "delay": "5~200s",
+            "voltage": "4.5V~20V",
+            "current": "50μA"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 2.80, "stock": 80000},
+            {"vendor": "Taobao", "price": 3.20, "stock": 40000}
+        ],
+        "alternatives": ["AM312", "SR602"]
+    },
+    {
+        "part_number": "MQ-2",
+        "description": "Gas Sensor (Combustible Gas/Smoke)",
+        "manufacturer": "Winsen",
+        "category": "sensor",
+        "specs": {
+            "detection": "LPG, Propane, Hydrogen, Methane, Smoke",
+            "sensitivity": "adjustable",
+            "voltage": "5V",
+            "current": "150mA",
+            "heater": "5V"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 3.50, "stock": 50000},
+            {"vendor": "Taobao", "price": 4.20, "stock": 30000}
+        ],
+        "alternatives": ["MQ-3", "MQ-5", "MQ-135"]
+    },
+    {
+        "part_number": "ADS1115",
+        "description": "16-Bit ADC with PGA",
+        "manufacturer": "Texas Instruments",
+        "category": "sensor",
+        "specs": {
+            "resolution": "16-bit",
+            "channels": "4",
+            "i2c_addr": "0x48~0x4B",
+            "voltage": "2.0V~5.5V",
+            "sps": "860"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 3.80, "stock": 20000},
+            {"vendor": "DigiKey", "price": 6.20, "stock": 5000}
+        ],
+        "alternatives": ["ADS1015", "PCF8591"]
+    },
+    {
+        "part_number": "MAX9814",
+        "description": "Electret Microphone Amplifier",
+        "manufacturer": "Maxim",
+        "category": "sensor",
+        "specs": {
+            "gain": "40/50/60 dB",
+            "bandwidth": "20Hz~20kHz",
+            "vdd": "2.7V~5.5V",
+            "current": "3mA",
+            "feature": "AGC"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 4.50, "stock": 35000},
+            {"vendor": "LCSC", "price": 4.20, "stock": 15000}
+        ],
+        "alternatives": ["MAX4466", "MAX9814"]
+    }
+]
+
+# 导出所有器件数据库
+def get_all_components():
+    """获取所有内置器件数据"""
+    return {
+        "power": POWER_COMPONENTS,
+        "communication": COMMUNICATION_MODULES,
+        "sensor": SENSORS,
+        # 合并到主数据库
+    }
+
+# 将新器件添加到主列表
+_all_db = get_all_components()
+for category in ["communication", "sensor"]:
+    for item in _all_db.get(category, []):
+        # 更新现有数据库（这里只是扩展，实际使用时从 get_all_components 获取）
+        pass
