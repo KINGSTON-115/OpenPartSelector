@@ -453,7 +453,7 @@ def calculate_resistor_for_led(
     led_voltage: float = 2.0,
     led_current: float = 0.02
 ) -> Dict:
-    """计算LED限流电阻"""
+    """计算LED限流电阻 (改进版 - 完整E24系列)"""
     v_r = voltage - led_voltage
     if v_r <= 0:
         return {"error": "输入电压必须大于LED压降"}
@@ -461,22 +461,61 @@ def calculate_resistor_for_led(
     r = v_r / led_current
     power = v_r * led_current
     
-    # 查找最近的标准电阻值 (E24 通用系列)
-    e24_values = [10, 12, 15, 18, 22, 27, 33, 39, 47, 51, 56, 62, 68, 75, 82, 91, 100, 120, 150, 180, 200, 220, 270, 330, 390, 470, 510, 560, 680, 820, 1000]
+    # 完整E24标准电阻系列 (10Ω ~ 1MΩ)
+    e24_values = [
+        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
+        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
+        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
+        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
+        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
+        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
+        10000, 11000, 12000, 13000, 15000, 16000, 18000, 20000, 22000, 24000, 27000, 30000,
+        33000, 36000, 39000, 43000, 47000, 51000, 56000, 62000, 68000, 75000, 82000, 91000,
+        100000, 110000, 120000, 130000, 150000, 160000, 180000, 200000, 220000, 240000, 270000, 300000,
+        330000, 360000, 390000, 430000, 470000, 510000, 560000, 620000, 680000, 750000, 820000, 910000,
+        1000000
+    ]
     
-    # 使用 E24 系列找最接近的值
+    # 使用E24系列找最接近的值
     standard = min(e24_values, key=lambda x: abs(x - r))
+    
+    # 计算实际功率
+    actual_power = (v_r ** 2) / standard
     
     return {
         "input_voltage": f"{voltage}V",
         "led_voltage": f"{led_voltage}V",
         "led_current": f"{led_current*1000:.0f}mA",
-        "calculated_resistance": f"{r:.0f}",
-        "recommended_resistance": f"{standard}",
-        "power_dissipation": f"{power*1000:.1f}mW",
-        "power_rating": "1/4W (建议用1W如果功率大)",
-        "formula": f"R = (Vcc - Vled) / Iled"
+        "voltage_across_resistor": f"{v_r:.1f}V",
+        "calculated_resistance": f"{r:.1f}Ω",
+        "recommended_resistance": f"{standard}Ω",
+        "power_dissipation": f"{actual_power*1000:.1f}mW",
+        "power_rating": _get_power_rating(actual_power),
+        "formula": f"R = (Vcc - Vled) / Iled = ({voltage}V - {led_voltage}V) / {led_current*1000:.0f}mA",
+        "nearby_standard_values": _find_nearby_standards(r, e24_values)
     }
+
+
+def _get_power_rating(power_watts: float) -> str:
+    """根据功率推荐合适的电阻功率等级"""
+    if power_watts < 0.125:
+        return "1/8W (或更大)"
+    elif power_watts < 0.25:
+        return "1/4W (推荐)"
+    elif power_watts < 0.5:
+        return "1/2W (推荐)"
+    elif power_watts < 1.0:
+        return "1W (必须)"
+    elif power_watts < 2.0:
+        return "2W (推荐)"
+    else:
+        return f"{int(power_watts)}W+ (大功率电阻)"
+
+
+def _find_nearby_standards(calculated: float, e24_series: list) -> list:
+    """找到最接近的标准值列表"""
+    sorted_values = sorted(e24_series, key=lambda x: abs(x - calculated))
+    return [f"{v}Ω" for v in sorted_values[:3]]
 
 
 def calculate_voltage_divider(

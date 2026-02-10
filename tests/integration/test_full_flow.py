@@ -156,6 +156,43 @@ def test_features_sync():
     result = calculate_resistor_for_led()
     assert result["recommended_resistance"] == "150"  # 期望标准值
     print(f"✅ LED计算器同步测试通过")
+    
+    # 测试改进后的LED计算器 (包含更多E24值)
+    result2 = calculate_resistor_for_led(voltage=12.0, led_voltage=3.2, led_current=0.02)
+    assert "nearby_standard_values" in result2
+    assert "power_rating" in result2
+    print(f"✅ 改进版LED计算器测试通过")
+
+
+async def test_edge_cases():
+    """测试边缘情况"""
+    from ops.features import calculate_resistor_for_led
+    
+    # 1. 电压不足的情况
+    result = calculate_resistor_for_led(voltage=1.5, led_voltage=2.0, led_current=0.02)
+    assert "error" in result
+    print(f"✅ 电压不足错误处理通过")
+    
+    # 2. 空查询
+    from ops.agent import quick_select
+    result = quick_select("nonexistent_part_xyz_123", top_k=3)
+    assert result is not None
+    assert len(result.recommended_parts) == 0  # 预期无结果
+    print(f"✅ 无结果查询测试通过")
+
+
+async def test_passive_components():
+    """测试被动器件数据库"""
+    from ops.database import search_components, PASSIVE_COMPONENTS
+    
+    # 测试被动器件是否存在
+    assert len(PASSIVE_COMPONENTS) > 0
+    print(f"✅ 被动器件库包含 {len(PASSIVE_COMPONENTS)} 个器件")
+    
+    # 测试搜索被动器件
+    results = search_components(query="10K", category="passive")
+    assert len(results) > 0
+    print(f"✅ 被动器件搜索测试通过")
 
 
 # 运行测试
@@ -189,6 +226,12 @@ if __name__ == "__main__":
         print()
         
         test_features_sync()
+        print()
+        
+        await test_edge_cases()
+        print()
+        
+        await test_passive_components()
         print()
         
         print("=" * 60)

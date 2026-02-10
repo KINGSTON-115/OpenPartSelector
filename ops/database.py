@@ -6,6 +6,98 @@ from typing import Dict, List, Any, Optional
 from functools import lru_cache
 
 
+# ============ 2026-02-10 新增：常用被动器件 ============
+PASSIVE_COMPONENTS = [
+    {
+        "part_number": "10uF_16V_Ceramic",
+        "description": "MLCC Ceramic Capacitor 10uF 16V 0805",
+        "manufacturer": "Various",
+        "category": "passive",
+        "specs": {
+            "capacitance": "10uF",
+            "voltage": "16V",
+            "tolerance": "±20%",
+            "package": "0805",
+            "type": "X7R"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 0.01, "stock": 500000},
+            {"vendor": "AliExpress", "price": 0.02, "stock": 200000}
+        ],
+        "alternatives": ["10uF_25V_0805", "10uF_16V_0603"]
+    },
+    {
+        "part_number": "100nF_50V_Ceramic",
+        "description": "MLCC Ceramic Capacitor 100nF 50V 0603",
+        "manufacturer": "Various",
+        "category": "passive",
+        "specs": {
+            "capacitance": "100nF",
+            "voltage": "50V",
+            "tolerance": "±10%",
+            "package": "0603",
+            "type": "X7R"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 0.005, "stock": 1000000},
+            {"vendor": "AliExpress", "price": 0.01, "stock": 500000}
+        ],
+        "alternatives": ["100nF_25V_0603"]
+    },
+    {
+        "part_number": "10K_0603_1%",
+        "description": "Metal Film Resistor 10KΩ 1/10W 1% 0603",
+        "manufacturer": "Various",
+        "category": "passive",
+        "specs": {
+            "resistance": "10KΩ",
+            "power": "0.1W",
+            "tolerance": "1%",
+            "package": "0603"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 0.002, "stock": 2000000},
+            {"vendor": "AliExpress", "price": 0.005, "stock": 1000000}
+        ],
+        "alternatives": ["10K_0805_1%", "10K_0603_5%"]
+    },
+    {
+        "part_number": "1K_0603_1%",
+        "description": "Metal Film Resistor 1KΩ 1/10W 1% 0603",
+        "manufacturer": "Various",
+        "category": "passive",
+        "specs": {
+            "resistance": "1KΩ",
+            "power": "0.1W",
+            "tolerance": "1%",
+            "package": "0603"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 0.002, "stock": 2000000},
+            {"vendor": "AliExpress", "price": 0.005, "stock": 1000000}
+        ],
+        "alternatives": ["1K_0805_1%", "1K_0603_5%"]
+    },
+    {
+        "part_number": "100R_0603_1%",
+        "description": "Metal Film Resistor 100Ω 1/10W 1% 0603",
+        "manufacturer": "Various",
+        "category": "passive",
+        "specs": {
+            "resistance": "100Ω",
+            "power": "0.1W",
+            "tolerance": "1%",
+            "package": "0603"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 0.002, "stock": 2000000},
+            {"vendor": "AliExpress", "price": 0.005, "stock": 1000000}
+        ],
+        "alternatives": ["100R_0805_1%", "100R_0603_5%"]
+    }
+]
+
+
 # 常见电源管理芯片
 POWER_COMPONENTS = [
     {
@@ -337,15 +429,6 @@ DISCRETE_COMPONENTS = [
     }
 ]
 
-
-# 合并所有内置数据
-BUILTIN_DATABASE = (
-    POWER_COMPONENTS + 
-    MCU_COMPONENTS + 
-    INTERFACE_COMPONENTS + 
-    ANALOG_COMPONENTS + 
-    DISCRETE_COMPONENTS
-)
 
 # 简单内存缓存
 _CACHE = {}
@@ -790,6 +873,7 @@ def get_all_components() -> Dict[str, List[Dict]]:
         "power": POWER_COMPONENTS,
         "communication": COMMUNICATION_MODULES,
         "sensor": SENSORS,
+        "passive": PASSIVE_COMPONENTS,
     }
 
 
@@ -803,12 +887,15 @@ def get_component_by_partnumber(part_number: str) -> Optional[Dict]:
     """根据型号精确获取器件"""
     return get_component(part_number)
 
-# 将新器件添加到主列表
-_all_db = get_all_components()
-# 修复 2026-02-10: 确保所有分类的器件都添加到主数据库
-for category in ["communication", "sensor"]:
-    for item in _all_db.get(category, []):
-        # 检查是否已存在，避免重复
-        exists = any(d["part_number"] == item["part_number"] for d in BUILTIN_DATABASE)
-        if not exists:
-            BUILTIN_DATABASE.append(item)
+
+# ============ 2026-02-10 新增：合并所有内置数据 ============
+BUILTIN_DATABASE = (
+    POWER_COMPONENTS + 
+    MCU_COMPONENTS + 
+    INTERFACE_COMPONENTS + 
+    ANALOG_COMPONENTS + 
+    DISCRETE_COMPONENTS +
+    COMMUNICATION_MODULES +
+    SENSORS +
+    PASSIVE_COMPONENTS
+)
