@@ -1,5 +1,17 @@
 """
 AI Agent 主模块 - 基于多 Agent 协作的选型引擎
+
+功能:
+    - 自然语言查询解析
+    - 多源元器件搜索
+    - 兼容性分析与排序
+    - BOM 清单生成
+    - 国产替代推荐
+
+示例:
+    >>> import asyncio
+    >>> agent = Agent()
+    >>> asyncio.run(agent.select("为 ESP32 项目找一个 3.3V LDO"))
 """
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
@@ -7,6 +19,7 @@ from enum import Enum
 import json
 import logging
 import asyncio
+from datetime import datetime, timezone
 
 from .config import Config
 from .search import SearchEngine
@@ -45,7 +58,23 @@ class PartSpec:
 
 @dataclass
 class SearchResult:
-    """搜索结果"""
+    """
+    搜索结果 - 代表一个匹配的元器件
+
+    Attributes:
+        part_number: 元器件型号
+        description: 器件描述
+        manufacturer: 制造商
+        category: 分类 (power/mcu/sensor/...)
+        specs: 规格参数
+        price: 最低价格
+        stock: 总库存
+        vendors: 各供应商价格列表
+        datasheet_url: datasheet 链接
+        compatibility_score: 兼容性分数 (0-1)
+        matched_constraints: 匹配的约束条件列表
+        alternatives: 替代料推荐
+    """
     part_number: str
     description: str
     manufacturer: str
@@ -344,10 +373,9 @@ class Agent:
         
         return results
     
-    async def _get_price_with_timeout(self, part_number: str, timeout: float = 2.0) -> Dict:
-        """带超时的价格获取"""
+    async def _get_price_with_timeout(self, part_number: str, timeout: float = 2.0) -> Dict[str, Any]:
+        """带超时的价格获取 (防止网络阻塞)"""
         try:
-            import asyncio
             return await asyncio.wait_for(
                 self.search_engine.compare_prices(part_number),
                 timeout=timeout
@@ -506,8 +534,7 @@ class Agent:
         return bom
     
     def _timestamp(self) -> str:
-        """生成时间戳"""
-        from datetime import datetime, timezone
+        """生成 UTC 时间戳"""
         return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
@@ -521,38 +548,108 @@ def create_agent(config_path: Optional[str] = None) -> Agent:
 # 同步版本的选型函数 (方便简单使用)
 def quick_select(query: str, top_k: int = 5) -> SelectionResult:
     """
-    快速选型 (同步版本)
-    
+    快速选型 (同步版本) - 简单易用，无需 async/await 知识
+
     Args:
-        query: 自然语言查询
-        top_k: 返回结果数量
-        
+        query: 自然语言查询，如 "为 ESP32 项目找一个 3.3V LDO"
+        top_k: 返回结果数量，默认 5
+
     Returns:
-        选型结果
+        SelectionResult: 选型结果，包含推荐器件、分析报告、BOM 清单
+
+    Example:
+        >>> result = quick_select("STM32F103C8T6 国产替代")
+        >>> for part in result.recommended_parts:
+        ...     print(f"{part.part_number}: ¥{part.price}")
     """
-    import asyncio
-    
+    import concurrent.futures
+
     agent = Agent()
-    
+
     # 检查是否已在事件循环中
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            # 在已有循环中，使用 ensure_future
-            async def do_select():
+            # 在 Jupyter/IPython 等环境中，在线程池中运行
+            async def do_select() -> SelectionResult:
                 try:
                     await agent.initialize()
                 except Exception:
-                    pass  # 忽略初始化错误
+                    pass  # 忽略初始化错误，使用内置数据库
                 return await agent.select(query, top_k=top_k)
-            
-            # 在新线程中运行
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(asyncio.run, do_select())
                 return future.result()
+
     except RuntimeError:
         # 无运行中的循环，直接使用 run
         pass
-    
+
     return asyncio.run(agent.select(query, top_k=top_k))
+
+
+def quick_search(query: str, limit: int = 10) -> List[SearchResult]:
+    """
+    快速搜索 - 只搜索不分析，适合批量查询
+
+    Args:
+        query: 搜索关键词
+        limit: 返回结果数量，默认 10
+
+    Returns:
+        List[SearchResult]: 搜索结果列表
+
+    Example:
+        >>> results = quick_search("STM32F103")
+        >>> for r in results[:3]:
+        ...     print(f"{r.part_number}: {r.manufacturer}")
+    """
+    import concurrent.futures
+
+    agent = Agent()
+
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # 在已有事件循环中，使用线程池
+            async def do_search() -> List[SearchResult]:
+                try:
+                    await agent.initialize()
+                except Exception:
+                    pass
+                candidates = await agent.search_engine.search(query=query, limit=limit)
+                # 只返回基本信息，不做深度分析
+                return [
+                    SearchResult(
+                        part_number=c.get("part_number", ""),
+                        description=c.get("description", ""),
+                        manufacturer=c.get("manufacturer", ""),
+                        category=c.get("category", ""),
+                        specs=PartSpec(),
+                        price=c.get("price"),
+                        stock=c.get("stock"),
+                    )
+                    for c in candidates
+                ]
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(asyncio.run, do_search())
+                return future.result()
+
+    except RuntimeError:
+        pass
+
+    results = asyncio.run(agent.search_engine.search(query=query, limit=limit))
+    return [
+        SearchResult(
+            part_number=c.get("part_number", ""),
+            description=c.get("description", ""),
+            manufacturer=c.get("manufacturer", ""),
+            category=c.get("category", ""),
+            specs=PartSpec(),
+            price=c.get("price"),
+            stock=c.get("stock"),
+        )
+        for c in results
+    ]
