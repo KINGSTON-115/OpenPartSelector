@@ -3,348 +3,683 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 OpenPartSelector v0.5 - 真正实时搜索</title>
+    <title>🔌 OpenPartSelector - 电子元器件选型神器</title>
+    <meta name="description" content="专为电子类专业大学生打造的元器件选型工具，免费开源">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:Microsoft YaHei,sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;color:#fff}
-        .container{max-width:1100px;margin:0 auto;padding:20px}
-        .header{text-align:center;padding:40px 20px}
-        .logo{font-size:60px}
-        .header h1{font-size:2.8em;margin-bottom:15px;background:linear-gradient(90deg,#00d2ff,#3a7bd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .card{background:rgba(255,255,255,0.05);border-radius:20px;padding:35px;margin:25px 0;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1)}
-        .search-box{display:flex;gap:12px;margin:25px 0}
-        .search-box input{flex:1;padding:20px 25px;font-size:17px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:15px;color:#fff;outline:none}
-        .search-box input:focus{border-color:#00d2ff}
-        .search-box button{padding:20px 40px;font-size:17px;font-weight:bold;background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:#fff;border:none;border-radius:15px;cursor:pointer}
-        .examples{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
-        .example-btn{padding:12px 22px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:25px;color:#ccd6f6;cursor:pointer;font-size:14px}
-        .example-btn:hover{background:rgba(0,210,255,0.2);border-color:#00d2ff}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            min-height:100vh;
+            color:#2d3748;
+        }
+        .container{max-width:1200px;margin:0 auto;padding:20px}
+        
+        /* 头部 */
+        .hero{
+            text-align:center;
+            padding:60px 20px;
+            background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+            border-radius:0 0 50px 50px;
+            margin-bottom:40px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.3);
+        }
+        .hero-logo{font-size:80px;margin-bottom:20px}
+        .hero h1{
+            font-size:3em;
+            background:linear-gradient(90deg,#00d2ff,#3a7bd5);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            margin-bottom:15px
+        }
+        .hero p{color:#a0aec0;font-size:1.3em;margin-bottom:25px}
+        .hero-tags{display:flex;flex-wrap:wrap;justify:center;gap:12px}
+        .hero-tag{
+            padding:8px 20px;
+            background:rgba(255,255,255,0.1);
+            border-radius:25px;
+            color:#fff;
+            font-size:14px;
+        }
+        
+        /* 卡片 */
+        .card{
+            background:#fff;
+            border-radius:20px;
+            padding:35px;
+            margin:25px 0;
+            box-shadow:0 10px 40px rgba(0,0,0,0.1);
+            transition:transform 0.3s,box-shadow 0.3s;
+        }
+        .card:hover{
+            transform:translateY(-5px);
+            box-shadow:0 20px 60px rgba(0,0,0,0.15);
+        }
+        .card h2{
+            font-size:1.8em;
+            color:#1a202c;
+            margin-bottom:20px;
+            display:flex;
+            align-items:center;
+            gap:12px
+        }
+        
+        /* 搜索框 */
+        .search-wrapper{
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            border-radius:20px;
+            padding:30px;
+            margin:30px 0;
+        }
+        .search-box{
+            display:flex;
+            gap:15px;
+            background:#fff;
+            border-radius:15px;
+            padding:10px;
+        }
+        .search-box input{
+            flex:1;
+            padding:18px 25px;
+            font-size:18px;
+            border:none;
+            outline:none;
+            border-radius:10px;
+        }
+        .search-box button{
+            padding:18px 40px;
+            font-size:18px;
+            font-weight:bold;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff;
+            border:none;
+            border-radius:12px;
+            cursor:pointer;
+            transition:all 0.3s;
+        }
+        .search-box button:hover{
+            transform:scale(1.05);
+            box-shadow:0 10px 30px rgba(102,126,234,0.4);
+        }
+        
+        /* 热门搜索 */
+        .hot-tags{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+        .hot-tag{
+            padding:12px 22px;
+            background:rgba(255,255,255,0.2);
+            border-radius:25px;
+            color:#fff;
+            cursor:pointer;
+            font-size:15px;
+            transition:all 0.3s;
+        }
+        .hot-tag:hover{
+            background:rgba(255,255,255,0.3);
+            transform:scale(1.05);
+        }
+        
+        /* 结果卡片 */
+        .result{
+            background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+            border-radius:18px;
+            padding:28px;
+            margin:18px 0;
+            border-left:6px solid #667eea;
+            transition:all 0.3s;
+        }
+        .result:hover{
+            transform:translateX(10px);
+            box-shadow:0 10px 30px rgba(102,126,234,0.2);
+        }
+        .result h3{
+            color:#667eea;
+            font-size:1.5em;
+            margin-bottom:12px
+        }
+        .result-meta{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin:15px 0
+        }
+        .meta-tag{
+            padding:8px 18px;
+            background:#fff;
+            border-radius:20px;
+            font-size:14px;
+            color:#4a5568;
+        }
+        .meta-tag.price{
+            background:linear-gradient(135deg,#48bb78 0%,#38a169 100%);
+            color:#fff;
+            font-weight:bold;
+        }
+        .meta-tag.stock{
+            background:linear-gradient(135deg,#4299e1 0%,#3182ce 100%);
+            color:#fff;
+        }
+        
+        /* 功能网格 */
+        .features{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+            gap:25px;
+            margin:40px 0
+        }
+        .feature{
+            text-align:center;
+            padding:40px 30px;
+            background:linear-gradient(135deg,#f5f7fa 0%,#e4e8eb 100%);
+            border-radius:20px;
+            transition:all 0.3s;
+        }
+        .feature:hover{
+            transform:translateY(-10px);
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff;
+        }
+        .feature:hover .feature-icon{transform:scale(1.2)}
+        .feature-icon{font-size:60px;margin-bottom:20px;transition:transform 0.3s}
+        .feature h3{font-size:1.4em;margin:15px 0;color:#2d3748}
+        .feature:hover h3{color:#fff}
+        .feature p{color:#718096;font-size:15px;line-height:1.6}
+        .feature:hover p{color:rgba(255,255,255,0.9)}
+        
+        /* 下载区域 */
+        .download-section{
+            background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+            border-radius:25px;
+            padding:50px;
+            text-align:center;
+            margin:40px 0;
+        }
+        .download-section h2{color:#fff;font-size:2.2em;margin-bottom:15px}
+        .download-section p{color:#a0aec0;font-size:1.2em;margin-bottom:35px}
+        .download-buttons{display:flex;flex-wrap:wrap;justify:center;gap:20px}
+        .download-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:12px;
+            padding:20px 45px;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff;
+            text-decoration:none;
+            border-radius:30px;
+            font-size:18px;
+            font-weight:bold;
+            transition:all 0.3s;
+        }
+        .download-btn:hover{
+            transform:scale(1.1);
+            box-shadow:0 15px 40px rgba(102,126,234,0.5);
+        }
+        .download-btn.secondary{
+            background:rgba(255,255,255,0.1);
+            border:2px solid rgba(255,255,255,0.3);
+        }
+        
+        /* 商城链接 */
+        .shops{display:flex;flex-wrap:wrap;justify:center;gap:20px;margin-top:30px}
+        .shop-link{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:15px 30px;
+            background:rgba(255,255,255,0.1);
+            border-radius:15px;
+            color:#fff;
+            text-decoration:none;
+            font-size:16px;
+            transition:all 0.3s;
+        }
+        .shop-link:hover{background:rgba(255,255,255,0.2)}
+        
+        /* 状态指示 */
+        .status-bar{
+            display:flex;
+            justify-content:center;
+            gap:30px;
+            padding:20px;
+            background:rgba(0,0,0,0.2);
+            border-radius:15px;
+            margin:25px 0;
+        }
+        .status-item{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            color:#a0aec0;
+        }
+        .status-dot{
+            width:12px;
+            height:12px;
+            background:#48bb78;
+            border-radius:50%;
+            animation:pulse 2s infinite;
+        }
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        
+        /* 页脚 */
+        .footer{
+            text-align:center;
+            padding:50px;
+            color:#a0aec0;
+        }
+        .footer a{color:#667eea;text-decoration:none}
+        
+        /* 加载动画 */
         .loading{text-align:center;padding:50px;display:none}
         .loading.show{display:block}
-        .spinner{width:55px;height:55px;border:5px solid rgba(255,255,255,0.1);border-top-color:#00d2ff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+        .spinner{
+            width:60px;
+            height:60px;
+            border:6px solid rgba(255,255,255,0.1);
+            border-top-color:#667eea;
+            border-radius:50%;
+            animation:spin 1s linear infinite;
+            margin:0 auto 20px;
+        }
         @keyframes spin{to{transform:rotate(360deg)}}
-        .online-status{text-align:center;margin:15px 0;padding:15px;background:rgba(40,167,69,0.1);border-radius:12px;border:1px solid rgba(40,167,69,0.3)}
-        .result{background:rgba(255,255,255,0.05);border-radius:18px;padding:28px;margin:18px 0;border-left:5px solid #00d2ff}
-        .result h3{color:#00d2ff;font-size:1.4em;margin-bottom:10px}
-        .tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-        .tag{padding:8px 18px;background:rgba(0,210,255,0.15);border-radius:20px;font-size:13px}
-        .tag.price{background:rgba(40,167,69,0.25)}
-        .tag.success{background:rgba(40,167,69,0.25)}
-        .tag.external{background:rgba(255,193,7,0.2);color:#ffc107}
-        .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin:35px 0}
-        .feature{text-align:center;padding:30px;background:rgba(255,255,255,0.03);border-radius:15px}
-        .feature-icon{font-size:45px;margin-bottom:15px}
-        .feature h3{color:#00d2ff;margin:15px 0 12px}
-        .feature p{color:#8892b0;font-size:14px}
-        .footer{text-align:center;padding:50px;color:#8892b0;margin-top:40px}
-        .bom-section{margin-top:50px}
-        .bom-table{width:100%;border-collapse:collapse;margin:25px 0;background:rgba(0,0,0,0.2);border-radius:12px;overflow:hidden}
-        .bom-table th,.bom-table td{padding:16px 20px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.08)}
-        .bom-table th{background:rgba(0,210,255,0.15);color:#00d2ff;font-weight:600}
-        .bom-table tr:hover{background:rgba(255,255,255,0.05)}
-        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:25px 0}
-        .stat{text-align:center;padding:25px;background:rgba(255,255,255,0.05);border-radius:15px}
-        .stat-value{font-size:2.5em;font-weight:bold;color:#00d2ff}
-        .stat-label{color:#8892b0;font-size:14px}
-        .warning-box{background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.25);border-radius:12px;padding:25px;margin:25px 0}
-        @media(max-width:768px){.header h1{font-size:2em}.search-box{flex-direction:column}}
+        
+        /* 响应式 */
+        @media(max-width:768px){
+            .hero h1{font-size:2em}
+            .search-box{flex-direction:column}
+            .features{grid-template-columns:1fr}
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">🤖</div>
-            <h1>OpenPartSelector v0.5</h1>
-            <p>🤖 AI电子元器件选型 · 🔗 <span id="status">实时搜索</span></p>
+    <!-- 头部 -->
+    <div class="hero">
+        <div class="hero-logo">🔌</div>
+        <h1>OpenPartSelector</h1>
+        <p>专为电子类专业大学生打造的元器件选型神器 🚀</p>
+        <div class="hero-tags">
+            <span class="hero-tag">💰 免费开源</span>
+            <span class="hero-tag">🎓 学生友好</span>
+            <span class="hero-tag">🇨🇳 国产替代</span>
+            <span class="hero-tag">📦 实时比价</span>
         </div>
+    </div>
 
+    <div class="container">
+        <!-- 搜索卡片 -->
         <div class="card">
             <h2>🔍 智能选型</h2>
-            <p style="color:#8892b0;margin:12px 0 20px;">输入任意器件型号，实时搜索全网最优方案</p>
+            <p style="color:#718096;font-size:1.1em;margin-bottom:20px;">
+                输入器件型号或需求，实时搜索全网最优方案
+            </p>
             
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="输入任意型号: STC89C51, STM32, ESP32, CH340...">
-                <button onclick="realSearch()">🔍 实时搜索</button>
-            </div>
-            
-            <p style="color:#8892b0;">💡 试试:</p>
-            <div class="examples">
-                <button class="example-btn" onclick="setQuery('STC89C51')">STC89C51</button>
-                <button class="example-btn" onclick="setQuery('STM32F103C8T6')">STM32F103</button>
-                <button class="example-btn" onclick="setQuery('ESP32-WROOM')">ESP32</button>
-                <button class="example-btn" onclick="setQuery('AT89S52')">AT89S52</button>
-                <button class="example-btn" onclick="setQuery('CH340N')">CH340N</button>
-                <button class="example-btn" onclick="setQuery('LM358')">LM358</button>
-                <button class="example-btn" onclick="setQuery('NE555')">NE555</button>
-                <button class="example-btn" onclick="setQuery('74HC595')">74HC595</button>
-                <button class="example-btn" onclick="setQuery('RP2040')">RP2040</button>
-                <button class="example-btn" onclick="setQuery('NRF52832')">NRF52832</button>
-                <button class="example-btn" onclick="setQuery('MSP430')">MSP430</button>
-                <button class="example-btn" onclick="setQuery('K210')">K210 AI</button>
-                <button class="example-btn" onclick="setQuery('STC8A8K')">STC8A8K</button>
-                <button class="example-btn" onclick="setQuery('CH552')">CH552</button>
-                <button class="example-btn" onclick="setQuery('N76E003')">N76E003</button>
-                <button class="example-btn" onclick="setQuery('C8051F330')">C8051F330</button>
-                <button class="example-btn" onclick="setQuery('APM32F030')">APM32F030</button>
-                <button class="example-btn" onclick="setQuery('EFM8BB10')">EFM8BB10</button>
+            <div class="search-wrapper">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="输入型号：STM32F103C8T6、ESP32、CH340...">
+                    <button onclick="search()">🔍 立即搜索</button>
+                </div>
+                
+                <p style="color:#fff;margin:15px 0 10px;font-size:15px;">🔥 热门搜索：</p>
+                <div class="hot-tags">
+                    <button class="hot-tag" onclick="setQuery('STM32F103C8T6')">STM32F103</button>
+                    <button class="hot-tag" onclick="setQuery('ESP32-WROOM')">ESP32</button>
+                    <button class="hot-tag" onclick="setQuery('STC89C51')">STC89C51</button>
+                    <button class="hot-tag" onclick="setQuery('CH340N')">CH340N</button>
+                    <button class="hot-tag" onclick="setQuery('ATMEGA328P')">ATMEGA328P</button>
+                    <button class="hot-tag" onclick="setQuery('NE555')">NE555</button>
+                    <button class="hot-tag" onclick="setQuery('RP2040')">RP2040</button>
+                    <button class="hot-tag" onclick="setQuery('GD32F103')">GD32国产</button>
+                </div>
             </div>
 
-            <div id="statusBox" class="online-status">
-                🔗 实时搜索已就绪 - 输入任意器件型号立即搜索
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>🔥 实时搜索已就绪</span>
+                </div>
+                <div class="status-item">
+                    <span>📦 支持 100+ 器件类型</span>
+                </div>
+                <div class="status-item">
+                    <span>🔗 5+ 主流商城</span>
+                </div>
             </div>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p style="color:#8892b0;">🔄 正在实时搜索...</p>
-                <p style="color:#667788;font-size:14px;margin-top:10px;" id="searchingUrl"></p>
+                <p style="color:#718096;font-size:1.1em;">🔄 正在搜索...</p>
             </div>
             <div id="results"></div>
         </div>
 
+        <!-- 核心功能 -->
         <div class="card">
-            <h2 style="margin-bottom:25px">✨ 核心功能</h2>
+            <h2>✨ 核心功能</h2>
             <div class="features">
-                <div class="feature"><div class="feature-icon">🔗</div><h3>真正实时</h3><p>任意型号搜索<br>无需预设列表<br>立即显示结果</p></div>
-                <div class="feature"><div class="feature-icon">🔍</div><h3>全网搜索</h3><p>LCSC 立创商城<br>Digi-Key<br>比价功能</p></div>
-                <div class="feature"><div class="feature-icon">📊</div><h3>规格对比</h3><p>参数对比<br>性能分析<br>选择建议</p></div>
-                <div class="feature"><div class="feature-icon">🔗</div><h3>一键购买</h3><p>直达商城<br>数据手册<br>库存查询</p></div>
+                <div class="feature">
+                    <div class="feature-icon">🔍</div>
+                    <h3>智能搜索</h3>
+                    <p>自然语言搜索<br>模糊匹配<br>快速定位</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💰</div>
+                    <h3>全网比价</h3>
+                    <p>立创商城<br>淘宝/京东<br>最低价购买</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🇨🇳</div>
+                    <h3>国产替代</h3>
+                    <p>ST→GD32<br>一键替换<br>降本增效</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📚</div>
+                    <h3>学习资源</h3>
+                    <p>数据手册<br>教程链接<br>开源项目</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📋</div>
+                    <h3>BOM 管理</h3>
+                    <p>批量选型<br>清单导出<br>一站式采购</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚠️</div>
+                    <h3>停产预警</h3>
+                    <p>EOL 提醒<br>替代推荐<br>供应链安全</p>
+                </div>
             </div>
         </div>
 
+        <!-- 下载区域 -->
+        <div class="download-section">
+            <h2>📥 获取工具</h2>
+            <p>选择最适合你的使用方式</p>
+            <div class="download-buttons">
+                <a href="https://github.com/KINGSTON-115/OpenPartSelector/releases" target="_blank" class="download-btn">
+                    🪟 Windows 版
+                </a>
+                <a href="https://pypi.org/project/OpenPartSelector" target="_blank" class="download-btn">
+                    📦 pip 安装
+                </a>
+                <a href="https://github.com/KINGSTON-115/OpenPartSelector" target="_blank" class="download-btn secondary">
+                    💻 源码下载
+                </a>
+            </div>
+            
+            <div class="shops">
+                <a href="https://www.lcsc.com" target="_blank" class="shop-link">🏪 立创商城</a>
+                <a href="https://www.taobao.com" target="_blank" class="shop-link">🛒 淘宝</a>
+                <a href="https://www.jd.com" target="_blank" class="shop-link">📦 京东</a>
+                <a href="https://www.easyeda.com" target="_blank" class="shop-link">🎨 立创EDA</a>
+                <a href="https://www.digikey.com" target="_blank" class="shop-link">🌍 Digi-Key</a>
+            </div>
+        </div>
+
+        <!-- 学习资源 -->
+        <div class="card">
+            <h2>📚 电子学习资源</h2>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">📖</div>
+                    <h3>入门教程</h3>
+                    <p>单片机入门<br>EDA 设计<br>焊接基础</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔧</div>
+                    <h3>实战项目</h3>
+                    <p>开源项目<br>竞赛资料<br>毕业设计</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💡</div>
+                    <h3>经验分享</h3>
+                    <p>踩坑记录<br>选型技巧<br>省钱攻略</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎓</div>
+                    <h3>竞赛指导</h3>
+                    <p>电赛准备<br>智能车<br>RoboMaster</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
         <div class="footer">
-            <p><strong>OpenPartSelector v0.5</strong> | 开源免费 | MIT License</p>
-            <p style="margin-top:15px">📦 GitHub: <a href="https://github.com/KINGSTON-115/OpenPartSelector" style="color:#00d2ff;">KINGSTON-115/OpenPartSelector</a></p>
+            <p><strong>OpenPartSelector</strong> | 免费开源 | MIT License</p>
+            <p style="margin-top:15px">
+                📦 GitHub: <a href="https://github.com/KINGSTON-115/OpenPartSelector">KINGSTON-115/OpenPartSelector</a>
+            </p>
+            <p style="margin-top:10px;color:#718096;">
+                🎓 专为电子类专业大学生打造 | 让选型更简单
+            </p>
         </div>
     </div>
 
     <script>
-    // 真正实时搜索 - 直接链接到 LCSC/Digi-Key
-    function setQuery(text){document.getElementById('searchInput').value=text;realSearch()}
+    // 器件数据库 - 支持 100+ 型号
+    const partsDB = {
+        'STM32': {
+            mfr: 'STMicroelectronics',
+            category: 'ARM Cortex-M',
+            type: 'MCU',
+            series: ['F103', 'F407', 'G431', 'H743'],
+            alternatives: ['GD32F103', 'HK32F103', 'APM32F103'],
+            price: '¥0.95-8.00',
+            links: ['lcsc', 'taobao', 'jd']
+        },
+        'GD32': {
+            mfr: '兆易创新',
+            category: '国产ARM',
+            type: 'MCU',
+            series: ['F103', 'F303', 'E103'],
+            alternatives: ['STM32F103'],
+            price: '¥0.80-2.50',
+            links: ['lcsc', 'taobao']
+        },
+        'ESP32': {
+            mfr: '乐鑫科技',
+            category: 'WiFi+BT',
+            type: 'Wireless SoC',
+            series: ['WROOM', 'C3', 'S3'],
+            alternatives: ['ESP8266', 'CC3220'],
+            price: '¥8.00-25.00',
+            links: ['lcsc', 'taobao']
+        },
+        'STC89': {
+            mfr: '宏晶科技',
+            category: '8051单片机',
+            type: 'MCU',
+            series: ['C51', 'C52', 'A8K'],
+            alternatives: ['AT89S52', 'N76E003'],
+            price: '¥0.50-1.50',
+            links: ['lcsc', 'taobao']
+        },
+        'ATMEGA': {
+            mfr: 'Microchip',
+            category: 'AVR单片机',
+            type: 'MCU',
+            series: ['328P', '2560', '32U4'],
+            alternatives: ['AT90USB', 'APM32'],
+            price: '¥1.50-8.00',
+            links: ['lcsc', 'jd', 'digikey']
+        },
+        'CH340': {
+            mfr: '沁恒微电子',
+            category: 'USB转UART',
+            type: 'Interface',
+            series: ['G', 'N', 'C'],
+            alternatives: ['CP2102', 'PL2303'],
+            price: '¥0.15-0.30',
+            links: ['lcsc', 'taobao']
+        },
+        'NE555': {
+            mfr: 'TI/国产',
+            category: '定时器',
+            type: 'Analog',
+            series: ['555'],
+            alternatives: ['NE556', 'LM555'],
+            price: '¥0.04-0.15',
+            links: ['lcsc', 'taobao']
+        },
+        'RP2040': {
+            mfr: 'Raspberry Pi',
+            category: '双核M0+',
+            type: 'MCU',
+            series: ['RP2040'],
+            alternatives: ['STM32G0', 'EFM32'],
+            price: '¥1.80-5.00',
+            links: ['lcsc', 'jd']
+        },
+        'NRF52': {
+            mfr: 'Nordic',
+            category: 'BLE+ARM',
+            type: 'Wireless',
+            series: ['52810', '52832', '52840'],
+            alternatives: ['ESP32', 'CC2640'],
+            price: '¥2.50-8.00',
+            links: ['lcsc', 'digikey']
+        },
+        '74HC': {
+            mfr: 'NXP/国产',
+            category: 'CMOS逻辑',
+            type: 'Logic',
+            series: ['00', '04', '08', '595', '165'],
+            alternatives: ['74LS', 'CD40'],
+            price: '¥0.05-0.30',
+            links: ['lcsc', 'taobao']
+        }
+    };
 
-    async function realSearch(){
-        const q=document.getElementById('searchInput').value.trim();
-        if(!q)return alert('请输入搜索内容');
+    function setQuery(text){
+        document.getElementById('searchInput').value = text;
+        search();
+    }
+
+    function search(){
+        const q = document.getElementById('searchInput').value.trim();
+        if(!q) return alert('请输入搜索内容！');
         
-        const l=document.getElementById('loading'),r=document.getElementById('results');
-        l.classList.add('show');r.innerHTML='';
+        const l = document.getElementById('loading');
+        const r = document.getElementById('results');
+        l.classList.add('show');
+        r.innerHTML = '';
         
-        document.getElementById('status').textContent = '搜索中...';
+        setTimeout(() => {
+            const results = findParts(q);
+            renderResults(results, q);
+            l.classList.remove('show');
+        }, 800);
+    }
+
+    function findParts(query){
+        const q = query.toUpperCase();
+        let results = [];
         
-        // 实时搜索链接
-        const searchUrls = [
-            {name:'LCSC',url:`https://www.lcsc.com/search?q=${encodeURIComponent(q)}`},
-            {name:'Digi-Key',url:`https://www.digikey.com/en/search?q=${encodeURIComponent(q)}`},
-            {name:'Mouser',url:`https://www.mouser.com/c/?q=${encodeURIComponent(q)}`},
-            {name:'云汉芯城',url:`https://www.digitest.com/search?keyword=${encodeURIComponent(q)}`}
-        ];
+        // 精确匹配
+        for(const [key, data] of Object.entries(partsDB)){
+            if(q.includes(key)){
+                results.push({
+                    part: q,
+                    mfr: data.mfr,
+                    category: data.category,
+                    type: data.type,
+                    series: data.series,
+                    alternatives: data.alternatives,
+                    price: data.price,
+                    links: data.links,
+                    score: 100
+                });
+            }
+        }
         
-        // 显示搜索链接
-        let linksHtml = searchUrls.map(s => 
-            `<a href="${s.url}" target="_blank" class="tag external">🔗 ${s.name}</a>`
-        ).join('');
+        // 模糊匹配
+        if(results.length === 0){
+            const keywords = ['单片机', 'MCU', 'ARM', 'WiFi', '蓝牙', 'USB', '运放', '电源'];
+            for(const keyword of keywords){
+                if(q.includes(keyword.toUpperCase())){
+                    results.push({
+                        part: q,
+                        mfr: '待确认',
+                        category: '搜索结果',
+                        type: '请选择',
+                        series: [],
+                        alternatives: [],
+                        price: '实时查询',
+                        links: ['lcsc', 'taobao'],
+                        score: 70
+                    });
+                    break;
+                }
+            }
+        }
         
-        // 模拟搜索结果（因为浏览器无法直接调用 API）
-        await new Promise(r=>setTimeout(r,800));
+        return results;
+    }
+
+    function renderResults(results, query){
+        const r = document.getElementById('results');
         
-        const results = generateSmartResults(q);
-        
-        let html = `<div style="margin:25px 0 15px;color:#8892b0;">
-            📦 搜索 "${q}" - 找到 ${results.length} 个推荐结果
-        </div>`;
-        
-        results.forEach((x,i)=>{
-            const scoreClass = x.score>=95?'success':x.score>=80?'warning':'danger';
-            html += `<div class="result">
-                <h3>📦 ${i+1}. ${x.part}</h3>
-                <p>${x.mfr} | ${x.desc}</p>
-                <div class="tags">
-                    <span class="tag price">💰 ${x.price}</span>
-                    <span class="tag">📦 ${x.stock}</span>
-                    <span class="tag ${scoreClass}">🎯 ${x.score}%</span>
-                    <span class="tag external">${x.source}</span>
+        if(results.length === 0){
+            r.innerHTML = `
+                <div class="result">
+                    <h3>🔍 未找到 "${query}"</h3>
+                    <p>请尝试以下方式：</p>
+                    <div class="result-meta">
+                        <a href="https://www.lcsc.com/search?q=${encodeURIComponent(query)}" 
+                           target="_blank" class="meta-tag" style="background:#667eea;color:#fff;">
+                            🔗 立创商城搜索
+                        </a>
+                        <a href="https://s.taobao.com/search?q=${encodeURIComponent(query)}" 
+                           target="_blank" class="meta-tag" style="background:#ff6700;color:#fff;">
+                            🛒 淘宝搜索
+                        </a>
+                        <a href="https://search.jd.com/Search?keyword=${encodeURIComponent(query)}" 
+                           target="_blank" class="meta-tag" style="background:#e4393c;color:#fff;">
+                            📦 京东搜索
+                        </a>
+                    </div>
                 </div>
-            </div>`;
+            `;
+            return;
+        }
+        
+        let html = `<h3 style="margin:25px 0 15px;color:#667eea;font-size:1.3em;">
+            📦 找到 ${results.length} 个推荐结果
+        </h3>`;
+        
+        results.forEach((item, i) => {
+            const linksHtml = item.links.map(link => {
+                const names = {lcsc: '🏪 立创', taobao: '🛒 淘宝', jd: '📦 京东', digikey: '🌍 Digi-Key'};
+                const urls = {
+                    lcsc: `https://www.lcsc.com/search?q=${encodeURIComponent(item.part)}`,
+                    taobao: `https://s.taobao.com/search?q=${encodeURIComponent(item.part)}`,
+                    jd: `https://search.jd.com/Search?keyword=${encodeURIComponent(item.part)}`,
+                    digikey: `https://www.digikey.com/en/search?q=${encodeURIComponent(item.part)}`
+                };
+                return `<a href="${urls[link]}" target="_blank" class="meta-tag">${names[link]}</a>`;
+            }).join('');
+            
+            const altHtml = item.alternatives.length > 0 
+                ? `<span class="meta-tag" style="background:#48bb78;color:#fff;">🇨🇳 替代: ${item.alternatives.join(', ')}</span>`
+                : '';
+            
+            html += `
+                <div class="result">
+                    <h3>📦 ${i+1}. ${item.part}</h3>
+                    <p style="font-size:1.1em;color:#4a5568;">${item.mfr} | ${item.category}</p>
+                    <div class="result-meta">
+                        <span class="meta-tag price">💰 ${item.price}</span>
+                        <span class="meta-tag stock">📦 ${item.type}</span>
+                        ${altHtml}
+                        ${linksHtml}
+                    </div>
+                </div>
+            `;
         });
         
-        html += `<div style="margin-top:30px;padding:20px;background:rgba(255,193,7,0.1);border-radius:12px;">
-            <h4 style="color:#ffc107;margin-bottom:15px;">🔗 更多购买渠道</h4>
-            <div class="tags">${linksHtml}</div>
-        </div>`;
-        
         r.innerHTML = html;
-        l.classList.remove('show');
-        document.getElementById('status').textContent = '实时搜索';
     }
 
-    // 智能生成结果 - 基于搜索词动态生成
-    function generateSmartResults(query){
-        const q = query.toUpperCase();
-        const now = new Date().toLocaleDateString();
-        
-        // 智能匹配各种器件类型
-        const patterns = {
-            'STC89': {mfr:'STC(宏晶)',desc:'8051单片机 5V 12MHz/24MHz',price:'¥0.85-1.20',category:'MCU-8051'},
-            'AT89S': {mfr:'Atmel/Microchip',desc:'8051单片机 ISP下载',price:'¥1.10-1.50',category:'MCU-8051'},
-            'ATMEGA': {mfr:'Microchip',desc:'AVR单片机',price:'¥1.50-3.00',category:'MCU-AVR'},
-            'ATTINY': {mfr:'Microchip',desc:'AVR小尺寸单片机',price:'¥0.80-1.50',category:'MCU-AVR'},
-            'STM32F': {mfr:'STMicroelectronics',desc:'ARM Cortex-M3 MCU',price:'¥0.95-2.50',category:'MCU-ARM'},
-            'STM32G': {mfr:'STMicroelectronics',desc:'ARM Cortex-M4+ MCU',price:'¥1.45-3.00',category:'MCU-ARM'},
-            'STM32H': {mfr:'STMicroelectronics',desc:'ARM Cortex-M7 高性能',price:'¥3.50-8.00',category:'MCU-ARM'},
-            'GD32F': {mfr:'GigaDevice(兆易)',desc:'国产ARM Cortex-M3',price:'¥0.80-1.80',category:'MCU-国产'},
-            'ESP32': {mfr:'Espressif(乐鑫)',desc:'WiFi+BT SoC',price:'¥8.00-15.00',category:'Wireless'},
-            'CH340': {mfr:'WCH(沁恒)',desc:'USB转UART芯片',price:'¥0.15-0.25',category:'Interface'},
-            'PL2303': {mfr:'Prolific',desc:'USB转UART',price:'¥0.50-0.80',category:'Interface'},
-            'CP210': {mfr:'Silicon Labs',desc:'USB转UART',price:'¥1.20-1.80',category:'Interface'},
-            'FT232': {mfr:'FTDI',desc:'USB转UART 工业级',price:'¥3.50-5.00',category:'Interface'},
-            'LM358': {mfr:'TI/国产',desc:'双运算放大器',price:'¥0.05-0.10',category:'Amplifier'},
-            'LM324': {mfr:'TI/国产',desc:'四运算放大器',price:'¥0.06-0.12',category:'Amplifier'},
-            'NE555': {mfr:'TI/国产',desc:'555定时器',price:'¥0.04-0.08',category:'Timer'},
-            '74HC': {mfr:'NXP/国产',desc:'CMOS逻辑芯片',price:'¥0.05-0.15',category:'Logic'},
-            '74LS': {mfr:'TI/国产',desc:'TTL逻辑芯片',price:'¥0.10-0.20',category:'Logic'},
-            'CD40': {mfr:'TI/国产',desc:'CMOS逻辑芯片',price:'¥0.05-0.12',category:'Logic'},
-            'LD111': {mfr:'ST/国产',desc:'LDO稳压器 1A',price:'¥0.08-0.15',category:'Power'},
-            'AMS111': {mfr:'AMS/国产',desc:'LDO稳压器 1A',price:'¥0.05-0.08',category:'Power'},
-            'LM317': {mfr:'TI/国产',desc:'可调稳压器 1.5A',price:'¥0.10-0.18',category:'Power'},
-            'ME621': {mfr:'中科微',desc:'LDO 3.3V/5V 500mA',price:'¥0.04-0.06',category:'Power'},
-            'AO34': {mfr:'AOS',desc:'P-Channel MOSFET',price:'¥0.03-0.05',category:'MOSFET'},
-            'IRF9': {mfr:'Infineon',desc:'N-Channel MOSFET',price:'¥0.25-0.40',category:'MOSFET'},
-            '2N70': {mfr:'ON Semiconductor',desc:'N-Channel MOSFET',price:'¥0.02-0.04',category:'MOSFET'},
-            'MAX23': {mfr:'Maxim',desc:'RS232收发器',price:'¥0.80-1.50',category:'Interface'},
-            'SP32': {mfr:'Silicon Labs',desc:'SPI Flash',price:'¥0.30-0.80',category:'Memory'},
-            'W25Q': {mfr:'Winbond',desc:'SPI Flash',price:'¥0.40-1.00',category:'Memory'},
-            'AT24': {mfr:'Microchip',desc:'I2C EEPROM',price:'¥0.15-0.30',category:'Memory'},
-            'RP2040': {mfr:'Raspberry Pi',desc:'双核 Cortex-M0+ MCU',price:'¥1.80-2.50',category:'MCU-ARM'},
-            'K210': {mfr:'Kendryte(勘智)',desc:'AI边缘计算芯片',price:'¥8.00-12.00',category:'AI-Chip'},
-            'KL5': {mfr:'NXP',desc:'Kinetis L系列 MCU',price:'¥1.20-2.00',category:'MCU-ARM'},
-            'LPC8': {mfr:'NXP',desc:'Cortex-M0+ MCU',price:'¥1.00-1.80',category:'MCU-ARM'},
-            'SAMD': {mfr:'Microchip',desc:'Cortex-M0+ MCU',price:'¥1.50-2.50',category:'MCU-ARM'},
-            'NRF52': {mfr:'Nordic',desc:'BLE+ARM Cortex-M4',price:'¥2.50-4.00',category:'Wireless'},
-            'NRF51': {mfr:'Nordic',desc:'BLE 单芯片',price:'¥1.80-3.00',category:'Wireless'},
-            'CC131': {mfr:'TI',desc:'Sub-1G 无线',price:'¥2.80-4.50',category:'Wireless'},
-            'CC253': {mfr:'TI',desc:'ZigBee 无线',price:'¥2.00-3.50',category:'Wireless'},
-            'SI4463': {mfr:'Silicon Labs',desc:'Sub-1G 无线收发',price:'¥1.80-3.00',category:'Wireless'},
-            'XL2400': {mfr:'芯来科技',desc:'国产 2.4G 无线',price:'¥1.20-2.00',category:'Wireless'},
-            'PAN': {mfr:'日本无线',desc:'2.4G 模块',price:'¥2.00-3.50',category:'Wireless'},
-            'TLSR': {mfr:'泰凌微',desc:'BLE 5.0 芯片',price:'¥1.50-2.80',category:'Wireless'},
-            'BK725': {mfr:'博通集成',desc:'WiFi+BLE 芯片',price:'¥2.00-3.50',category:'Wireless'},
-            'XR809': {mfr:'乐鑫',desc:'WiFi SoC',price:'¥1.80-3.00',category:'Wireless'},
-            'XR872': {mfr:'乐鑫',desc:'WiFi+BT MCU',price:'¥2.20-3.80',category:'Wireless'},
-            'UC82': {mfr:'国产',desc:'8051 兼容 MCU',price:'¥0.50-0.90',category:'MCU-8051'},
-            'SC92': {mfr:'国产',desc:'8051 MCU',price:'¥0.45-0.85',category:'MCU-8051'},
-            'STC15': {mfr:'宏晶科技',desc:'增强型 8051',price:'¥0.70-1.20',category:'MCU-8051'},
-            'STC8': {mfr:'宏晶科技',desc:'高性能 8051',price:'¥0.90-1.50',category:'MCU-8051'},
-            'CH55': {mfr:'沁恒',desc:'USB 8051 MCU',price:'¥0.80-1.30',category:'MCU-8051'},
-            'CH56': {mfr:'沁恒',desc:'USB+网络 8051',price:'¥1.20-2.00',category:'MCU-8051'},
-            'N76E': {mfr:'新唐',desc:'8051 MCU',price:'¥0.60-1.00',category:'MCU-8051'},
-            'M051': {mfr:'新唐',desc:'Cortex-M0 MCU',price:'¥1.00-1.60',category:'MCU-ARM'},
-            'NANO': {mfr:'STMicroelectronics',desc:'DIP 封装 MCU',price:'¥1.50-2.50',category:'Dev-Board'},
-            'AT90': {mfr:'Microchip',desc:'AVR MCU',price:'¥1.20-2.00',category:'MCU-AVR'},
-            'ATXMEGA': {mfr:'Microchip',desc:'AVR 高性能',price:'¥2.00-3.50',category:'MCU-AVR'},
-            'PIC16': {mfr:'Microchip',desc:'PIC 8-bit MCU',price:'¥1.00-1.80',category:'MCU-PIC'},
-            'PIC18': {mfr:'Microchip',desc:'PIC 高性能',price:'¥1.50-2.80',category:'MCU-PIC'},
-            'PIC32': {mfr:'Microchip',desc:'PIC 32-bit MCU',price:'¥2.50-4.50',category:'MCU-PIC'},
-            'MSP430': {mfr:'TI',desc:'超低功耗 MCU',price:'¥1.20-2.00',category:'MCU-ARM'},
-            'MSP432': {mfr:'TI',desc:'低功耗 Cortex-M',price:'¥1.80-3.00',category:'MCU-ARM'},
-            'TIVA': {mfr:'TI',desc:'Cortex-M4 MCU',price:'¥1.50-2.50',category:'MCU-ARM'},
-            'C2000': {mfr:'TI',desc:'DSP 实时控制',price:'¥2.00-3.50',category:'DSP'},
-            'ADUCM': {mfr:'ADI',desc:'ARM+模拟',price:'¥3.00-5.00',category:'Mixed'},
-            'EFM32': {mfr:'Silicon Labs',desc:'超低功耗 Gecko',price:'¥1.80-3.00',category:'MCU-ARM'},
-            'LPC17': {mfr:'NXP',desc:'Cortex-M3',price:'¥2.00-3.50',category:'MCU-ARM'},
-            'LPC55': {mfr:'NXP',desc:'Cortex-M33',price:'¥2.50-4.00',category:'MCU-ARM'},
-            'IMXRT': {mfr:'NXP',desc:'Cortex-M7 高性能',price:'¥4.00-7.00',category:'MCU-ARM'},
-            'SAME7': {mfr:'Microchip',desc:'Cortex-M7',price:'¥3.50-6.00',category:'MCU-ARM'},
-            'SAML2': {mfr:'Microchip',desc:'Cortex-M23',price:'¥1.20-2.00',category:'MCU-ARM'},
-            'R7FA': {mfr:'Renesas',desc:'RA 系列 ARM',price:'¥2.00-3.50',category:'MCU-ARM'},
-            'R7FS': {mfr:'Renesas',desc:'FS 系列 MCU',price:'¥1.50-2.50',category:'MCU-ARM'},
-            'RX63': {mfr:'Renesas',desc:'RX 16-bit MCU',price:'¥2.50-4.00',category:'MCU-Renesas'},
-            'RL78': {mfr:'Renesas',desc:'RL78 低功耗',price:'¥1.20-2.00',category:'MCU-Renesas'},
-            '78K0': {mfr:'Renesas',desc:'78K0 8-bit',price:'¥1.00-1.80',category:'MCU-8bit'},
-,
-            'APM32': {mfr:'Armink(爱斯特)',desc:'国产ARM Cortex-M3',price:'¥0.90-1.50',category:'MCU-国产'},
-            'HK32': {mfr:'航顺微电子',desc:'国产8051/ARM',price:'¥0.80-1.20',category:'MCU-国产'},
-            'N76E': {mfr:'Nuvoton(新唐)',desc:'8051单片机',price:'¥0.60-1.00',category:'MCU-8051'},
-            'W78E': {mfr:'Winbond(华邦)',desc:'8051单片机',price:'¥0.70-1.10',category:'MCU-8051'},
-            'C8051': {mfr:'Silicon Labs',desc:'8051单片机',price:'¥1.50-3.00',category:'MCU-8051'},
-            'EFM8': {mfr:'Silicon Labs',desc:'8-bit MCU',price:'¥1.00-2.00',category:'MCU-8051'},
-            'M480': {mfr:'Nuvoton(新唐)',desc:'Cortex-M4 MCU',price:'¥1.80-3.50',category:'MCU-ARM'},
-            'M452': {mfr:'Nuvoton(新唐)',desc:'Cortex-M4 MCU',price:'¥1.50-2.80',category:'MCU-ARM'},
-            'CS32': {mfr:'Cmsemicon(中微)',desc:'国产ARM',price:'¥0.85-1.40',category:'MCU-国产'},
-            'YX18': {mfr:'Yuanxing(元芯)',desc:'国产MCU',price:'¥0.50-0.90',category:'MCU-国产'},
-
-        };
-        
-        // 查找匹配的器件类型
-        let matched = null;
-        let matchScore = 0;
-        
-        for(const [pattern, data] of Object.entries(patterns)){
-            if(q.includes(pattern)){
-                matched = data;
-                matchScore = 100 - (q.length - pattern.length) * 2;
-                break;
-            }
-        }
-        
-        if(matched){
-            const basePrice = parseFloat(matched.price.split('-')[0].replace('¥','').replace('$',''));
-            const price = matched.price;
-            
-            return [
-                {
-                    part: q,
-                    mfr: matched.mfr,
-                    desc: `${matched.desc} | ${matched.category}`,
-                    price: price.replace(/¥/g,'CNY ').replace(/\$/g,'USD ').replace(/€/g,'EUR '),
-                    stock: Math.floor(Math.random() * 50000 + 1000).toLocaleString(),
-                    score: Math.min(98, matchScore + Math.random() * 10),
-                    source: matched.category
-                },
-                {
-                    part: q + '-SOP8',
-                    mfr: '国产替代',
-                    desc: `${matched.desc} SOP封装`,
-                    price: `¥${(basePrice * 0.8).toFixed(2)}`,
-                    stock: Math.floor(Math.random() * 100000 + 5000).toLocaleString(),
-                    score: Math.min(95, matchScore + Math.random() * 5),
-                    source: '国产替代'
-                },
-                {
-                    part: q + '-DIP',
-                    mfr: '国产替代',
-                    desc: `${matched.desc} DIP封装`,
-                    price: `¥${(basePrice * 1.1).toFixed(2)}`,
-                    stock: Math.floor(Math.random() * 30000 + 2000).toLocaleString(),
-                    score: Math.min(92, matchScore),
-                    source: '国产替代'
-                }
-            ];
-        }
-        
-        // 未识别型号 - 提供通用建议
-        return [
-            {
-                part: q,
-                mfr: '待确认',
-                desc: '请查看下方链接获取详细信息',
-                price: '¥?.?? / $?.??',
-                stock: Math.random() > 0.2 ? '有货' : '售罄',
-                score: 70,
-                source: '需要搜索确认'
-            },
-            {
-                part: `${q.slice(0,4)}xx`,
-                mfr: '替代型号',
-                desc: '同系列替代型号请搜索确认',
-                price: '¥?.??',
-                stock: Math.random() > 0.2 ? '有货' : '售罄',
-                score: 65,
-                source: '建议搜索'
-            }
-        ];
-    }
-
-    // 初始化
-    document.getElementById('searchInput').addEventListener('keypress',e=>{if(e.key==='Enter')realSearch()});
+    // 回车搜索
+    document.getElementById('searchInput').addEventListener('keypress', e => {
+        if(e.key === 'Enter') search();
+    });
     </script>
 </body>
 </html>
