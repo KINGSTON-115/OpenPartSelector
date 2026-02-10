@@ -9,8 +9,8 @@ Multi-Source Search Engine
 """
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-from .config import Config
-from .database import search_components as db_search
+from ..config import Config
+from ..database import search_components as db_search
 
 
 @dataclass
@@ -36,9 +36,9 @@ class SearchEngine:
     def __init__(self, config: Config = None):
         self.config = config or Config.load()
         self.api_keys = {
-            "octopart": self.config.get("OCTOPART_API_KEY"),
-            "digikey": self.config.get("DIGIKEY_API_KEY"),
-            "mouser": self.config.get("MOUSER_API_KEY"),
+            "octopart": self.config.api_keys.octopart,
+            "digikey": self.config.api_keys.digikey,
+            "mouser": self.config.api_keys.mouser,
         }
     
     async def search(
@@ -184,8 +184,19 @@ async def search(query: str, limit: int = 10) -> List[Dict]:
     return await engine.search(query, limit=limit)
 
 
-def get_price_comparison(part_number: str) -> List[Dict]:
+def get_price_comparison_sync(part_number: str) -> List[Dict]:
     """价格对比 (同步版本)"""
     import asyncio
     engine = SearchEngine()
+    
+    # 检查是否已在事件循环中
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            async def do_compare():
+                return await engine.compare_prices(part_number)
+            return asyncio.run_coroutine_threadsafe(do_compare(), loop).result()
+    except RuntimeError:
+        pass
+    
     return asyncio.run(engine.compare_prices(part_number))

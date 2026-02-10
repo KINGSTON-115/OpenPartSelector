@@ -81,7 +81,7 @@ class Agent:
     def __init__(self, config: Optional[Config] = None):
         self.config = config or Config.load()
         self.search_engine = SearchEngine(self.config)
-        self.datasheet_parser = DatasheetParser(self.config)
+        self.datasheet_parser = DatasheetParser()
         self.knowledge_base = VectorStore(self.config)
         self._initialized = False
     
@@ -499,5 +499,21 @@ def quick_select(query: str, top_k: int = 5) -> SelectionResult:
     Returns:
         选型结果
     """
+    import asyncio
+    
     agent = Agent()
+    
+    # 检查是否已在事件循环中
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # 在已有循环中，创建新任务
+            async def do_select():
+                await agent.initialize()
+                return await agent.select(query, top_k=top_k)
+            return asyncio.run_coroutine_threadsafe(do_select(), loop).result()
+    except RuntimeError:
+        # 无运行中的循环，直接使用 run
+        pass
+    
     return asyncio.run(agent.select(query, top_k=top_k))

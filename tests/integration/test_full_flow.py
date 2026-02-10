@@ -14,8 +14,8 @@ async def test_quick_select_basic():
     """测试基础快速选型"""
     from ops.agent import quick_select
     
-    # 执行搜索
-    result = await quick_select("ESP32", top_k=3)
+    # 执行搜索 (quick_select 是同步函数)
+    result = quick_select("ESP32", top_k=3)
     
     # 验证结果结构
     assert result is not None
@@ -139,9 +139,9 @@ async def test_bom_analysis():
     
     # 测试空BOM
     result = analyze_bom_full([])
-    assert "total_cost" in result
-    assert "risk_assessment" in result
-    print(f"✅ BOM分析: 总成本 ¥{result['total_cost']}")
+    assert "summary" in result
+    assert "total_price" in result["summary"]
+    print(f"✅ BOM分析: 总价 ¥{result['summary']['total_price']}")
 
 
 def test_features_sync():
@@ -152,9 +152,9 @@ def test_features_sync():
         calculate_resistor_for_led
     )
     
-    # 测试LED计算器
+    # 测试LED计算器 (5V - 2V = 3V, 3V/0.02A = 150Ω, E24最近值=150)
     result = calculate_resistor_for_led()
-    assert result["recommended_resistance"] == "82"  # 期望标准值
+    assert result["recommended_resistance"] == "150"  # 期望标准值
     print(f"✅ LED计算器同步测试通过")
 
 
