@@ -82,6 +82,7 @@ async def test_compare_prices():
     print(f"✅ 比价结果: {result['part_number']}")
 
 
+@pytest.mark.asyncio
 async def test_features():
     """测试锦上添花功能"""
     from ops.features import (
@@ -170,6 +171,7 @@ def test_features_sync():
     print(f"✅ 改进版LED计算器测试通过")
 
 
+@pytest.mark.asyncio
 async def test_edge_cases():
     """测试边缘情况"""
     from ops.features import calculate_resistor_for_led
@@ -187,6 +189,7 @@ async def test_edge_cases():
     print(f"✅ 无结果查询测试通过")
 
 
+@pytest.mark.asyncio
 async def test_passive_components():
     """测试被动器件数据库"""
     from ops.database import search_components, PASSIVE_COMPONENTS
