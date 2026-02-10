@@ -1,8 +1,19 @@
-# OpenPartSelector v1.1.11 🚀🤖🔌
+# OpenPartSelector v1.1.14 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
 > **核心价值**：用 AI Agent 自动化解决电子工程师的元器件选型痛点——搜索、对比、验证、一键生成采购清单
+
+---
+
+## ✨ v1.1.14 更新日志 (2026-02-10)
+
+| 功能 | 说明 |
+|------|------|
+| 🔧 **兼容性修复** | 恢复 calculate_led_series_resistor() 兼容性函数 |
+| 🧪 **测试修复** | 修复单元测试 key 名称问题 (recommended_resistance → recommended_resistor) |
+| 🧪 **测试修复** | 修复集成测试断言问题 |
+| ✅ **全部通过** | 96 个测试全部通过 |
 
 ---
 
