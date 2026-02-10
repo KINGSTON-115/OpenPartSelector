@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="OpenPartSelector",
-    version="1.1.19",
+    version="1.1.23",
     description="AI-Driven Electronic Component Selection Engine",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
