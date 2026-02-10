@@ -22,11 +22,15 @@ from .agent import Agent, SelectionResult, quick_select
 from .database import search_components, get_price_comparison, get_alternatives
 from .jlc import search_jlc, calculate_jlc_smt, get_jlc_footprint, export_jlc_bom
 from .features import find_alternatives, get_circuit_template, get_datasheet_summary
+from .features import (
+    calculate_resistor_for_led, calculate_voltage_divider, calculate_pwm_frequency,
+    calculate_led_resistor, calculate_rc_time_constant, calculate_capacitor_ripple
+)
 from .eol import check_component_lifecycle, analyze_bom_risk
 from .cad import search_cad_library, check_cad_availability
 from .bom import analyze_bom_full, quick_bom_check
 
-__version__ = "1.1.3"
+__version__ = "1.1.7"
 __author__ = "KINGSTON-115"
 
 __all__ = [
@@ -44,6 +48,12 @@ __all__ = [
     "find_alternatives",
     "get_circuit_template",
     "get_datasheet_summary",
+    "calculate_resistor_for_led",
+    "calculate_voltage_divider",
+    "calculate_pwm_frequency",
+    "calculate_led_resistor",
+    "calculate_rc_time_constant",
+    "calculate_capacitor_ripple",
     "check_component_lifecycle",
     "analyze_bom_risk",
     "search_cad_library",

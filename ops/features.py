@@ -585,3 +585,159 @@ def calculate_pwm_frequency(
         "duty_resolution": f"{duty_resolution}级 ({duty_step:.2f}%/级)",
         "formula": "Freq = TimerClock / (PSC+1) / (ARR+1)"
     }
+
+
+# ==================== 新增实用计算函数 (v1.1.7) ====================
+
+def calculate_led_resistor(
+    voltage: float = 5.0,
+    led_voltage: float = 2.0,
+    led_current: float = 0.02  # 20mA
+) -> Dict:
+    """
+    计算LED限流电阻 (改进版)
+    
+    Args:
+        voltage: 输入电压 (V)
+        led_voltage: LED正向压降 (V)
+        led_current: LED工作电流 (A)
+    
+    Returns:
+        推荐电阻值及参数
+    """
+    v_resistor = voltage - led_voltage
+    
+    if v_resistor <= 0:
+        return {"error": "输入电压必须大于LED压降"}
+    
+    # 计算理想电阻值
+    r_ideal = v_resistor / led_current
+    
+    # E24标准电阻值
+    e24_values = [
+        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
+        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
+        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
+        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
+        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
+        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
+        10000
+    ]
+    
+    # 查找最接近的标准值
+    r_std = min(e24_values, key=lambda x: abs(x - r_ideal))
+    
+    # 计算实际电流
+    i_actual = v_resistor / r_std
+    
+    # 计算功耗
+    power = v_resistor * i_actual
+    
+    # 推荐功率 (留50%余量)
+    recommended_power = power * 2
+    
+    # 推荐封装
+    if recommended_power < 0.125:
+        package = "0603"
+    elif recommended_power < 0.25:
+        package = "0805"
+    elif recommended_power < 0.5:
+        package = "1206"
+    else:
+        package = "1210或更大"
+    
+    return {
+        "input_voltage": f"{voltage}V",
+        "led_voltage": f"{led_voltage}V",
+        "led_current": f"{led_current*1000:.0f}mA",
+        "ideal_resistor": f"{r_ideal:.1f}Ω",
+        "recommended_resistor": f"{r_std}Ω",
+        "actual_current": f"{i_actual*1000:.1f}mA",
+        "power_dissipation": f"{power*1000:.1f}mW",
+        "recommended_power": f"{recommended_power*1000:.1f}mW",
+        "recommended_package": package,
+        "formula": "R = (V_in - V_led) / I_led"
+    }
+
+
+def calculate_rc_time_constant(
+    resistance: float = 10000,  # 10KΩ
+    capacitance: float = 0.0001  # 100uF
+) -> Dict:
+    """
+    计算RC时间常数
+    
+    Args:
+        resistance: 电阻值 (Ω)
+        capacitance: 电容值 (F)
+    
+    Returns:
+        时间常数及充放电参数
+    """
+    tau = resistance * capacitance
+    
+    # 充放电时间
+    t_63 = tau  # 63.2%
+    t_50 = tau * 0.693  # 50%
+    t_90 = tau * 2.303  # 90%
+    t_99 = tau * 4.605  # 99%
+    
+    # 截止频率
+    f_cutoff = 1 / (2 * 3.14159 * resistance * capacitance)
+    
+    return {
+        "resistance": f"{resistance/1000:.1f}KΩ",
+        "capacitance": f"{capacitance*1000000:.1f}μF",
+        "time_constant": f"{tau:.4f}s",
+        "time_50pct": f"{t_50:.4f}s (50%充电)",
+        "time_63pct": f"{t_63:.4f}s (63.2%充电)",
+        "time_90pct": f"{t_90:.4f}s (90%充电)",
+        "time_99pct": f"{t_99:.4f}s (99%充电)",
+        "cutoff_frequency": f"{f_cutoff:.2f}Hz",
+        "formula": "τ = R × C"
+    }
+
+
+def calculate_capacitor_ripple(
+    load_current: float = 0.1,  # 100mA
+    ripple_voltage: float = 0.5,  # 500mVpp
+    frequency: float = 120  # 120Hz (全波整流)
+) -> Dict:
+    """
+    计算滤波电容容量 (简化公式)
+    
+    Args:
+        load_current: 负载电流 (A)
+        ripple_voltage: 允许纹波电压 (Vpp)
+        frequency: 纹波频率 (Hz)
+    
+    Returns:
+        推荐电容值及参数
+    """
+    # 简化公式: C = I / (f × Vripple)
+    c_ideal = load_current / (frequency * ripple_voltage)
+    
+    # 转换为常用单位
+    if c_ideal < 0.001:
+        c_display = c_ideal * 1000000  # μF
+        unit = "μF"
+    else:
+        c_display = c_ideal * 1000  # mF
+        unit = "mF"
+    
+    # 推荐标准值
+    standard_values = [10, 22, 47, 100, 220, 470, 1000, 2200, 4700, 10000]
+    c_std = min(standard_values, key=lambda x: abs(x - c_display))
+    
+    # 实际纹波
+    actual_ripple = load_current / (frequency * (c_std if unit == "μF" else c_std/1000000))
+    
+    return {
+        "load_current": f"{load_current*1000:.0f}mA",
+        "ripple_voltage": f"{ripple_voltage*1000:.0f}mVpp",
+        "frequency": f"{frequency}Hz",
+        "ideal_capacitor": f"{c_display:.1f}{unit}",
+        "recommended_capacitor": f"{c_std}{unit}",
+        "actual_ripple": f"{actual_ripple*1000:.1f}mVpp",
+        "formula": "C = I / (f × ΔV)"
+    }

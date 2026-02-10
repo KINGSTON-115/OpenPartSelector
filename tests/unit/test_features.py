@@ -17,6 +17,9 @@ from ops.features import (
     calculate_resistor_for_led,
     calculate_voltage_divider,
     calculate_pwm_frequency,
+    calculate_led_resistor,
+    calculate_rc_time_constant,
+    calculate_capacitor_ripple,
     CHIP_ALTERNATIVES,
     CIRCUIT_TEMPLATES,
     DATASHEET_SUMMARIES,
@@ -248,3 +251,75 @@ class TestFeaturesDataIntegrity:
             summary = get_datasheet_summary(chip)
             assert summary is not None, f"Missing datasheet for {chip}"
             assert summary["一句话说明"] is not None
+
+
+class TestNewCalculators_v117:
+    """v1.1.7 新增计算函数测试"""
+
+    def test_calculate_led_resistor(self):
+        """测试LED限流电阻计算"""
+        result = calculate_led_resistor(voltage=5.0, led_voltage=2.0, led_current=0.02)
+        
+        assert "recommended_resistor" in result
+        assert "actual_current" in result
+        assert "recommended_package" in result
+        
+        # 5V - 2V = 3V / 20mA = 150Ω (最接近标准值可能是150Ω或180Ω)
+        assert "recommended_resistor" in result
+    
+    def test_calculate_led_resistor_blue_led(self):
+        """测试蓝灯LED (约3.2V压降)"""
+        result = calculate_led_resistor(voltage=5.0, led_voltage=3.2, led_current=0.015)
+        
+        assert "recommended_resistor" in result
+        assert "actual_current" in result
+    
+    def test_calculate_rc_time_constant(self):
+        """测试RC时间常数计算"""
+        result = calculate_rc_time_constant(resistance=10000, capacitance=0.0001)
+        
+        assert "time_constant" in result
+        assert "time_63pct" in result
+        assert "cutoff_frequency" in result
+        
+        # 10KΩ × 100μF = 1秒
+        assert float(result["time_constant"].replace("s","")) == 1.0
+    
+    def test_calculate_rc_time_constant_small(self):
+        """测试小RC时间常数"""
+        result = calculate_rc_time_constant(resistance=1000, capacitance=0.000001)
+        
+        # 1KΩ × 1μF = 1ms
+        assert float(result["time_constant"].replace("s","")) == 0.001
+    
+    def test_calculate_capacitor_ripple(self):
+        """测试滤波电容计算"""
+        result = calculate_capacitor_ripple(
+            load_current=0.1,
+            ripple_voltage=0.5,
+            frequency=120
+        )
+        
+        assert "recommended_capacitor" in result
+        assert "actual_ripple" in result
+        
+        # I=100mA, f=120Hz, ΔV=500mV → C ≈ 1667μF → 1.67mF
+        recommended = result["recommended_capacitor"]
+        # 支持 mF 或 μF
+        if recommended.endswith("mF"):
+            value = float(recommended.replace("mF", "")) * 1000  # 转换为μF
+        else:
+            value = float(recommended.replace("μF", ""))
+        assert value >= 1000
+    
+    def test_calculate_capacitor_ripple_smaller(self):
+        """测试小电流滤波"""
+        result = calculate_capacitor_ripple(
+            load_current=0.01,  # 10mA
+            ripple_voltage=0.2,
+            frequency=100
+        )
+        
+        # 需要的电容更小
+        recommended = int(result["recommended_capacitor"].replace("μF",""))
+        assert recommended < 1000
