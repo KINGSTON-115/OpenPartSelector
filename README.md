@@ -1,8 +1,18 @@
-# OpenPartSelector v1.1.16 🚀🤖🔌
+# OpenPartSelector v1.1.17 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
 > **核心价值**：用 AI Agent 自动化解决电子工程师的元器件选型痛点——搜索、对比、验证、一键生成采购清单
+
+---
+
+## ✨ v1.1.17 更新日志 (2026-02-10)
+
+| 功能 | 说明 |
+|------|------|
+| 🔧 **版本号统一** | 修复 ops/__init__.py 版本不一致问题 (1.1.15 → 1.1.17) |
+| 🧹 **代码清理** | 清理 conftest.py 无效 JSON 片段 |
+| 🧪 **测试改进** | 优化 pytest 配置 |
 
 ---
 
