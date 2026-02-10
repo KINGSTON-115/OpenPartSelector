@@ -386,9 +386,9 @@ class LCSCClient:
         """
         搜索器件
         
-        TODO: 接入立创API (需要API Key)
+        v1.1.23: 优化搜索逻辑，统一数据源
         """
-        # 目前返回模拟数据
+        # 优先使用内置数据库
         from .. import database
         results = database.search_components(keyword, limit=limit)
         
@@ -399,7 +399,14 @@ class LCSCClient:
         for r in results:
             r["source"] = "builtin"
         
-        return results + jlc_results
+        # 合并结果，去重
+        seen = set(r["part_number"] for r in results)
+        for jr in jlc_results:
+            if jr.get("part_number") not in seen:
+                results.append(jr)
+                seen.add(jr["part_number"])
+        
+        return results[:limit]
     
     async def get_price(self, part_number: str) -> Dict:
         """获取价格和库存"""

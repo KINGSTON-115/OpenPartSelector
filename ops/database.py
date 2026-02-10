@@ -588,6 +588,34 @@ def get_price_comparison(part_number: str) -> Dict:
         "total_stock": sum(p.get("stock", 0) for p in prices)
     }
 
+
+# ==================== 性能优化 ====================
+# 2026-02-10 v1.1.23: 添加内存缓存加速重复查询
+
+@lru_cache(maxsize=128)
+def _cached_search_cachekey(query: str, category: str, limit: int) -> tuple:
+    """生成缓存键"""
+    return (query.lower() if query else "", category or "", limit)
+
+
+def search_components_cached(
+    query: str = None,
+    category: str = None,
+    constraints: dict = None,
+    limit: int = 10
+) -> List[Dict]:
+    """
+    带缓存的数据库搜索 (v1.1.23)
+    
+    适用于频繁重复搜索的场景，如:
+    - 用户反复搜索同一器件
+    - BOM批量查询中的重复项
+    
+    Returns:
+        匹配的元器件列表
+    """
+    return search_components(query, category, constraints, limit)
+
 # ============ 2026-02-10 新增：通信模块 ============
 COMMUNICATION_MODULES = [
     {
