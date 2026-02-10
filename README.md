@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.23 🚀🤖🔌
+# OpenPartSelector v1.1.24 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,10 +6,10 @@
 
 ---
 
-## ✨ v1.1.23 更新日志 (2026-02-10)
+## ✨ v1.1.24 更新日志 (2026-02-10)
 
 ### 🔧 版本统一
-- 统一版本号：standalone.html v1.1.20 → v1.1.23
+- 统一版本号：standalone.html v1.1.23 → v1.1.24
 
 ### 🆕 新增传感器
 - SGP30: VOC/CO2 传感器 (Sensirion)
