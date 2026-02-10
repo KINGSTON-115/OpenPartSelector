@@ -456,7 +456,15 @@
                 </div>
             </div>
 
-            <div class="status-bar">
+            <div id="cartPanel" style="display:none;position:fixed;top:80px;right:20px;width:350px;max-height:500px;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:9999;overflow:hidden;">
+        <div style="padding:20px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;">
+            <h3 style="margin:0;">🛒 我的清单</h3>
+            <small>点击器件查看详情</small>
+        </div>
+        <div id="cartItems" style="padding:20px;max-height:350px;overflow-y:auto;"></div>
+    </div>
+    
+    <div class="status-bar">
                 <div class="status-item">
                     <div class="status-dot"></div>
                     <span>🔥 实时搜索已就绪</span>
@@ -515,6 +523,7 @@
 
         <!-- 下载区域 -->
         <div class="download-section">
+            <button onclick="startTour()" style="position:absolute;top:20px;right:20px;padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);border-radius:25px;color:#fff;cursor:pointer;font-size:14px;">🎓 新手引导</button>
             <h2>📥 获取工具</h2>
             <p>选择最适合你的使用方式</p>
             <div class="download-buttons">
@@ -892,6 +901,174 @@
         const days = Object.keys(stats).length;
         const total = Object.values(stats).reduce((a,b)=>a+b,0);
         showToast(`📊 已使用 ${days} 天，搜索 ${total} 次`, 'success');
+    }
+    
+    // 购物车功能
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    function addToCart(part, mfr, price){
+        if(!cart.find(c => c.part === part)){
+            cart.push({part, mfr, price, time: new Date().toLocaleString()});
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showToast(`🛒 已添加 ${part} 到清单`, 'success');
+            updateCartCount();
+        } else {
+            showToast('⚠️ 已添加过此器件', 'error');
+        }
+    }
+    
+    function removeFromCart(part){
+        cart = cart.filter(c => c.part !== part);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        showCartItems();
+        updateCartCount();
+    }
+    
+    function updateCartCount(){
+        const count = cart.length;
+        const btn = document.getElementById('cartBtn');
+        if(btn){
+            btn.innerHTML = `🛒 清单 (${count})`;
+        }
+    }
+    
+    function showCartItems(){
+        const container = document.getElementById('cartItems');
+        if(!container) return;
+        
+        if(cart.length === 0){
+            container.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:30px;">📭 清单为空，添加器件开始选型</p>';
+            return;
+        }
+        
+        let total = 0;
+        container.innerHTML = '<div style="display:grid;gap:10px;">' + 
+            cart.map(c => {
+                const price = parseFloat(c.price.replace('¥','')) || 0;
+                total += price;
+                return `<div style="padding:15px;background:rgba(102,126,234,0.1);border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+                    <div><strong style="color:#667eea;">${c.part}</strong><br><small style="color:#718096;">${c.mfr}</small><br><span style="color:#48bb78;">${c.price}</span></div>
+                    <button onclick="removeFromCart('${c.part}')" style="padding:8px 15px;background:#f56565;border:none;border-radius:8px;color:#fff;cursor:pointer;">删除</button>
+                </div>`;
+            }).join('') + `</div>
+            <div style="margin-top:20px;padding:20px;background:linear-gradient(135deg,#48bb78,#38a169);border-radius:12px;text-align:center;color:#fff;">
+                <div style="font-size:14px;">预估总价</div>
+                <div style="font-size:28px;font-weight:bold;">¥${total.toFixed(2)}</div>
+            </div>
+            <button onclick="exportBOM()" style="width:100%;margin-top:15px;padding:15px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;">📥 导出 BOM 清单</button>`;
+        container.style.display = 'block';
+    }
+    
+    // 导出 BOM 清单
+    function exportBOM(){
+        if(cart.length === 0){
+            showToast('⚠️ 请先添加器件到清单', 'error');
+            return;
+        }
+        
+        let total = 0;
+        let csv = '型号,制造商,价格,添加时间
+';
+        cart.forEach(c => {
+            const price = parseFloat(c.price.replace('¥','')) || 0;
+            total += price;
+            csv += `${c.part},${c.mfr},${c.price},${c.time}
+`;
+        });
+        csv += `
+总计,,¥${total.toFixed(2)},`;
+        
+        const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `BOM_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('📥 BOM 清单已导出', 'success');
+    }
+    
+    // 分享功能
+    function shareResult(part, mfr){
+        const text = `🔌 OpenPartSelector 推荐
+
+📦 ${part}
+🏭 ${mfr}
+🔗 https://github.com/KINGSTON-115/OpenPartSelector`;
+        
+        if(navigator.share){
+            navigator.share({title: 'OpenPartSelector', text: text});
+        } else {
+            navigator.clipboard.writeText(text);
+            showToast('📋 已复制到剪贴板', 'success');
+        }
+    }
+    
+    // 新手引导
+    function startTour(){
+        const steps = [
+            {el: '#searchInput', title: '🔍 搜索器件', text: '输入型号或需求，如 STM32F103、ESP32'},
+            {el: '.suggestions', title: '💡 智能补全', text: '输入时自动显示匹配器件'},
+            {el: '.result', title: '📦 查看结果', text: '点击可直接添加或查看详情'},
+            {el: '#cartBtn', title: '🛒 清单管理', text: '添加器件到采购清单'},
+            {el: '.download-section', title: '📥 下载离线版', text: '获取 Windows/源码版本'}
+        ];
+        let current = 0;
+        
+        function showStep(){
+            if(current >= steps.length){
+                showToast('🎉 引导完成！开始使用吧！', 'success');
+                localStorage.setItem('tourDone', 'true');
+                return;
+            }
+            const step = steps[current];
+            const el = document.querySelector(step.el);
+            if(el){
+                el.scrollIntoView({behavior: 'smooth', block: 'center'});
+                const overlay = document.createElement('div');
+                overlay.id = 'tourOverlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;display:flex;align-items:center;justify-content:center;';
+                overlay.innerHTML = `<div style="background:#fff;padding:30px;border-radius:20px;max-width:400px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                    <h3 style="color:#667eea;margin-bottom:15px;">${step.title}</h3>
+                    <p style="color:#4a5568;margin-bottom:20px;line-height:1.6;">${step.text}</p>
+                    <button onclick="nextTour()" style="padding:12px 30px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:25px;color:#fff;cursor:pointer;font-size:16px;">${current >= steps.length - 1 ? '🎉 完成' : '下一步 →'}</button>
+                </div>`;
+                document.body.appendChild(overlay);
+            }
+        }
+        
+        window.nextTour = function(){
+            const overlay = document.getElementById('tourOverlay');
+            if(overlay) overlay.remove();
+            current++;
+            setTimeout(showStep, 300);
+        }
+        
+        showStep();
+    }
+    
+    // 显示购物车按钮
+    function showCartBtn(){
+        const cartSection = document.querySelector('.status-bar');
+        if(cartSection){
+            const btn = document.createElement('button');
+            btn.id = 'cartBtn';
+            btn.innerHTML = '🛒 清单 (0)';
+            btn.style.cssText = 'padding:10px 20px;background:linear-gradient(135deg,#ed8936,#dd6b20);border:none;border-radius:25px;color:#fff;cursor:pointer;font-size:14px;';
+            btn.onclick = () => {
+                const panel = document.getElementById('cartPanel');
+                panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+                showCartItems();
+            };
+            cartSection.appendChild(btn);
+        }
+    }
+    
+    // 初始化
+    showCartBtn();
+    updateCartCount();
+    if(!localStorage.getItem('tourDone')){
+        setTimeout(startTour, 2000);
     }
     
     // 初始化收藏显示
