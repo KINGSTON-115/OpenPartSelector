@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.20 🚀🤖🔌
+# OpenPartSelector v1.1.21 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,7 +6,7 @@
 
 ---
 
-## ✨ v1.1.20 更新日志 (2026-02-10)
+## ✨ v1.1.21 更新日志 (2026-02-10)
 
 ### 🔧 代码质量改进
 - 移除重复的 `import asyncio`
