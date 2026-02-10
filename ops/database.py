@@ -6,7 +6,7 @@ from typing import Dict, List, Any, Optional
 from functools import lru_cache
 
 
-# ============ 2026-02-10 v1.1.25 新增：常用被动器件 ============
+# ============ 2026-02-10 v1.1.26 新增：常用被动器件 ============
 PASSIVE_COMPONENTS = [
     {
         "part_number": "10uF_16V_Ceramic",
