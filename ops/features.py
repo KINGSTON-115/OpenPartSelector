@@ -489,8 +489,6 @@ def calculate_resistor_for_led(
     """
     计算LED限流电阻
     
-    ⚠️ 已合并到 calculate_led_resistor()，此函数为兼容性保留
-    
     Args:
         voltage: 输入电压 (V)
         led_voltage: LED正向压降 (V)
@@ -516,9 +514,6 @@ def _get_power_rating(power_watts: float) -> str:
         return "2W (推荐)"
     else:
         return f"{int(power_watts)}W+ (大功率电阻)"
-
-
-# 函数已合并到共享模块，使用 find_e24_nearby()
 
 
 def calculate_voltage_divider(
@@ -649,8 +644,6 @@ def calculate_led_series_resistor(
     """
     计算LED串联电阻 (兼容性函数)
     
-    ⚠️ 已合并到 calculate_led_resistor()，此函数为兼容性保留
-    
     Args:
         supply_voltage: 输入电压 (V)
         led_forward_voltage: LED正向压降 (V)
@@ -670,9 +663,8 @@ def calculate_led_series_resistor(
     if led_current is None and led_current_ma is not None:
         led_current = led_current_ma / 1000
     elif led_current is None:
-        led_current = 0.02  # 默认20mA
+        led_current = 0.02
     
-    # 调用统一函数
     result = calculate_led_resistor(
         voltage=supply_voltage,
         led_voltage=led_forward_voltage,
@@ -845,7 +837,7 @@ def decode_resistor_4band(
         "colors": [color1, color2, color3, color4],
         "resistance": value_str,
         "tolerance": f"±{tol}%",
-        "power_rating": "1/4W (常用)",
+        "power_rating": "1/4W",
         "e24_alternative": f"{find_e24_closest(resistance)}Ω (E24)"
     }
 
@@ -901,12 +893,9 @@ def decode_resistor_5band(
         "colors": [color1, color2, color3, color4, color5],
         "resistance": value_str,
         "tolerance": f"±{tol}%",
-        "power_rating": "1/8W ~ 1/4W",
+        "power_rating": "1/8W~1/4W",
         "e24_alternative": f"{find_e24_closest(resistance)}Ω (E24)"
     }
-
-
-# 已合并到 calculate_led_resistor() - 删除重复代码
 
 
 # ==================== 新增: 电容色环解码器 (v1.1.9) ====================

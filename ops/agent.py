@@ -161,10 +161,13 @@ class Agent:
             "opamp": "opamp", "运放": "opamp", "amplifier": "amplifier", "双运放": "dual opamp",
             "mosfet": "mosfet", "三极管": "transistor", "flash": "flash",
             # 中文品类
-            "单片机": "单片机", "传感器": "传感器", "电源": "电源",
+            "单片机": "mcu", "传感器": "sensor", "电源": "power",
             # 中文关键词映射
             "稳压器": "ldo", "低压差": "ldo", "升压": "boost", "降压": "buck",
             "存储": "memory", "闪存": "flash", "存储器": "memory",
+            # 2026-02-10 v1.1.24 新增
+            "电压监测": "power monitor", "功率": "power", "电流检测": "current monitor",
+            "蓝牙": "bluetooth", "wifi": "wifi", "wifi模块": "wifi",
         }
         
         # 品类映射 - 英文缩写到标准分类

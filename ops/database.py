@@ -891,6 +891,25 @@ SENSORS = [
             {"vendor": "LCSC", "price": 4.20, "stock": 15000}
         ],
         "alternatives": ["MAX4466", "MAX9814"]
+    },
+    {
+        "part_number": "INA219",
+        "description": "I2C Digital Power Monitor",
+        "manufacturer": "Texas Instruments",
+        "category": "sensor",
+        "specs": {
+            "voltage": "0~26V",
+            "current": "0~3.2A",
+            "resolution": "12-bit",
+            "interface": "I2C",
+            "voltage": "3.0V~5.5V",
+            "feature": "Power Monitoring"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 2.50, "stock": 20000},
+            {"vendor": "AliExpress", "price": 3.20, "stock": 40000}
+        ],
+        "alternatives": ["INA226", "ACS712"]
     }
 ]
 
