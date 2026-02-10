@@ -637,6 +637,57 @@ def calculate_led_resistor(
     }
 
 
+def calculate_led_series_resistor(
+    supply_voltage: float = None,
+    led_forward_voltage: float = None,
+    led_current: float = None,
+    # 兼容旧参数名
+    voltage: float = None,
+    led_voltage: float = None,
+    led_current_ma: float = None
+) -> Dict:
+    """
+    计算LED串联电阻 (兼容性函数)
+    
+    ⚠️ 已合并到 calculate_led_resistor()，此函数为兼容性保留
+    
+    Args:
+        supply_voltage: 输入电压 (V)
+        led_forward_voltage: LED正向压降 (V)
+        led_current: LED工作电流 (A) 或 led_current_ma (mA)
+        voltage: 输入电压 (V, 别名)
+        led_voltage: LED正向压降 (V, 别名)
+        led_current_ma: LED工作电流 (mA)
+    
+    Returns:
+        推荐电阻值及参数
+    """
+    # 参数适配
+    if supply_voltage is None:
+        supply_voltage = voltage
+    if led_forward_voltage is None:
+        led_forward_voltage = led_voltage
+    if led_current is None and led_current_ma is not None:
+        led_current = led_current_ma / 1000
+    elif led_current is None:
+        led_current = 0.02  # 默认20mA
+    
+    # 调用统一函数
+    result = calculate_led_resistor(
+        voltage=supply_voltage,
+        led_voltage=led_forward_voltage,
+        led_current=led_current
+    )
+    
+    # 兼容旧版 key 名称
+    if "recommended_resistor" in result:
+        result["recommended_resistance"] = result["recommended_resistor"]
+    if "power_dissipation" in result:
+        result["power_dissipation_mw"] = result["power_dissipation"]
+    
+    return result
+
+
 def calculate_rc_time_constant(
     resistance: float = 10000,  # 10KΩ
     capacitance: float = 0.0001  # 100uF

@@ -176,11 +176,11 @@ class TestCalculators:
             led_current=0.02
         )
         
-        assert "recommended_resistance" in result
+        assert "recommended_resistor" in result
         # 5V-2V=3V / 0.02A = 150Ω
         # E24系列中150附近的标准值
         e24_standard = ["130Ω", "150Ω", "160Ω", "180Ω", "200Ω"]
-        assert result["recommended_resistance"] in e24_standard
+        assert result["recommended_resistor"] in e24_standard
     
     def test_calculate_resistor_error_voltage(self):
         """测试电压不足错误"""
@@ -201,7 +201,7 @@ class TestCalculators:
         )
         
         # 计算值 = (5-2)/0.01 = 300Ω
-        calculated = float(result["calculated_resistance"].replace("Ω", ""))
+        calculated = float(result["ideal_resistor"].replace("Ω", ""))
         assert 290 < calculated < 310
     
     def test_calculate_voltage_divider(self):
