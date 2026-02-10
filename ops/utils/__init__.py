@@ -2,6 +2,7 @@
 工具函数模块
 """
 import logging
+import re
 from datetime import datetime
 from typing import Any, Dict
 import json
@@ -92,6 +93,58 @@ def parse_current(current_str: str) -> Dict[str, float]:
         return {"value": value, "unit": "A"}
     
     return {"value": 0.0, "unit": "A"}
+
+
+def parse_resistance(resistance_str: str) -> Dict[str, Any]:
+    """
+    解析电阻值字符串
+    
+    Args:
+        resistance_str: 如 "10kΩ", "1M", "4.7K", "100R"
+        
+    Returns:
+        {"value": float, "unit": str, "ohms": float}
+    """
+    if not resistance_str:
+        return {"value": 0.0, "unit": "Ω", "ohms": 0.0}
+    
+    # 清理字符串，提取数值和单位
+    match = re.match(r"([0-9.]+)\s*([kKmMµuU]?)Ω?", resistance_str)
+    if not match:
+        # 尝试无单位格式
+        match = re.match(r"([0-9.]+)([kKmMµuU]?)", resistance_str.replace("R", "", 1))
+    
+    if match:
+        value = float(match.group(1))
+        unit = match.group(2).upper()
+        
+        # 标准化为欧姆
+        ohms = value
+        if unit == "K":
+            ohms = value * 1000
+            unit = "kΩ"
+        elif unit == "M":
+            ohms = value * 1000000
+            unit = "MΩ"
+        elif unit == "U" or unit == "µ":
+            ohms = value / 1000000
+            unit = "MΩ"
+        elif not unit or unit == "R":
+            unit = "Ω"
+        
+        return {"value": value, "unit": unit, "ohms": ohms}
+    
+    return {"value": 0.0, "unit": "Ω", "ohms": 0.0}
+
+
+def celsius_to_fahrenheit(celsius: float) -> float:
+    """摄氏转华氏"""
+    return celsius * 9/5 + 32
+
+
+def fahrenheit_to_celsius(fahrenheit: float) -> float:
+    """华氏转摄氏"""
+    return (fahrenheit - 32) * 5/9
 
 
 def estimate_price(part_number: str = "", quantity: int = 1) -> Dict[str, Any]:
@@ -240,7 +293,3 @@ class BomBuilder:
             )
         
         return "\n".join(lines)
-
-
-# 导入 re 用于正则表达式
-import re
