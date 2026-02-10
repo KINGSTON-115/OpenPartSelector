@@ -129,6 +129,13 @@
                 <button class="example-btn" onclick="setQuery('AO3400')">AO3400</button>
                 <button class="example-btn" onclick="setQuery('NE555')">NE555</button>
                 <button class="example-btn" onclick="setQuery('ATMEGA328P')">ATMEGA328P</button>
+                <button class="example-btn" onclick="setQuery('W25Q128')">W25Q128</button>
+                <button class="example-btn" onclick="setQuery('MAX485')">MAX485</button>
+                <button class="example-btn" onclick="setQuery('LM2596')">LM2596</button>
+                <button class="example-btn" onclick="setQuery('WS2812B')">WS2812B</button>
+                <button class="example-btn" onclick="setQuery('MPU6050')">MPU6050</button>
+                <button class="example-btn" onclick="setQuery('74HC595')">74HC595</button>
+                <button class="example-btn" onclick="setQuery('DS3231')">DS3231</button>
             </div>
 
             <div class="loading" id="loading">
@@ -170,26 +177,101 @@
     <script>
     // 器件数据库
     const partsDB = {
+        // === MCU ===
         'STM32F103C8T6': {mfr:'STMicroelectronics',category:'ARM Cortex-M3',price:'¥0.95',alt:['GD32F103','HK32F103']},
         'STM32F103': {mfr:'STMicroelectronics',category:'ARM Cortex-M3',price:'¥0.95',alt:['GD32F103','HK32F103']},
+        'STM32F401CCU6': {mfr:'STMicroelectronics',category:'ARM Cortex-M4',price:'¥2.50',alt:['GD32F401']},
         'GD32F103': {mfr:'兆易创新',category:'国产ARM Cortex-M3',price:'¥0.85',alt:['STM32F103']},
+        'GD32F401': {mfr:'兆易创新',category:'国产ARM Cortex-M4',price:'¥2.30',alt:['STM32F401']},
         'ESP32': {mfr:'乐鑫科技',category:'WiFi+BT SoC',price:'¥12.00',alt:['ESP32-C3']},
         'ESP32-C3': {mfr:'乐鑫科技',category:'RISC-V WiFi',price:'¥8.00',alt:['ESP32']},
+        'ESP32-S3': {mfr:'乐鑫科技',category:'WiFi+BT+AI',price:'¥15.00',alt:['ESP32']},
+        'ATMEGA328P': {mfr:'Microchip',category:'AVR单片机',price:'¥1.80',alt:['APM32']},
+        'ATMEGA2560': {mfr:'Microchip',category:'AVR 256KB',price:'¥4.50',alt:['SAM3X8E']},
+        'RP2040': {mfr:'Raspberry Pi',category:'双核Cortex-M0+',price:'¥1.80',alt:['STM32G0']},
+        'CH552': {mfr:'沁恒微电子',category:'USB 8051 MCU',price:'¥0.65',alt:['CH554']},
+        'CH554': {mfr:'沁恒微电子',category:'USB 8051 MCU',price:'¥0.80',alt:['CH552']},
+        
+        // === USB/UART ===
         'CH340N': {mfr:'沁恒微电子',category:'USB转UART',price:'¥0.15',alt:['CH340G','CP2102']},
-        'CH340G': {mfr:'沁恒微电子',category:'USB转UART',price:'¥0.18',alt:['CH340N','CP2102']},
+        'CH340G': {mfr:'沁恒微电子',category:'USB转UART SOP-16',price:'¥0.18',alt:['CH340N','CP2102']},
+        'CP2102': {mfr:'Silicon Labs',category:'USB转UART',price:'¥8.00',alt:['CH340N']},
+        'CP2102N': {mfr:'Silicon Labs',category:'USB转UART USB-C',price:'¥10.00',alt:['CH340N']},
+        'FT232R': {mfr:'FTDI',category:'USB转UART',price:'¥18.00',alt:['CP2102N']},
+        
+        // === LDO/电源管理 ===
         'LD1117V33': {mfr:'ST',category:'LDO 3.3V 1A',price:'¥0.15',alt:['AMS1117','ME6211']},
         'AMS1117': {mfr:'AMS',category:'LDO稳压器',price:'¥0.06',alt:['ME6211']},
         'ME6211': {mfr:'中科微',category:'LDO 3.3V',price:'¥0.04',alt:['AMS1117']},
+        'TPS63000': {mfr:'TI',category:'升降压稳压器',price:'¥1.20',alt:['SY8113']},
+        'SY8113': {mfr:'矽力杰',category:'降压芯片',price:'¥0.45',alt:['TPS63000']},
+        'LM2596': {mfr:'TI',category:'降压模块',price:'¥0.35',alt:['MP1584']},
+        'MP1584': {mfr:'MPS',category:'降压模块',price:'¥0.30',alt:['LM2596']},
+        
+        // === 运算放大器 ===
         'LM358': {mfr:'TI',category:'双运算放大器',price:'¥0.06',alt:['SGM358','TL072']},
+        'TL072': {mfr:'TI',category:'双JFET运放',price:'¥0.08',alt:['LM358']},
+        'NE5532': {mfr:'TI',category:'低噪声运放',price:'¥0.25',alt:['SGM2139']},
         'SGM358': {mfr:'圣邦微',category:'国产低噪声运放',price:'¥0.05',alt:['LM358']},
+        'RS858': {mfr:'润石科技',category:'国产双运放',price:'¥0.04',alt:['LM358']},
+        'LM324': {mfr:'TI',category:'四运放',price:'¥0.08',alt:['SGM324']},
+        
+        // === MOSFET ===
         'AO3400': {mfr:'AOS',category:'P-Channel MOSFET',price:'¥0.03',alt:['AO3401']},
         'AO3401': {mfr:'AOS',category:'N-Channel MOSFET',price:'¥0.03',alt:['2N7000']},
         '2N7000': {mfr:'ON Semi',category:'N-Channel MOSFET',price:'¥0.02',alt:['BS170']},
+        'IRF9540': {mfr:'Infineon',category:'P-Channel -100V',price:'¥0.40',alt:['IRF9540N']},
+        'IRF540N': {mfr:'Infineon',category:'N-Channel 100V 33A',price:'¥0.25',alt:['IRF3205']},
+        'IRF3205': {mfr:'Infineon',category:'N-Channel 55V 110A',price:'¥0.35',alt:['IRF540N']},
+        'BS170': {mfr:'ON Semi',category:'N-Channel 500V',price:'¥0.03',alt:['2N7000']},
+        'AO3402': {mfr:'AOS',category:'P-Channel -20V',price:'¥0.03',alt:['AO3401']},
+        
+        // === 逻辑芯片 ===
+        '74HC00': {mfr:'NXP',category:'四路与非门',price:'¥0.05',alt:['74HC02']},
+        '74HC02': {mfr:'NXP',category:'四路或非门',price:'¥0.05',alt:['74HC00']},
+        '74HC595': {mfr:'NXP',category:'8位移位寄存器',price:'¥0.08',alt:['SN74HC595']},
+        '74HC14': {mfr:'NXP',category:'六路施密特触发器',price:'¥0.06',alt:['CD40106']},
+        'CD40106': {mfr:'TI',category:'六路施密特触发器',price:'¥0.05',alt:['74HC14']},
+        
+        // === 定时器/时钟 ===
         'NE555': {mfr:'TI/国产',category:'精密定时器',price:'¥0.06',alt:['NE556']},
-        'ATMEGA328P': {mfr:'Microchip',category:'AVR单片机',price:'¥1.80',alt:['APM32']},
-        'RP2040': {mfr:'Raspberry Pi',category:'双核Cortex-M0+',price:'¥1.80',alt:['STM32G0']},
+        'NE556': {mfr:'TI',category:'双定时器',price:'¥0.12',alt:['NE555x2']},
+        'DS1302': {mfr:'Maxim',category:'RTC时钟芯片',price:'¥0.40',alt:['DS3231']},
+        'DS3231': {mfr:'Maxim',category:'高精度RTC',price:'¥1.20',alt:['DS1302']},
+        
+        // === 存储 ===
         'W25Q128': {mfr:'Winbond',category:'SPI Flash 16MB',price:'¥0.80',alt:['GD25Q128']},
-        'CH552': {mfr:'沁恒微电子',category:'USB 8051 MCU',price:'¥0.65',alt:['ATMEGA']}
+        'GD25Q128': {mfr:'兆易创新',category:'SPI Flash 16MB',price:'¥0.70',alt:['W25Q128']},
+        'AT24C256': {mfr:'Microchip',category:'EEPROM 256Kb',price:'¥0.35',alt:['CAT24C256']},
+        
+        // === 传感器 ===
+        'DHT11': {mfr:'Aosong',category:'温湿度传感器',price:'¥0.50',alt:['DHT22']},
+        'DHT22': {mfr:'Aosong',category:'高精度温湿度',price:'¥1.50',alt:['DHT11']},
+        'BMP280': {mfr:'Bosch',category:'气压温度传感器',price:'¥0.80',alt:['BMP180']},
+        'MPU6050': {mfr:'InvenSense',category:'六轴加速度计',price:'¥1.20',alt:['ICM20600']},
+        'HC-SR04': {mfr:'ElecFreaks',category:'超声波测距',price:'¥0.45',alt:['US-015']},
+        
+        // === 接口/通信 ===
+        'MAX485': {mfr:'Maxim',category:'RS-485收发器',price:'¥0.35',alt:['SP485']},
+        'SP485': {mfr:'EXAR',category:'RS-485收发器',price:'¥0.30',alt:['MAX485']},
+        'ADM485': {mfr:'Analog',category:'RS-485收发器',price:'¥0.45',alt:['MAX485']},
+        'EN28J60': {mfr:'Microchip',category:'以太网控制器',price:'¥2.00',alt:['W5500']},
+        'W5500': {mfr:'WIZnet',category:'以太网控制器',price:'¥2.50',alt:['EN28J60']},
+        
+        // === 分立元件 ===
+        'SS8050': {mfr:'UTC',category:'NPN三极管',price:'¥0.02',alt:['S8050']},
+        'S8050': {mfr:'CJ',category:'NPN三极管',price:'¥0.02',alt:['SS8050']},
+        'SS8550': {mfr:'UTC',category:'PNP三极管',price:'¥0.02',alt:['S8550']},
+        'S8550': {mfr:'CJ',category:'PNP三极管',price:'¥0.02',alt:['SS8550']},
+        '1N4007': {mfr:'Vishay',category:'整流二极管 1000V',price:'¥0.01',alt:['1N4004']},
+        '1N5819': {mfr:'Vishay',category:'肖特基二极管',price:'¥0.03',alt:['SS34']},
+        'SS34': {mfr:'Taiwan Semi',category:'肖特基二极管 3A',price:'¥0.03',alt:['1N5819']},
+        
+        // === LED/显示 ===
+        'WS2812B': {mfr:'Worldsemi',category:'RGB LED',price:'¥0.12',alt:['SK6812']},
+        'SK6812': {mfr:'Skylab',category:'RGB LED',price:'¥0.10',alt:['WS2812B']},
+        'TM1637': {mfr:'Titan Micro',category:'数码管驱动',price:'¥0.25',alt:['TM1638']},
+        'MAX7219': {mfr:'Maxim',category:'LED矩阵驱动',price:'¥0.80',alt:['TM1637']}
     };
 
     // Toast
@@ -311,6 +393,7 @@
         
         res.forEach((x,i)=>{
             const alt=x.alt?.length?x.alt.map(a=>`<span class="tag alt" onclick="setQuery('${a}')">🇨🇳 ${a}</span>`).join(''):'';
+            const datasheetUrl=`https://www.google.com/search?q=${x.part}+datasheet+filetype:pdf`;
             html+=`<div class="result">
                 <h3>📦 ${i+1}. ${x.part}</h3>
                 <p>${x.mfr} | ${x.category}</p>
@@ -320,7 +403,9 @@
                     <span class="tag fav" onclick="addFav('${x.part}','${x.mfr}')">⭐ 收藏</span>
                     ${alt}
                     <a href="https://www.lcsc.com/search?q=${x.part}" target="_blank" class="tag">🏪 LCSC</a>
-                    <a href="https://www.taobao.com/search?q=${x.part}" target="_blank" class="tag">🛒 淘宝</a>
+                    <a href="${datasheetUrl}" target="_blank" class="tag">📄 Datasheet</a>
+                    <a href="https://www.szlcsc.com/search?q=${x.part}" target="_blank" class="tag">🇨🇳 立创</a>
+                    <a href="https://item.szlcsc.com/${x.part.toUpperCase().replace('T6','').replace('U6','').replace('N6','')}.html" target="_blank" class="tag">📐 原理图</a>
                 </div>
             </div>`;
         });
@@ -383,7 +468,113 @@
         if(qq.includes('ATMEGA')||qq.includes('328')){
             return [
                 {part:'ATMEGA328P-PU',mfr:'Microchip',category:'AVR 32KB Flash',price:'¥1.80',stock:'25,000+',alt:['APM32']},
-                {part:'ATMEGA2560',mfr:'Microchip',category:'AVR高性能 256KB',price:'¥4.50',stock:'8,000+',alt:['SAM3X8E']}
+                {part:'ATMEGA2560',mfr:'Microchip',category:'AVR高性能 256KB',price:'¥4.50',stock:'8,000+',alt:['SAM3X8E']},
+                {part:'APM32A103',mfr:'芯旺微',category:'国产ARM Cortex-M3',price:'¥1.60',stock:'12,000+',alt:['ATMEGA328P']}
+            ];
+        }
+        
+        // === 新增：存储器 ===
+        if(qq.includes('W25Q')||qq.includes('FLASH')){
+            return [
+                {part:'W25Q128JVS',mfr:'Winbond',category:'SPI Flash 16MB',price:'¥0.80',stock:'65,000+',alt:['GD25Q128']},
+                {part:'GD25Q128C',mfr:'兆易创新',category:'SPI Flash 16MB 兼容',price:'¥0.70',stock:'85,000+',alt:['W25Q128']},
+                {part:'AT24C256',mfr:'Microchip',category:'EEPROM 256Kb I2C',price:'¥0.35',stock:'45,000+',alt:['CAT24C256']}
+            ];
+        }
+        
+        // === 新增：传感器 ===
+        if(qq.includes('MPU6050')||qq.includes('GYRO')){
+            return [
+                {part:'MPU-6050',mfr:'InvenSense',category:'6轴加速度计+陀螺仪',price:'¥1.20',stock:'120,000+',alt:['ICM20600']},
+                {part:'ICM20602',mfr:'InvenSense',category:'低功耗6轴传感器',price:'¥1.50',stock:'85,000+',alt:['MPU6050']},
+                {part:'BMI160',mfr:'Bosch',category:'6轴惯性传感器',price:'¥1.30',stock:'60,000+',alt:['MPU6050']}
+            ];
+        }
+        
+        if(qq.includes('DHT')||qq.includes('温湿度')){
+            return [
+                {part:'DHT11',mfr:'Aosong',category:'温湿度传感器',price:'¥0.50',stock:'200,000+',alt:['DHT22']},
+                {part:'DHT22',mfr:'Aosong',category:'高精度温湿度传感器',price:'¥1.50',stock:'85,000+',alt:['DHT11']},
+                {part:'SHT30',mfr:'Sensirion',category:'I2C温湿度传感器',price:'¥2.00',stock:'45,000+',alt:['SHT31']}
+            ];
+        }
+        
+        // === 新增：接口芯片 ===
+        if(qq.includes('MAX485')||qq.includes('485')){
+            return [
+                {part:'MAX485',mfr:'Maxim',category:'RS-485收发器',price:'¥0.35',stock:'150,000+',alt:['SP485','ADM485']},
+                {part:'SP485',mfr:'EXAR',category:'低功耗RS-485',price:'¥0.30',stock:'120,000+',alt:['MAX485']},
+                {part:'MAX3485',mfr:'Maxim',category:'3.3V RS-485',price:'¥0.45',stock:'85,000+',alt:['SP3485']}
+            ];
+        }
+        
+        // === 新增：逻辑芯片 ===
+        if(qq.includes('74HC')||qq.includes('74')){
+            const chips={
+                'HC00':{name:'74HC00',desc:'四路2输入与非门'},
+                'HC02':{name:'74HC02',desc:'四路2输入或非门'},
+                'HC04':{name:'74HC04',desc:'六路反相器'},
+                'HC08':{name:'74HC08',desc:'四路2输入与门'},
+                'HC14':{name:'74HC14',desc:'六路施密特触发器'},
+                'HC32':{name:'74HC32',desc:'四路2输入或门'},
+                'HC74':{name:'74HC74',desc:'双D触发器'},
+                'HC595':{name:'74HC595',desc:'8位移位寄存器'},
+                'HC165':{name:'74HC165',desc:'8位并行输入串行输出'},
+                'HC244':{name:'74HC244',desc:'八路缓冲器'}
+            };
+            const found=Object.values(chips).find(c=>qq.includes(c.name));
+            if(found){
+                return [
+                    {part:found.name,mfr:'NXP',category:found.desc,price:'¥0.05',stock:'500,000+',alt:['SN74'+found.name.substring(2)]},
+                    {part:found.name,mfr:'TI',category:found.desc,price:'¥0.06',stock:'350,000+',alt:['CD'+found.name]},
+                    {part:found.name.replace('HC','HCT'),mfr:'NXP',category:'HCT版本',price:'¥0.07',stock:'120,000+',alt:[found.name]}
+                ];
+            }
+        }
+        
+        // === 新增：三极管 ===
+        if(qq.includes('8050')||qq.includes('8550')||qq.includes('SS8050')){
+            return [
+                {part:'SS8050',mfr:'UTC',category:'NPN通用三极管',price:'¥0.02',stock:'2,000,000+',alt:['S8050','2N5551']},
+                {part:'S8050',mfr:'CJ',category:'NPN三极管',price:'¥0.02',stock:'1,800,000+',alt:['SS8050']},
+                {part:'SS8550',mfr:'UTC',category:'PNP通用三极管',price:'¥0.02',stock:'1,500,000+',alt:['S8550','2N5401']},
+                {part:'S8550',mfr:'CJ',category:'PNP三极管',price:'¥0.02',stock:'1,200,000+',alt:['SS8550']}
+            ];
+        }
+        
+        // === 新增：肖特基/整流 ===
+        if(qq.includes('1N5819')||qq.includes('5819')||qq.includes('SS34')){
+            return [
+                {part:'1N5819',mfr:'Vishay',category:'肖特基二极管 40V 1A',price:'¥0.03',stock:'1,200,000+',alt:['SS34','SB540']},
+                {part:'SS34',mfr:'Taiwan Semi',category:'肖特基二极管 3A',price:'¥0.03',stock:'850,000+',alt:['1N5819']},
+                {part:'1N4007',mfr:'Vishay',category:'整流二极管 1000V 1A',price:'¥0.01',stock:'3,000,000+',alt:['1N4004']}
+            ];
+        }
+        
+        // === 新增：LED驱动 ===
+        if(qq.includes('WS2812')||qq.includes('RGB LED')){
+            return [
+                {part:'WS2812B',mfr:'Worldsemi',category:'RGB LED 内置驱动',price:'¥0.12',stock:'500,000+',alt:['SK6812','PL9823']},
+                {part:'SK6812',mfr:'Skylab',category:'RGB LED 兼容WS2812',price:'¥0.10',stock:'350,000+',alt:['WS2812B']},
+                {part:'WS2812B-4',mfr:'Worldsemi',category:'RGB LED 4脚',price:'¥0.15',stock:'280,000+',alt:['WS2812B']}
+            ];
+        }
+        
+        // === 新增：时钟芯片 ===
+        if(qq.includes('DS323')||qq.includes('RTC')){
+            return [
+                {part:'DS3231',mfr:'Maxim',category:'高精度RTC I2C',price:'¥1.20',stock:'85,000+',alt:['DS1302','PCF8563']},
+                {part:'DS1302',mfr:'Maxim',category:'RTC时钟芯片',price:'¥0.40',stock:'65,000+',alt:['DS3231']},
+                {part:'PCF8563',mfr:'NXP',category:'低功耗RTC I2C',price:'¥0.35',stock:'55,000+',alt:['DS3231']}
+            ];
+        }
+        
+        // === 新增：电源模块 ===
+        if(qq.includes('LM2596')||qq.includes('BUCK')){
+            return [
+                {part:'LM2596-5.0',mfr:'TI',category:'降压模块 5V 3A',price:'¥0.35',stock:'250,000+',alt:['MP1584','XL2596']},
+                {part:'MP1584',mfr:'MPS',category:'降压芯片 3A',price:'¥0.30',stock:'180,000+',alt:['LM2596']},
+                {part:'XL2596',mfr:'XLSEMI',category:'国产降压芯片',price:'¥0.20',stock:'120,000+',alt:['LM2596']}
             ];
         }
         // 默认
@@ -393,7 +584,29 @@
         ];
     }
 
-    inp.addEventListener('keypress',e=>{if(e.key==='Enter')onlineSearch()});
+    inp.addEventListener('keypress',e=>{
+        if(e.key==='Enter'){
+            // Ctrl+Enter 保存到收藏
+            if(e.ctrlKey){
+                const q=inp.value.trim();
+                const data=partsDB[q.toUpperCase()]||partsDB[Object.keys(partsDB).find(k=>k.toUpperCase()===q.toUpperCase())];
+                if(data){
+                    addFav(q.toUpperCase(),data.mfr);
+                } else {
+                    showToast('⚠️ 未找到器件，无法收藏','error');
+                }
+            } else {
+                onlineSearch();
+            }
+        }
+    });
+    
+    // ESC键关闭收藏面板
+    document.addEventListener('keydown',e=>{
+        if(e.key==='Escape'){
+            document.getElementById('favPanel').classList.remove('show');
+        }
+    });
     
     // 初始化
     updateFavUI();
