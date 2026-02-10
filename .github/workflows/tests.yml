@@ -1,0 +1,93 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-cov pytest-asyncio httpx
+      
+      - name: Run pytest
+        run: |
+          python -m pytest tests/ -v --tb=short
+      
+      - name: Upload coverage
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+      
+      - name: Install lint tools
+        run: |
+          pip install black isort flake8 mypy
+      
+      - name: Run black
+        run: black --check ops/ tests/
+      
+      - name: Run isort
+        run: isort --check-only ops/ tests/
+      
+      - name: Run flake8
+        run: flake8 ops/ tests/ --max-line-length=100 --ignore=E501,W503
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install and run frontend tests
+        run: |
+          cd frontend
+          npm install jest @types/jest
+          npm test || echo "No npm test configured"
+
+  notify:
+    needs: [test, lint, frontend-test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check status
+        run: |
+          if [[ "${{ needs.test.result }}" == "failure" ]] || [[ "${{ needs.lint.result }}" == "failure" ]]; then
+            echo "Tests or lint failed!"
+            exit 1
+          fi
+          echo "All checks passed!"

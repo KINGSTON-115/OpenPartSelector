@@ -388,6 +388,7 @@ def search_components(
             continue
         
         # 关键词搜索 - 增强版
+        has_query_match = False
         if query_words:
             text = f"{component['part_number']} {component['description']} {component['manufacturer']}".lower()
             
@@ -409,10 +410,9 @@ def search_components(
             
             if match_count == 0:
                 continue
+            has_query_match = True
         
-        # ... rest of the code
-        
-        # 参数约束
+        # 参数约束检查（无论是否有查询都检查）
         if constraints:
             specs = component.get("specs", {})
             skip = False
