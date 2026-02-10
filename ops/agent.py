@@ -507,8 +507,8 @@ class Agent:
     
     def _timestamp(self) -> str:
         """生成时间戳"""
-        from datetime import datetime
-        return datetime.utcnow().isoformat() + "Z"
+        from datetime import datetime, timezone
+        return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 # 便捷函数
