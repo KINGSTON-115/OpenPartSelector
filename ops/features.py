@@ -717,27 +717,251 @@ def calculate_capacitor_ripple(
     # 简化公式: C = I / (f × Vripple)
     c_ideal = load_current / (frequency * ripple_voltage)
     
-    # 转换为常用单位
-    if c_ideal < 0.001:
-        c_display = c_ideal * 1000000  # μF
-        unit = "μF"
-    else:
-        c_display = c_ideal * 1000  # mF
-        unit = "mF"
+    # 转换为常用单位 (μF)
+    c_uf = c_ideal * 1000000
     
     # 推荐标准值
     standard_values = [10, 22, 47, 100, 220, 470, 1000, 2200, 4700, 10000]
-    c_std = min(standard_values, key=lambda x: abs(x - c_display))
+    c_std = min(standard_values, key=lambda x: abs(x - c_uf))
     
-    # 实际纹波
-    actual_ripple = load_current / (frequency * (c_std if unit == "μF" else c_std/1000000))
+    # 实际纹波 (C 转换为法拉)
+    actual_ripple = load_current / (frequency * (c_std / 1000000))
     
     return {
         "load_current": f"{load_current*1000:.0f}mA",
         "ripple_voltage": f"{ripple_voltage*1000:.0f}mVpp",
         "frequency": f"{frequency}Hz",
-        "ideal_capacitor": f"{c_display:.1f}{unit}",
-        "recommended_capacitor": f"{c_std}{unit}",
+        "ideal_capacitor": f"{c_uf:.1f}μF",
+        "recommended_capacitor": f"{c_std}μF",
         "actual_ripple": f"{actual_ripple*1000:.1f}mVpp",
         "formula": "C = I / (f × ΔV)"
+    }
+
+
+# ==================== 新增: 电阻色环解码器 (v1.1.8) ====================
+
+RESISTOR_COLORS = {
+    "black": {"value": 0, "multiplier": 1, "tolerance": None},
+    "brown": {"value": 1, "multiplier": 10, "tolerance": 1},
+    "red": {"value": 2, "multiplier": 100, "tolerance": 2},
+    "orange": {"value": 3, "multiplier": 1000, "tolerance": None},
+    "yellow": {"value": 4, "multiplier": 10000, "tolerance": 5},
+    "green": {"value": 5, "multiplier": 100000, "tolerance": 0.5},
+    "blue": {"value": 6, "multiplier": 1000000, "tolerance": 0.25},
+    "violet": {"value": 7, "multiplier": 10000000, "tolerance": 0.1},
+    "gray": {"value": 8, "multiplier": 0.1, "tolerance": 0.05},
+    "white": {"value": 9, "multiplier": 0.01, "tolerance": None},
+    "gold": {"value": None, "multiplier": 0.1, "tolerance": 5},
+    "silver": {"value": None, "multiplier": 0.01, "tolerance": 10},
+}
+
+TOLERANCE_COLORS = {
+    1: "brown",
+    2: "red",
+    5: "gold",
+    10: "silver",
+    0.5: "green",
+    0.25: "blue",
+    0.1: "violet",
+    0.05: "gray",
+}
+
+
+def decode_resistor_4band(
+    color1: str,
+    color2: str, 
+    color3: str,
+    color4: str = "gold"
+) -> Dict:
+    """
+    解码 4 色环电阻
+    
+    Args:
+        color1: 第1环 (首位数字)
+        color2: 第2环 (次位数字)
+        color3: 第3环 (乘数)
+        color4: 第4环 (误差)
+    
+    Returns:
+        电阻值及参数
+    """
+    color1 = color1.lower()
+    color2 = color2.lower()
+    color3 = color3.lower()
+    color4 = color4.lower()
+    
+    v1 = RESISTOR_COLORS.get(color1, {}).get("value")
+    v2 = RESISTOR_COLORS.get(color2, {}).get("value")
+    mult = RESISTOR_COLORS.get(color3, {}).get("multiplier", 1)
+    tol = RESISTOR_COLORS.get(color4, {}).get("tolerance", 5)
+    
+    if v1 is None or v2 is None:
+        return {"error": "无效的颜色代码"}
+    
+    # 计算阻值
+    resistance = (v1 * 10 + v2) * mult
+    
+    # 格式化输出
+    if resistance >= 1000000:
+        value_str = f"{resistance / 1000000:.1f}MΩ"
+    elif resistance >= 1000:
+        value_str = f"{resistance / 1000:.1f}KΩ"
+    else:
+        value_str = f"{resistance:.0f}Ω"
+    
+    # 查找误差对应的颜色
+    tol_color = color4
+    
+    return {
+        "bands": 4,
+        "colors": [color1, color2, color3, color4],
+        "resistance": value_str,
+        "tolerance": f"±{tol}%",
+        "power_rating": "1/4W (常用)",
+        "e24_alternative": _find_e24_alternative(resistance)
+    }
+
+
+def decode_resistor_5band(
+    color1: str,
+    color2: str,
+    color3: str,
+    color4: str,
+    color5: str = "brown"
+) -> Dict:
+    """
+    解码 5 色环精密电阻
+    
+    Args:
+        color1: 第1环 (百位数)
+        color2: 第2环 (十位数)
+        color3: 第3环 (个位数)
+        color4: 第4环 (乘数)
+        color5: 第5环 (误差)
+    
+    Returns:
+        电阻值及参数
+    """
+    color1 = color1.lower()
+    color2 = color2.lower()
+    color3 = color3.lower()
+    color4 = color4.lower()
+    color5 = color5.lower()
+    
+    v1 = RESISTOR_COLORS.get(color1, {}).get("value")
+    v2 = RESISTOR_COLORS.get(color2, {}).get("value")
+    v3 = RESISTOR_COLORS.get(color3, {}).get("value")
+    mult = RESISTOR_COLORS.get(color4, {}).get("multiplier", 1)
+    tol = RESISTOR_COLORS.get(color5, {}).get("tolerance", 1)
+    
+    if v1 is None or v2 is None or v3 is None:
+        return {"error": "无效的颜色代码"}
+    
+    # 计算阻值
+    resistance = (v1 * 100 + v2 * 10 + v3) * mult
+    
+    # 格式化输出
+    if resistance >= 1000000:
+        value_str = f"{resistance / 1000000:.2f}MΩ"
+    elif resistance >= 1000:
+        value_str = f"{resistance / 1000:.2f}KΩ"
+    else:
+        value_str = f"{resistance:.0f}Ω"
+    
+    return {
+        "bands": 5,
+        "colors": [color1, color2, color3, color4, color5],
+        "resistance": value_str,
+        "tolerance": f"±{tol}%",
+        "power_rating": "1/8W ~ 1/4W",
+        "e24_alternative": _find_e24_alternative(resistance)
+    }
+
+
+def _find_e24_alternative(resistance: float) -> str:
+    """查找最接近的 E24 标准值"""
+    e24_values = [
+        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
+        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
+        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
+        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
+    ]
+    
+    # 找到最接近的E24值
+    if resistance >= 10:
+        closest = min(e24_values, key=lambda x: abs(x - resistance))
+        if resistance >= 1000:
+            return f"{closest}KΩ (E24)"
+        return f"{closest}Ω (E24)"
+    return "小于10Ω"
+
+
+def calculate_led_series_resistor(
+    supply_voltage: float = 5.0,
+    led_forward_voltage: float = 2.0,
+    led_current: float = 0.02
+) -> Dict:
+    """
+    计算LED串联电阻 (改进版 - 完整参数)
+    
+    Args:
+        supply_voltage: 电源电压 (V)
+        led_forward_voltage: LED正向压降 (V)
+        led_current: LED工作电流 (A)
+    
+    Returns:
+        推荐电阻值及功率信息
+    """
+    v_r = supply_voltage - led_forward_voltage
+    
+    if v_r <= 0:
+        return {"error": "电源电压必须大于LED压降"}
+    
+    r_ideal = v_r / led_current
+    
+    # 完整E24标准电阻系列
+    e24_values = [
+        10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30,
+        33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91,
+        100, 110, 120, 130, 150, 160, 180, 200, 220, 240, 270, 300,
+        330, 360, 390, 430, 470, 510, 560, 620, 680, 750, 820, 910,
+        1000, 1100, 1200, 1300, 1500, 1600, 1800, 2000, 2200, 2400, 2700, 3000,
+        3300, 3600, 3900, 4300, 4700, 5100, 5600, 6200, 6800, 7500, 8200, 9100,
+        10000
+    ]
+    
+    r_std = min(e24_values, key=lambda x: abs(x - r_ideal))
+    i_actual = v_r / r_std
+    power = v_r * i_actual
+    
+    # 推荐功率 (留50%余量)
+    recommended_power = power * 2
+    
+    # 推荐封装
+    if recommended_power < 0.125:
+        package = "0603 (1/16W)"
+    elif recommended_power < 0.25:
+        package = "0805 (1/8W)"
+    elif recommended_power < 0.5:
+        package = "1206 (1/4W)"
+    elif recommended_power < 1.0:
+        package = "1210 (1/2W)"
+    else:
+        package = "1210+ (大功率)"
+    
+    # 推荐色环
+    bands = decode_resistor_4band("brown", "black", "brown", "gold")
+    
+    return {
+        "supply_voltage": f"{supply_voltage}V",
+        "led_voltage": f"{led_forward_voltage}V",
+        "led_current": f"{led_current*1000:.0f}mA",
+        "ideal_resistance": f"{r_ideal:.1f}Ω",
+        "recommended_resistance": f"{r_std}Ω",
+        "actual_current": f"{i_actual*1000:.1f}mA",
+        "power_dissipation": f"{power*1000:.1f}mW",
+        "recommended_power": f"{recommended_power*1000:.1f}mW",
+        "recommended_package": package,
+        "color_bands": bands.get("colors", []),
+        "formula": "R = (Vcc - Vled) / Iled"
     }

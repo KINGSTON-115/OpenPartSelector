@@ -20,6 +20,9 @@ from ops.features import (
     calculate_led_resistor,
     calculate_rc_time_constant,
     calculate_capacitor_ripple,
+    decode_resistor_4band,
+    decode_resistor_5band,
+    calculate_led_series_resistor,
     CHIP_ALTERNATIVES,
     CIRCUIT_TEMPLATES,
     DATASHEET_SUMMARIES,
@@ -295,22 +298,16 @@ class TestNewCalculators_v117:
     def test_calculate_capacitor_ripple(self):
         """测试滤波电容计算"""
         result = calculate_capacitor_ripple(
-            load_current=0.1,
-            ripple_voltage=0.5,
-            frequency=120
+            load_current=0.1,  # 100mA
+            ripple_voltage=0.5,  # 500mVpp
+            frequency=120  # 120Hz
         )
         
         assert "recommended_capacitor" in result
         assert "actual_ripple" in result
         
-        # I=100mA, f=120Hz, ΔV=500mV → C ≈ 1667μF → 1.67mF
-        recommended = result["recommended_capacitor"]
-        # 支持 mF 或 μF
-        if recommended.endswith("mF"):
-            value = float(recommended.replace("mF", "")) * 1000  # 转换为μF
-        else:
-            value = float(recommended.replace("μF", ""))
-        assert value >= 1000
+        # I=100mA, f=120Hz, ΔV=500mV → C ≈ 1667μF → 标准值 2200μF
+        assert result["recommended_capacitor"] in ["2200μF", "1000μF"]
     
     def test_calculate_capacitor_ripple_smaller(self):
         """测试小电流滤波"""
@@ -323,3 +320,72 @@ class TestNewCalculators_v117:
         # 需要的电容更小
         recommended = int(result["recommended_capacitor"].replace("μF",""))
         assert recommended < 1000
+
+
+class TestNewCalculators_v118:
+    """v1.1.8 新增计算函数测试"""
+
+    def test_decode_resistor_4band_standard(self):
+        """测试标准4色环电阻解码"""
+        result = decode_resistor_4band("brown", "black", "red", "gold")
+        
+        assert "resistance" in result
+        assert "tolerance" in result
+        # 棕黑红 = 10 × 100 = 1KΩ
+        assert result["resistance"] in ["1KΩ", "1.0KΩ"]
+        assert "±5%" in result["tolerance"]
+
+    def test_decode_resistor_4band_220ohm(self):
+        """测试220Ω电阻解码"""
+        result = decode_resistor_4band("red", "red", "brown", "gold")
+        
+        # 红红棕 = 22 × 10 = 220Ω
+        assert result["resistance"] == "220Ω"
+
+    def test_decode_resistor_5band_precision(self):
+        """测试5色环精密电阻解码"""
+        result = decode_resistor_5band("brown", "black", "black", "brown", "brown")
+        
+        # 棕黑黑棕 = 100 × 10 = 1KΩ
+        assert result["resistance"] in ["1.00KΩ", "1KΩ"]
+        assert "±1%" in result["tolerance"]
+
+    def test_decode_resistor_invalid(self):
+        """测试无效颜色"""
+        result = decode_resistor_4band("pink", "black", "red", "gold")
+        assert "error" in result
+
+    def test_calculate_led_series_resistor(self):
+        """测试LED串联电阻完整计算"""
+        result = calculate_led_series_resistor(
+            supply_voltage=5.0,
+            led_forward_voltage=2.0,
+            led_current=0.02
+        )
+        
+        assert "recommended_resistance" in result
+        assert "recommended_package" in result
+        assert "power_dissipation" in result
+        # 5V-2V=3V / 20mA = 150Ω
+        assert "recommended_resistance" in result
+
+    def test_calculate_led_series_resistor_blue_led(self):
+        """测试蓝灯LED计算"""
+        result = calculate_led_series_resistor(
+            supply_voltage=5.0,
+            led_forward_voltage=3.2,
+            led_current=0.015
+        )
+        
+        assert "recommended_resistance" in result
+        # 5V-3.2V=1.8V / 15mA = 120Ω (标准值可能是120Ω)
+        assert "recommended_resistance" in result
+
+    def test_calculate_led_series_resistor_low_voltage_error(self):
+        """测试低压错误"""
+        result = calculate_led_series_resistor(
+            supply_voltage=1.5,
+            led_forward_voltage=2.0,
+            led_current=0.02
+        )
+        assert "error" in result

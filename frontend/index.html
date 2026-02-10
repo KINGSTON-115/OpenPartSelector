@@ -812,11 +812,11 @@
     });
     
     // 搜索框键盘导航
-    const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('keydown', e => {
+    const searchInputEl = document.getElementById('searchInput');
+    searchInputEl.addEventListener('keydown', e => {
         if(e.key === 'Enter') search();
         if(e.key === 'Escape'){
-            searchInput.blur();
+            searchInputEl.blur();
             const sugg = document.getElementById('suggestions');
             if(sugg) sugg.classList.remove('show');
         }
