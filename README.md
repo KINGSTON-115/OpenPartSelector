@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.24 🚀🤖🔌
+# OpenPartSelector v1.1.25 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,10 +6,19 @@
 
 ---
 
-## ✨ v1.1.24 更新日志 (2026-02-10)
+## ✨ v1.1.25 更新日志 (2026-02-10)
 
-### 🔧 版本统一
-- 统一版本号：standalone.html v1.1.23 → v1.1.24
+### 🔧 代码质量
+- 代码精简：消除重复定义，统一模块结构
+- 增强文档：SearchResult/PartSpec 等核心类添加详细 docstring
+- 性能优化：数据库搜索添加内存缓存，减少重复查询
+- 稳定性增强：价格查询添加超时控制，防止长时间阻塞
+
+### 🧪 测试增强
+- 单元测试：105个测试全部通过，覆盖电压/电流解析、价格估算、BOM构建
+
+### 🐛 Bug 修复
+- 修复 `quick_select` 在已有事件循环中的兼容性问题
 
 ### 🆕 新增传感器
 - SGP30: VOC/CO2 传感器 (Sensirion)
