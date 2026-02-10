@@ -467,6 +467,10 @@ body.dark-mode .feature:hover{background:linear-gradient(135deg,#667eea 0%,#764b
 body.dark-mode .footer{color:#718096 !important}
 body.dark-mode a{color:#667eea !important}
 body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
+
+/* 浮动导航 */
+.floating-nav{position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;opacity:0;transform:translateX(-100px);transition:all 0.3s;}
+.floating-nav.show{opacity:1;transform:translateX(0)}
 </style>
 </head>
 <body>
@@ -476,7 +480,16 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
     <!-- 头部 -->
     <button class="dark-toggle" onclick="toggleDark()">🌙 深色</button>
     
-    <div class="hero">
+    
+        <!-- 页内导航 -->
+        <div style="position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;">
+            <button onclick="scrollToSection('search')" style="width:50px;height:50px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:20px;box-shadow:0 5px 20px rgba(102,126,234,0.4);" title="搜索">🔍</button>
+            <button onclick="scrollToSection('features')" style="width:50px;height:50px;background:linear-gradient(135deg,#48bb78,#38a169);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:20px;box-shadow:0 5px 20px rgba(72,187,120,0.4);" title="功能">✨</button>
+            <button onclick="scrollToSection('download')" style="width:50px;height:50px;background:linear-gradient(135deg,#ed8936,#dd6b20);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:20px;box-shadow:0 5px 20px rgba(237,137,54,0.4);" title="下载">📥</button>
+            <button onclick="scrollToSection('learn')" style="width:50px;height:50px;background:linear-gradient(135deg,#4299e1,#3182ce);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:20px;box-shadow:0 5px 20px rgba(66,153,225,0.4);" title="学习">📚</button>
+            <button onclick="scrollToTop()" id="backToTop" style="width:50px;height:50px;background:linear-gradient(135deg,#f56565,#e53e3e);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:20px;box-shadow:0 5px 20px rgba(245,101,101,0.4);display:none;" title="回到顶部">⬆️</button>
+        </div>
+<div class="hero">
         <div class="hero-logo">🔌</div>
         <h1>OpenPartSelector</h1>
         <p>专为电子类专业大学生打造的元器件选型神器 🚀</p>
@@ -489,7 +502,7 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
     </div>
 
     <div class="container">
-        <!-- 搜索卡片 -->
+        <!-- 搜索卡片 --><a id="search"></a>
         <div class="card">
             <h2>🔍 智能选型</h2>
             <p style="color:#718096;font-size:1.1em;margin-bottom:20px;">
@@ -547,7 +560,7 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
             <div id="results"></div>
         </div>
 
-        <!-- 核心功能 -->
+        <!-- 核心功能 --><a id="features"></a>
         <div class="card">
             <h2>✨ 核心功能</h2>
             <div class="features">
@@ -584,7 +597,7 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
             </div>
         </div>
 
-        <!-- 下载区域 -->
+        <!-- 下载区域 --><a id="download"></a>
         <div class="download-section">
             <button onclick="startTour()" style="position:absolute;top:20px;right:20px;padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);border-radius:25px;color:#fff;cursor:pointer;font-size:14px;">🎓 新手引导</button>
             <h2>📥 获取工具</h2>
@@ -610,7 +623,7 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
             </div>
         </div>
 
-        <!-- 学习资源 -->
+        <!-- 学习资源 --><a id="learn"></a>
         <div class="card">
             <h2>📚 电子学习资源</h2>
             <div class="features">
@@ -755,6 +768,23 @@ body.dark-mode .hot-tag{background:rgba(102,126,234,0.2) !important}
             </div>`).join('') + '</div>';
     }
     
+    // 页内导航
+    function scrollToSection(id){
+        const el = document.querySelector('.card, .download-section, .hero');
+        if(el) el.scrollIntoView({behavior: 'smooth'});
+    }
+    
+    function scrollToTop(){
+        window.scrollTo({top:0,behavior:'smooth'});
+    }
+    
+    // 监听滚动显示回到顶部
+    window.addEventListener('scroll', () => {
+        const btn = document.getElementById('backToTop');
+        if(btn){
+            btn.style.display = window.scrollY > 300 ? 'block' : 'none';
+        }
+    });
     // 键盘快捷键增强
     document.addEventListener('keydown', e => {
         if(e.key === '/' && document.activeElement.tagName !== 'INPUT'){

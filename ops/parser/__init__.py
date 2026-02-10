@@ -1,309 +1,261 @@
 """
-文档解析模块 - 解析 datasheet 和封装
+📄 Datasheet 解析器
+Datasheet Parser
+
+功能:
+- PDF 解析
+- 参数提取
+- 中文解读生成
 """
-from typing import Dict, List, Optional
-from pathlib import Path
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
 import re
-import logging
 
-from ..config import Config
 
-logger = logging.getLogger(__name__)
+@dataclass
+class ParsedDatasheet:
+    """解析后的 Datasheet"""
+    part_number: str
+    manufacturer: str
+    description: str
+    specifications: Dict[str, str]
+    package: str
+    datasheet_url: str
+    summary: str  # 中文摘要
 
 
 class DatasheetParser:
     """Datasheet 解析器"""
     
-    def __init__(self, config: Config):
-        self.config = config
+    def __init__(self):
+        self.pdf_available = False
+        self._check_pdf_libs()
     
-    async def parse_file(self, file_path: str) -> Dict:
+    def _check_pdf_libs(self):
+        """检查 PDF 库是否可用"""
+        try:
+            import pdfplumber
+            self.pdf_available = True
+        except ImportError:
+            print("⚠️ pdfplumber 未安装，PDF解析功能受限")
+    
+    async def parse_file(self, file_path: str) -> Optional[ParsedDatasheet]:
         """
-        解析 datasheet 文件
+        解析 Datasheet 文件
         
         Args:
-            file_path: 文件路径或 URL
+            file_path: 文件路径 (PDF 或文本)
             
         Returns:
-            解析后的规格信息
+            解析结果
         """
-        if file_path.endswith(".pdf"):
+        if file_path.endswith('.pdf') and self.pdf_available:
             return await self._parse_pdf(file_path)
-        elif file_path.endswith(".html"):
-            return await self._parse_html(file_path)
+        elif file_path.endswith(('.txt', '.md', '.csv')):
+            return self._parse_text(file_path)
         else:
-            return await self._parse_text(file_path)
+            raise ValueError(f"不支持的文件格式: {file_path}")
     
-    async def parse_url(self, url: str) -> Dict:
-        """解析在线 datasheet"""
-        # TODO: 下载并解析
-        return {}
+    async def _parse_pdf(self, file_path: str) -> Optional[ParsedDatasheet]:
+        """解析 PDF 文件"""
+        import pdfplumber
+        
+        try:
+            with pdfplumber.open(file_path) as pdf:
+                text = ""
+                for page in pdf.pages[:5]:  # 只读前5页
+                    text += page.extract_text() or ""
+                
+                return self._extract_info(text)
+        except Exception as e:
+            print(f"PDF 解析失败: {e}")
+            return None
     
-    async def _parse_pdf(self, file_path: str) -> Dict:
-        """
-        解析 PDF datasheet
+    def _parse_text(self, file_path: str) -> Optional[ParsedDatasheet]:
+        """解析文本文件"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                text = f.read()
+            return self._extract_info(text)
+        except Exception as e:
+            print(f"文本解析失败: {e}")
+            return None
+    
+    def _extract_info(self, text: str) -> ParsedDatasheet:
+        """从文本中提取信息"""
+        text = text.lower()
         
-        使用规则提取 + AI 辅助理解关键参数
-        """
-        # TODO: 实现 PDF 解析
-        # 可以使用 PyPDF2, pdfplumber, 或 llamaparse
+        # 提取型号
+        part_number = self._extract_part_number(text)
         
-        result = {
-            "file_path": file_path,
-            "part_number": "",
-            "description": "",
-            "manufacturer": "",
-            "parameters": {},
-            "warnings": [],
-            "raw_text": ""
+        # 提取厂商
+        manufacturer = self._extract_manufacturer(text)
+        
+        # 提取描述
+        description = self._extract_description(text)
+        
+        # 提取规格
+        specifications = self._extract_specifications(text)
+        
+        # 提取封装
+        package = self._extract_package(text)
+        
+        # 生成摘要
+        summary = self._generate_summary(part_number, manufacturer, specifications)
+        
+        return ParsedDatasheet(
+            part_number=part_number or "未知",
+            manufacturer=manufacturer or "未知",
+            description=description or "无描述",
+            specifications=specifications,
+            package=package or "未知",
+            datasheet_url="",
+            summary=summary
+        )
+    
+    def _extract_part_number(self, text: str) -> Optional[str]:
+        """提取型号"""
+        # 常见型号模式
+        patterns = [
+            r'(stm32[f\d]+[a-z]*)',
+            r'(esp32[-\w]*)',
+            r'(ch340[ng]?)',
+            r'(lm358[a-z]*)',
+            r'(ams1117[-\w]*)',
+            r'(ld1117[-\w]*)',
+            r'(rp2040)',
+            r'(atmega328[p]?)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                return match.group(1).upper()
+        
+        # 通用模式
+        match = re.search(r'(?:part\s*(?:no|number)|型号)[:\s]*([a-z0-9\-]+)', text)
+        if match:
+            return match.group(1).upper()
+        
+        return None
+    
+    def _extract_manufacturer(self, text: str) -> Optional[str]:
+        """提取厂商"""
+        manufacturers = {
+            "stmicroelectronics": "STMicroelectronics",
+            "st.com": "STMicroelectronics",
+            "espressif": "乐鑫科技",
+            "wch.cn": "沁恒微电子",
+            "ti.com": "Texas Instruments",
+            "texas instruments": "Texas Instruments",
+            "analog devices": "ADI",
+            "onn": "安森美",
+            "onsemi": "安森美",
+            "nxp": "NXP",
+            "microchip": "Microchip",
         }
         
-        # 基础参数提取
-        params = {}
+        for pattern, name in manufacturers.items():
+            if pattern in text:
+                return name
         
-        # 电压参数
-        voltage_patterns = [
-            r"(?:Vin|Vcc|Supply Voltage|V_supply)\s*[:=]\s*([0-9.]+)\s*[~~-]\s*([0-9.]+)\s*V",
-            r"(?:Input Voltage|Vin)\s*[:=]\s*([0-9.]+)\s*V",
-        ]
-        
-        # 电流参数
-        current_patterns = [
-            r"(?:Iout|Output Current|I_out)\s*[:=]\s*([0-9.]+)\s*[mAu]",
-            r"(?:Iq|Quiescent Current)\s*[:=]\s*([0-9.]+)\s*[mAu]",
-        ]
-        
-        # 功率参数
-        power_patterns = [
-            r"(?:Pout|Power Dissipation|P_diss)\s*[:=]\s*([0-9.]+)\s*W",
-        ]
-        
-        # 封装
-        package_patterns = [
-            r"(?:Package|Pkg)\s*[:=]\s*([A-Z0-9\-]+)",
-        ]
-        
-        result["parameters"] = params
-        result["status"] = "parsed"
-        
-        return result
+        return None
     
-    async def _parse_html(self, url: str) -> Dict:
-        """解析 HTML datasheet"""
-        # TODO: 使用 BeautifulSoup 解析
-        return {}
-    
-    async def _parse_text(self, text: str) -> Dict:
-        """解析文本格式 datasheet"""
-        # TODO: 解析 markdown/text 格式
-        return {"raw_text": text, "status": "parsed"}
-    
-    def parse_specification_section(self, text: str) -> Dict:
-        """
-        解析规格表段落
-        
-        提取关键电气参数
-        """
-        specs = {}
-        
-        # 常见参数映射
-        param_mapping = {
-            "supply voltage": ["vcc", "vin", "v_supply", "supply voltage"],
-            "output voltage": ["vout", "v_output", "output voltage"],
-            "output current": ["iout", "i_output", "output current"],
-            "quiescent current": ["iq", "quiescent current", "i_q"],
-            "input voltage": ["vin", "v_in", "input voltage"],
-            "dropout voltage": ["vdo", "dropout voltage"],
-            "ripple rejection": ["psrr", "power supply rejection ratio"],
-            "noise": ["enoise", "output noise", "noise"],
-            "operating temperature": ["t_op", "operating temperature", "temperature"],
-            "storage temperature": ["t_stg", "storage temperature"],
-            "package": ["package", "pkg", "footprint"],
-        }
-        
+    def _extract_description(self, text: str) -> str:
+        """提取描述"""
+        # 尝试提取第一段作为描述
         lines = text.split('\n')
         for line in lines:
-            line_lower = line.lower()
-            
-            for key, keywords in param_mapping.items():
-                for kw in keywords:
-                    if kw in line_lower:
-                        # 提取数值
-                        match = re.search(r'([0-9.]+)\s*([mMkKgGuUvVnN]?V|[mMkKgG]?A|[Ww])', line)
-                        if match:
-                            value = match.group(1) + match.group(2)
-                            specs[key] = value
-                        break
+            line = line.strip()
+            if 20 < len(line) < 200:
+                return line
+        
+        return "无描述"
+    
+    def _extract_specifications(self, text: str) -> Dict[str, str]:
+        """提取规格参数"""
+        specs = {}
+        
+        # 电压范围
+        voltage_match = re.search(r'(\d+\.?\d*)\s*[-~至]\s*(\d+\.?\d*)\s*v(?:dc)?', text)
+        if voltage_match:
+            specs["voltage"] = f"{voltage_match.group(1)}-{voltage_match.group(2)}V"
+        
+        # 电流
+        current_match = re.search(r'(\d+\.?\d*)\s*(?:a|ma)', text)
+        if current_match:
+            specs["current"] = f"{current_match.group(1)}{'A' if 'a' in current_match.group(0) else 'mA'}"
+        
+        # 封装
+        package_match = re.search(r'(?:package|封装)[:\s]*([a-z0-9\-]+)', text)
+        if package_match:
+            specs["package"] = package_match.group(1).upper()
+        
+        # 温度范围
+        temp_match = re.search(r'(\-?\d+)\s*[:°]?\s*c.*?(\-?\d+)\s*[:°]?\s*c', text)
+        if temp_match:
+            specs["temperature"] = f"{temp_match.group(1)}°C ~ {temp_match.group(2)}°C"
         
         return specs
     
-    def extract_tables(self, text: str) -> List[Dict]:
-        """
-        提取表格数据
-        
-        用于解析 datasheet 中的参数表
-        """
-        tables = []
-        
-        # 简单的表格分隔符检测
-        # 实际应使用 PDF 解析库的表格提取功能
-        
-        return tables
-    
-    def extract_pinout(self, text: str) -> Dict:
-        """
-        提取引脚定义
-        
-        Returns:
-            引脚映射: {"1": "VCC", "2": "GND", ...}
-        """
-        pinout = {}
-        
-        # 引脚定义通常在 "Pin Configuration" 部分
-        pin_pattern = r"(\d+)\s+([A-Z0-9]+)\s+(.*)"
-        
-        matches = re.findall(pin_pattern, text)
-        for match in matches:
-            pin_number = match[0]
-            pin_name = match[1]
-            pin_function = match[2]
-            pinout[pin_number] = {
-                "name": pin_name,
-                "function": pin_function
-            }
-        
-        return pinout
-    
-    def extract_package_info(self, text: str) -> Dict:
-        """
-        提取封装信息
-        
-        Returns:
-            封装尺寸、焊盘图案等
-        """
-        package = {
-            "type": "",
-            "dimensions": "",
-            "land_pattern": ""
-        }
-        
-        # 封装类型
-        package_types = [
-            "SOT-23", "SOT-223", "SOT-89",
-            "QFN", "TQFN", "WSON",
-            "SOIC", "TSSOP", "MSOP",
-            "DIP", "BGA", "LFCSP"
+    def _extract_package(self, text: str) -> Optional[str]:
+        """提取封装"""
+        packages = [
+            "LQFP-48", "LQFP-44", "LQFP-32",
+            "SOP-8", "SOP-16", "SOIC-8",
+            "QFN-20", "QFN-24", "QFN-32",
+            "SOT-23", "SOT-223",
+            "DIP-8", "DIP-16",
+            "VSON-14", "VFQFPN-32",
         ]
         
-        for pkg_type in package_types:
-            if pkg_type in text.upper():
-                package["type"] = pkg_type
-                break
+        for pkg in packages:
+            if pkg.lower() in text.lower():
+                return pkg
         
-        # 尺寸提取
-        dim_pattern = r"(\d+\.?\d*)\s*[xX×]\s*(\d+\.?\d*)\s*[xX×]?\s*(\d+\.?\d*)?\s*(mm|mil)"
-        match = re.search(dim_pattern, text)
-        if match:
-            package["dimensions"] = f"{match.group(1)} x {match.group(2)} {match.group(4)}"
-        
-        return package
+        return None
     
-    async def generate_summary(self, parsed_data: Dict) -> str:
-        """
-        生成 datasheet 摘要
+    def _generate_summary(
+        self,
+        part_number: str,
+        manufacturer: str,
+        specifications: Dict[str, str]
+    ) -> str:
+        """生成中文摘要"""
+        parts = []
         
-        使用 LLM 生成通俗易懂的说明
-        """
-        # TODO: 调用 LLM 生成中文摘要
+        if manufacturer:
+            parts.append(f"{manufacturer}")
         
-        summary_parts = []
+        if part_number:
+            parts.append(f"{part_number}")
         
-        if parsed_data.get("part_number"):
-            summary_parts.append(f"器件型号: {parsed_data['part_number']}")
+        if specifications.get("voltage"):
+            parts.append(f"{specifications['voltage']}电压")
         
-        if parsed_data.get("description"):
-            summary_parts.append(f"功能描述: {parsed_data['description']}")
+        if specifications.get("current"):
+            parts.append(f"{specifications['current']}电流")
         
-        params = parsed_data.get("parameters", {})
-        if params:
-            summary_parts.append("主要参数:")
-            for key, value in params.items():
-                summary_parts.append(f"  - {key}: {value}")
+        if specifications.get("package"):
+            parts.append(f"{specifications['package']}封装")
         
-        return "\n".join(summary_parts)
+        return " ".join(parts) if parts else "未知器件"
+    
+    async def parse_url(self, url: str) -> Optional[ParsedDatasheet]:
+        """从 URL 解析 Datasheet"""
+        # 使用 web_fetch 获取内容
+        from . import web_fetch
+        
+        try:
+            content = await web_fetch.fetch(url)
+            return self._extract_info(content)
+        except Exception as e:
+            print(f"URL 解析失败: {e}")
+            return None
 
 
-class FootprintParser:
-    """封装解析器"""
-    
-    def __init__(self, config: Config):
-        self.config = config
-    
-    async def parse_footprint_file(self, file_path: str) -> Dict:
-        """
-        解析封装文件
-        
-        支持 KiCad, Altium, Eagle 等格式
-        """
-        ext = Path(file_path).suffix.lower()
-        
-        if ext == ".kicad_mod":
-            return await self._parse_kicad(file_path)
-        elif ext == ".xml":  # Altium
-            return await self._parse_altium(file_path)
-        elif ext == ".brd":  # Eagle
-            return await self._parse_eagle(file_path)
-        else:
-            return {"error": "Unsupported format"}
-    
-    async def _parse_kicad(self, file_path: str) -> Dict:
-        """解析 KiCad 封装"""
-        footprint = {
-            "format": "KiCad",
-            "file_path": file_path,
-            "name": "",
-            "pad_count": 0,
-            "pad_layout": "",
-            "dimensions": {}
-        }
-        
-        # 解析 Kicad Mod 格式
-        with open(file_path, 'r') as f:
-            content = f.read()
-        
-        # 提取封装名称
-        name_match = re.search(r'\(fp_name "?([^")]+)"?\)', content)
-        if name_match:
-            footprint["name"] = name_match.group(1)
-        
-        # 提取焊盘数量
-        pad_count = len(re.findall(r'\(pad ', content))
-        footprint["pad_count"] = pad_count
-        
-        # 提取尺寸信息
-        layer_patterns = [
-            (r'\(fp_line.*?\((?:start|end) ([0-9.-]+)\s+([0-9.-]+).*?\)', 'line'),
-            (r'\(fp_circle.*?\((?:center) ([0-9.-]+)\s+([0-9.-]+).*?\)', 'circle'),
-        ]
-        
-        footprint["status"] = "parsed"
-        
-        return footprint
-    
-    async def _parse_altium(self, file_path: str) -> Dict:
-        """解析 Altium 封装"""
-        # TODO: 实现 Altium PcbLib 解析
-        return {}
-    
-    async def _parse_eagle(self, file_path: str) -> Dict:
-        """解析 Eagle 封装"""
-        # TODO: 实现 Eagle BRD/MLIB 解析
-        return {}
-    
-    def generate_3d_model_info(self, footprint: Dict) -> Dict:
-        """生成 3D 模型信息"""
-        return {
-            "has_3d_model": False,
-            "step_file": None,
-            "url": None
-        }
+# 便捷函数
+async def parse_datasheet(file_path: str) -> Optional[ParsedDatasheet]:
+    """解析 Datasheet"""
+    parser = DatasheetParser()
+    return await parser.parse_file(file_path)
