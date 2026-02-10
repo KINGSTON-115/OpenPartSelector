@@ -9,8 +9,11 @@ from bs4 import BeautifulSoup
 import json
 import time
 import re
+import logging
 from datetime import datetime
+from typing import List, Dict, Optional, Any
 from urllib.parse import quote
+from functools import wraps
 
 # 配置
 BASE_URL = "https://www.lcsc.com"
@@ -22,6 +25,18 @@ HEADERS = {
     "Accept-Encoding": "gzip, deflate, br",
     "Connection": "keep-alive",
 }
+
+# 日志配置
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+# 重试配置
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
 
 # 热门搜索列表
 POPULAR_PARTS = [
@@ -48,24 +63,95 @@ POPULAR_PARTS = [
 ]
 
 
-def search_lcsc(keyword):
+# 重试装饰器
+def retry_on_failure(max_retries: int = MAX_RETRIES, delay: int = RETRY_DELAY):
+    """请求失败时自动重试的装饰器"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(1, max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    last_exception = e
+                    logger.warning(f"第 {attempt}/{max_retries} 次尝试失败: {e}")
+                    if attempt < max_retries:
+                        time.sleep(delay)
+            logger.error(f"重试 {max_retries} 次后仍然失败")
+            raise last_exception
+        return wrapper
+    return decorator
+
+
+def safe_find(element: BeautifulSoup, selectors: List[tuple]) -> Optional[Any]:
+    """
+    尝试多种选择器查找元素
+    
+    Args:
+        element: BeautifulSoup 元素
+        selectors: 选择器列表 [(tag, class_name), ...]
+    
+    Returns:
+        找到的元素或 None
+    """
+    for tag, cls in selectors:
+        result = element.find(tag, class_=re.compile(cls, re.I))
+        if result:
+            return result
+    return element.find('a') or element.find()
+
+
+def get_text_safe(element: Optional[Any], default: str = "") -> str:
+    """安全获取元素文本"""
+    if element:
+        return element.get_text(strip=True)
+    return default
+
+
+@retry_on_failure(max_retries=3, delay=2)
+def fetch_url(url: str, timeout: int = 30) -> Optional[str]:
+    """
+    获取 URL 内容（带重试机制）
+    
+    Args:
+        url: 目标 URL
+        timeout: 超时时间（秒）
+    
+    Returns:
+        响应文本，失败返回 None
+    """
+    logger.info(f"Fetching: {url}")
+    response = requests.get(url, headers=HEADERS, timeout=timeout)
+    response.raise_for_status()
+    return response.text
+
+
+def search_lcsc(keyword: str) -> List[Dict[str, Any]]:
     """
     搜索 LCSC 获取器件信息
+    
+    Args:
+        keyword: 搜索关键词
+    
+    Returns:
+        器件信息列表
     """
     try:
         encoded_keyword = quote(keyword, safe='')
         url = f"{SEARCH_URL}?q={encoded_keyword}"
         
+        logger.info(f"🔍 正在搜索: {keyword}...")
         print(f"🔍 正在搜索: {keyword}...")
         
-        response = requests.get(url, headers=HEADERS, timeout=30)
-        
-        if response.status_code != 200:
-            print(f"❌ 请求失败: {response.status_code}")
+        # 使用带重试的 fetch
+        html_content = fetch_url(url, timeout=30)
+        if not html_content:
+            logger.error(f"获取搜索结果失败: {keyword}")
             return []
         
         # 解析搜索结果
-        soup = BeautifulSoup(response.text, 'lxml')
+        soup = BeautifulSoup(html_content, 'lxml')
         results = []
         
         # 查找产品列表 - LCSC 的结构可能变化
@@ -83,19 +169,28 @@ def search_lcsc(keyword):
                 if part_info:
                     results.append(part_info)
             except Exception as e:
+                logger.debug(f"解析产品卡片失败: {e}")
                 continue
         
+        logger.info(f"✅ 找到 {len(results)} 个结果")
         print(f"✅ 找到 {len(results)} 个结果")
         return results
         
     except Exception as e:
+        logger.error(f"❌ 搜索出错: {e}")
         print(f"❌ 搜索出错: {e}")
         return []
 
 
-def extract_product_info(card):
+def extract_product_info(card) -> Optional[Dict[str, Any]]:
     """
     从产品卡片中提取信息
+    
+    Args:
+        card: BeautifulSoup 产品卡片元素
+    
+    Returns:
+        器件信息字典，失败返回 None
     """
     try:
         # 尝试多种选择器
@@ -106,36 +201,25 @@ def extract_product_info(card):
             ('a', 'product-title'),
         ]
         
-        name_elem = None
-        for tag, cls in selectors:
-            elem = card.find(tag, class_=re.compile(cls))
-            if elem:
-                name_elem = elem
-                break
+        name_elem = safe_find(card, selectors)
         
         if not name_elem:
             # 查找任何链接
             name_elem = card.find('a')
         
-        name = name_elem.get_text(strip=True) if name_elem else ""
+        name = get_text_safe(name_elem)
         
         # 提取价格
         price_elem = card.find(class_=re.compile(r'price|current-price'))
-        price = ""
-        if price_elem:
-            price = price_elem.get_text(strip=True)
+        price = get_text_safe(price_elem)
         
         # 提取库存
         stock_elem = card.find(class_=re.compile(r'stock|inventory'))
-        stock = ""
-        if stock_elem:
-            stock = stock_elem.get_text(strip=True)
+        stock = get_text_safe(stock_elem)
         
         # 提取型号
         part_elem = card.find(class_=re.compile(r'model|part-number'))
-        part = ""
-        if part_elem:
-            part = part_elem.get_text(strip=True)
+        part = get_text_safe(part_elem)
         
         if not part and name:
             part = name.split()[0] if name.split() else name
@@ -157,20 +241,27 @@ def extract_product_info(card):
         }
         
     except Exception as e:
+        logger.error(f"提取产品信息失败: {e}")
         return None
 
 
-def get_product_detail(url):
+@retry_on_failure(max_retries=2, delay=1)
+def get_product_detail(url: str) -> Optional[Dict[str, Any]]:
     """
     获取产品详情页
+    
+    Args:
+        url: 产品详情页 URL
+    
+    Returns:
+        详情信息字典
     """
     try:
-        response = requests.get(url, headers=HEADERS, timeout=30)
-        
-        if response.status_code != 200:
+        html_content = fetch_url(url, timeout=30)
+        if not html_content:
             return None
         
-        soup = BeautifulSoup(response.text, 'lxml')
+        soup = BeautifulSoup(html_content, 'lxml')
         
         # 提取详情
         data = {}
@@ -178,17 +269,17 @@ def get_product_detail(url):
         # 制造商
         mfr_elem = soup.find(class_=re.compile(r'manufacturer|mfr'))
         if mfr_elem:
-            data['manufacturer'] = mfr_elem.get_text(strip=True)
+            data['manufacturer'] = get_text_safe(mfr_elem)
         
         # 描述
         desc_elem = soup.find(class_=re.compile(r'description|detail-desc'))
         if desc_elem:
-            data['description'] = desc_elem.get_text(strip=True)[:200]
+            data['description'] = get_text_safe(desc_elem)[:200]
         
         # 封装
         pkg_elem = soup.find(class_=re.compile(r'package|footprint'))
         if pkg_elem:
-            data['package'] = pkg_elem.get_text(strip=True)
+            data['package'] = get_text_safe(pkg_elem)
         
         # 价格区间
         price_table = soup.find('table', class_=re.compile(r'price-table'))
@@ -197,34 +288,40 @@ def get_product_detail(url):
             for row in price_table.find_all('tr'):
                 cells = row.find_all(['td', 'th'])
                 if len(cells) >= 2:
-                    qty = cells[0].get_text(strip=True)
-                    price = cells[1].get_text(strip=True)
+                    qty = get_text_safe(cells[0])
+                    price = get_text_safe(cells[1])
                     prices.append({"qty": qty, "price": price})
             data['pricing'] = prices
         
+        logger.info(f"✅ 获取详情成功: {url}")
         return data
         
     except Exception as e:
+        logger.error(f"❌ 获取详情失败: {e}")
         print(f"❌ 获取详情失败: {e}")
         return None
 
 
-def scrape_all_popular():
+def scrape_all_popular() -> Dict[str, Any]:
     """
     爬取所有热门器件
+    
+    Returns:
+        包含所有器件数据的字典
     """
     print("=" * 60)
     print("🤖 LCSC 电子元器件数据爬虫")
     print("=" * 60)
-    print(f"⏰ 开始时间: {datetime.now().isoformat()}")
+    start_time = datetime.now()
+    print(f"⏰ 开始时间: {start_time.isoformat()}")
     print(f"📦 将爬取 {len(POPULAR_PARTS)} 个热门器件")
     print("=" * 60)
     
     all_data = {
         "meta": {
-            "updated": datetime.now().isoformat(),
+            "updated": start_time.isoformat(),
             "source": "LCSC (立创商城)",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "part_count": len(POPULAR_PARTS)
         },
         "parts": []
@@ -255,31 +352,37 @@ def scrape_all_popular():
                 "price": "查询中",
                 "stock": "查询中",
                 "link": f"{SEARCH_URL}?q={quote(part)}",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": start_time.isoformat(),
                 "status": "not_found"
             })
         
         # 礼貌性延迟
         time.sleep(1)
     
+    end_time = datetime.now()
     print("\n" + "=" * 60)
     print(f"✅ 爬取完成! 共获取 {len(all_data['parts'])} 个器件")
-    print(f"⏰ 结束时间: {datetime.now().isoformat()}")
+    print(f"⏰ 结束时间: {end_time.isoformat()}")
+    print(f"⏱️ 耗时: {(end_time - start_time).total_seconds():.1f} 秒")
     print("=" * 60)
     
     return all_data
 
 
-def save_to_json(data, filename="parts.json"):
+def save_to_json(data: Dict[str, Any], filename: str = "parts.json") -> None:
     """
     保存数据到 JSON 文件
+    
+    Args:
+        data: 要保存的数据
+        filename: 文件名
     """
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"💾 数据已保存到: {filename}")
 
 
-def main():
+def main() -> None:
     """
     主函数
     """
