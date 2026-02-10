@@ -1,45 +1,54 @@
 {
-    "name": "OpenPartSelector",
-    "version": "0.1.0",
-    "description": "AI-Driven Electronic Component Selection Engine",
-    "entry_points": {
-        "cli": "tools.cli:main",
-        "api": "api.main:app"
+  "name": "OpenPartSelector",
+  "version": "1.1.0",
+  "description": "AI-Driven Open-Source Electronic Component Selection Engine",
+  "entry_points": {
+    "cli": "tools.cli:main",
+    "api": "api.main:app"
+  },
+  "commands": {
+    "select": {
+      "description": "自然语言选型查询",
+      "example": "ops select '为 ESP32 项目找一个 3.3V LDO'"
     },
-    "commands": {
-        "select": {
-            "description": "自然语言选型查询",
-            "example": "ops select '为 ESP32 项目找一个 3.3V LDO'"
-        },
-        "price": {
-            "description": "多平台比价",
-            "example": "ops price 'STM32F103C8T6'"
-        },
-        "parse": {
-            "description": "解析 datasheet",
-            "example": "ops parse datasheet.pdf"
-        },
-        "bom": {
-            "description": "生成 BOM 清单",
-            "example": "ops bom --parts 'LD1117,ESP32'"
-        },
-        "compare": {
-            "description": "对比元器件",
-            "example": "ops compare 'LD1117' 'AMS1117'"
-        }
+    "price": {
+      "description": "多平台比价",
+      "example": "ops price 'STM32F103C8T6'"
     },
-    "features": [
-        "自然语言查询",
-        "多引擎搜索",
-        "Datasheet 解析",
-        "向量知识库",
-        "智能比价",
-        "BOM 生成"
-    ],
-    "supported_platforms": [
-        "DigiKey",
-        "Mouser",
-        "LCSC",
-        "Octopart"
-    ]
+    "parse": {
+      "description": "解析 datasheet",
+      "example": "ops parse datasheet.pdf"
+    },
+    "bom": {
+      "description": "生成 BOM 清单",
+      "example": "ops bom --parts 'LD1117,ESP32'"
+    },
+    "compare": {
+      "description": "对比元器件",
+      "example": "ops compare 'LD1117' 'AMS1117'"
+    }
+  },
+  "features": [
+    "自然语言查询",
+    "多引擎搜索",
+    "Datasheet 解析",
+    "向量知识库",
+    "智能比价",
+    "BOM 生成"
+  ],
+  "supported_platforms": [
+    "DigiKey",
+    "Mouser",
+    "LCSC",
+    "Octopart"
+  ],
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "build": "echo 'No build step for HTML/CSS/JS'",
+    "lint": "echo 'Use flake8 for Python'"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }
