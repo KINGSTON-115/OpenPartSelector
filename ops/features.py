@@ -4,6 +4,7 @@
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 import json
+import math
 
 
 # ==================== 0. 共享常量 (E24标准电阻系列) ====================
@@ -1283,5 +1284,183 @@ def calculate_inductor_rough(
             f"占空比 {duty_cycle*100:.1f}% = {voltage_out:.1f}V / {voltage_in:.1f}V",
             f"推荐使用饱和电流 {saturation_current*1000:.0f}mA 以上的电感",
             f"建议使用带磁屏蔽的功率电感以减少 EMI"
+        ]
+    }
+
+
+# ==================== 新增: 电容充电时间计算 (v1.1.33) ====================
+
+def calculate_rc_charge_time(
+    resistance: float = 1000,  # 电阻值 (Ω)
+    capacitance: float = 100,  # 电容值 (μF)
+    target_voltage_ratio: float = 0.632  # 充电到目标电压比例 (1-1/e ≈ 63.2%)
+) -> Dict:
+    """
+    计算 RC 充电时间
+    
+    V(t) = V0 × (1 - e^(-t/RC))
+    t = -RC × ln(1 - V/V0)
+    
+    Args:
+        resistance: 电阻值 (Ω)
+        capacitance: 电容值 (μF)
+        target_voltage_ratio: 目标电压比例 (默认 63.2% 充满)
+    
+    Returns:
+        充电时间及参数
+    """
+    # 边缘情况处理
+    if resistance <= 0:
+        return {"error": "电阻值必须大于0"}
+    if capacitance <= 0:
+        return {"error": "电容值必须大于0"}
+    if target_voltage_ratio <= 0 or target_voltage_ratio >= 1:
+        return {"error": "电压比例必须在 0 到 1 之间"}
+    
+    # 时间常数
+    tau = resistance * capacitance * 1e-6  # 转换为秒
+    
+    # 充电时间
+    time_to_target = -tau * math.log(1 - target_voltage_ratio)
+    
+    # 各时间点的电压
+    time_1tau = tau
+    time_2tau = 2 * tau
+    time_3tau = 3 * tau
+    time_5tau = 5 * tau
+    
+    return {
+        "resistance": f"{resistance/1000:.1f}KΩ" if resistance >= 1000 else f"{resistance:.0f}Ω",
+        "capacitance": f"{capacitance:.0f}μF",
+        "time_constant": f"{tau*1000:.1f}ms",
+        "time_to_63.2%": f"{time_1tau*1000:.1f}ms",
+        "time_to_86.5%": f"{time_2tau*1000:.1f}ms",
+        "time_to_95%": f"{time_3tau*1000:.1f}ms",
+        "time_to_99.3%": f"{time_5tau*1000:.1f}ms",
+        "formula": "t = -RC × ln(1 - V/V₀)",
+        "applications": [
+            "按键消抖: 典型 1-10ms",
+            "延时启动: 典型 100ms-1s",
+            "软启动电路: 典型 10-100ms"
+        ]
+    }
+
+
+# ==================== 新增: 线性稳压器散热计算 (v1.1.33) ====================
+
+def calculate_ldo_thermal(
+    input_voltage: float = 5.0,  # 输入电压 (V)
+    output_voltage: float = 3.3,  # 输出电压 (V)
+    output_current: float = 0.1,  # 输出电流 (A)
+    ambient_temp: float = 25,  # 环境温度 (°C)
+    thermal_resistance_junction_to_case: float = 5,  # RθJC (°C/W)
+    thermal_resistance_case_to_ambient: float = 50,  # RθCA (°C/W)
+) -> Dict:
+    """
+    计算 LDO 散热需求
+    
+    P = (Vin - Vout) × Iout
+    Tj = Ta + P × (RθJC + RθCA)
+    
+    Args:
+        input_voltage: 输入电压 (V)
+        output_voltage: 输出电压 (V)
+        output_current: 输出电流 (A)
+        ambient_temp: 环境温度 (°C)
+        thermal_resistance_junction_to_case: 结到壳热阻 (°C/W)
+        thermal_resistance_case_to_ambient: 壳到环境热阻 (°C/W)
+    
+    Returns:
+        散热计算结果
+    """
+    # 边缘情况处理
+    if input_voltage <= output_voltage:
+        return {"error": "输入电压必须大于输出电压"}
+    if output_current <= 0:
+        return {"error": "输出电流必须大于0"}
+    
+    # 功耗计算
+    power_dissipation = (input_voltage - output_voltage) * output_current
+    
+    # 总热阻
+    total_thermal_resistance = thermal_resistance_junction_to_case + thermal_resistance_case_to_ambient
+    
+    # 结温计算
+    junction_temp = ambient_temp + power_dissipation * total_thermal_resistance
+    
+    # 不同热阻下的结温
+    results = []
+    for rca in [20, 50, 100, 200]:
+        rt = thermal_resistance_junction_to_case + rca
+        tj = ambient_temp + power_dissipation * rt
+        results.append({
+            "rca": rca,
+            "junction_temp": tj,
+            "description": "无散热片" if rca < 50 else "小散热片" if rca < 100 else "中散热片" if rca < 150 else "大散热片"
+        })
+    
+    return {
+        "input_voltage": f"{input_voltage:.1f}V",
+        "output_voltage": f"{output_voltage:.1f}V",
+        "output_current": f"{output_current*1000:.0f}mA",
+        "power_dissipation": f"{power_dissipation*1000:.1f}mW",
+        "ambient_temperature": f"{ambient_temp}°C",
+        "calculated_junction_temp": f"{junction_temp:.1f}°C",
+        "max_junction_temp": "150°C (典型 LDO)",
+        "thermal_design": {
+            "no_heatsink": f"{results[0]['junction_temp']:.1f}°C",
+            "small_heatsink": f"{results[1]['junction_temp']:.1f}°C",
+            "medium_heatsink": f"{results[2]['junction_temp']:.1f}°C",
+        },
+        "tips": [
+            f"LDO 功耗 {power_dissipation*1000:.1f}mW = ({input_voltage:.1f}V - {output_voltage:.1f}V) × {output_current*1000:.0f}mA",
+            f"压差 {(input_voltage - output_voltage)*1000:.0f}mV，注意效率",
+            "大电流应用建议使用 DC-DC 降压"
+        ]
+    }
+
+
+# ==================== 新增: 示波器探头衰减计算 (v1.1.33) ====================
+
+def calculate_probe_attenuation(
+    probe_resistance: float = 10000000,  # 探头电阻 (Ω) 默认 10MΩ
+    scope_input_resistance: float = 1000000,  # 示波器输入电阻 (Ω) 默认 1MΩ
+    attenuation_ratio: float = 10,  # 衰减比 (10x, 100x)
+) -> Dict:
+    """
+    计算示波器探头补偿参数
+    
+    Args:
+        probe_resistance: 探头电阻 (Ω)
+        scope_input_resistance: 示波器输入电阻 (Ω)
+        attenuation_ratio: 衰减比
+    
+    Returns:
+        探头补偿参数
+    """
+    # 边缘情况处理
+    if scope_input_resistance <= 0:
+        return {"error": "示波器输入电阻必须大于0"}
+    
+    # 补偿电容计算 (目标 20pF)
+    target_compensation_capacitance = 20e-12  # 20pF
+    
+    # 探头内阻应该是示波器的 (衰减比 - 1) 倍
+    required_probe_r = scope_input_resistance * (attenuation_ratio - 1)
+    
+    # 实际探头电阻
+    actual_attenuation = probe_resistance / scope_input_resistance + 1
+    
+    return {
+        "probe_resistance": f"{probe_resistance/1000000:.0f}MΩ",
+        "scope_input_resistance": f"{scope_input_resistance/1000000:.0f}MΩ",
+        "attenuation_ratio": f"{attenuation_ratio}x",
+        "actual_attenuation": f"{actual_attenuation:.1f}x",
+        "compensation_capacitance": f"{target_compensation_capacitance*1e12:.0f}pF",
+        "recommended_compensation": "调节探头电容至方波边缘平直",
+        "tips": [
+            "使用 10x 探头时，示波器应切换到 1MΩ 输入模式",
+            "使用 100x 探头时，示波器应切换到高阻抗输入模式",
+            "每次测量前用校准信号检查探头补偿"
         ]
     }

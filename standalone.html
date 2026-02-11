@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔌 OpenPartSelector v1.1.32 - 电子元器件选型神器</title>
+    <title>🔌 OpenPartSelector v1.1.33 - 电子元器件选型神器</title>
     <meta name="description" content="专为电子类专业大学生打造的元器件选型工具，免费开源">
-    <meta name="version" content="1.1.32">
+    <meta name="version" content="1.1.33">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;min-height:100vh;color:#333}
@@ -36,7 +36,7 @@
 </head>
 <body>
     <div class="hero">
-        <h1>🔌 OpenPartSelector v1.1.32</h1>
+        <h1>🔌 OpenPartSelector v1.1.33</h1>
         <p>🤖 AI 驱动的电子元器件选型引擎 - 免费开源</p>
         <div class="stats">
             <div class="stat"><div class="stat-value">40+</div><div class="stat-label">器件种类</div></div>
@@ -111,12 +111,12 @@
     </div>
 
     <div class="footer">
-        <p>🤖 OpenPartSelector v1.1.32 | Built with AI Agents</p>
+        <p>🤖 OpenPartSelector v1.1.33 | Built with AI Agents</p>
         <p>📍 <a href="https://github.com/KINGSTON-115/OpenPartSelector" style="color:#667eea">GitHub</a> | 📧 Open Source</p>
     </div>
 
     <script>
-        // 内置数据库 v1.1.32 (扩展至 48+ 器件)
+        // 内置数据库 v1.1.33 (扩展至 70+ 器件)
         const DATABASE = [
             // === MCU 微控制器 ===
             {pn:'ESP32-WROOM-32',desc:'WiFi+BT模块 4MB Flash',mfr:'Espressif',cat:'mcu',spec:{core:'双核 240MHz',flash:'4MB',wireless:'WiFi+BT'},price:1.85,stock:50000,alt:['ESP32-WROVER','ESP32-C3']},
@@ -180,6 +180,38 @@
             {pn:'100nF_50V_0603',desc:'MLCC电容 100nF 50V',mfr:'Various',cat:'passive',spec:{cap:'100nF',volt:'50V',pkg:'0603'},price:0.005,stock:1000000,alt:['100nF_25V']},
             {pn:'10K_0603_1%',desc:'金属膜电阻 10KΩ',mfr:'Various',cat:'passive',spec:{res:'10KΩ',power:'0.1W',tol:'1%'},price:0.002,stock:2000000,alt:['10K_0805']},
             {pn:'1K_0603_1%',desc:'金属膜电阻 1KΩ',mfr:'Various',cat:'passive',spec:{res:'1KΩ',power:'0.1W',tol:'1%'},price:0.002,stock:2000000,alt:['1K_0805']},
+            
+            // === v1.1.33 新增器件 ===
+            {pn:'ESP32-S2-WROOM',desc:'单核 WiFi模块 4MB',mfr:'Espressif',cat:'mcu',spec:{core:'单核 240MHz',flash:'4MB',wireless:'WiFi'},price:2.80,stock:18000,alt:['ESP32-WROOM']},
+            {pn:'RP2350',desc:'双核M0+ 增强型 520KB',mfr:'Raspberry Pi',cat:'mcu',spec:{core:'双核 150MHz',ram:'520KB',voltage:'1.8-5.5V'},price:1.50,stock:20000,alt:['RP2040']},
+            {pn:'APM32F103C8T6',desc:'国产替代 STM32F103',mfr:'航顺微',cat:'mcu',spec:{core:'72MHz',flash:'64KB',voltage:'2.0-3.6V'},price:0.75,stock:40000,alt:['STM32F103','GD32F103']},
+            {pn:'LMR14010',desc:'降压 5V 1A',mfr:'TI',cat:'power',spec:{vin:'4-40V',vout:'5V',current:'1A'},price:0.85,stock:15000,alt:['MP2359','LM2596-5.0']},
+            {pn:'SY8089',desc:'同步降压 1A',mfr:'Silergy',cat:'power',spec:{vin:'2.7-5.5V',vout:'0.6-5V',current:'1A'},price:0.12,stock:60000,alt:['TPS62130','MP2143']},
+            {pn:'TP4056',desc:'锂电池充电 IC',mfr:'TOPPOWER',cat:'power',spec:{vin:'4.5-5.5V',vout:'4.2V',current:'1A'},price:0.25,stock:100000,alt:['TP4057','IP5305']},
+            {pn:'IP5306',desc:'充电升压一体 IC',mfr:'INJOINIC',cat:'power',spec:{vin:'5V',vout:'5V 2A',current:'充电1-2A'},price:0.35,stock:80000,alt:['IP5305','FP6277']},
+            {pn:'FT232RL',desc:'USB转UART',mfr:'FTDI',cat:'interface',spec:{interface:'USB2.0',baudrate:'3Mbps'},price:2.80,stock:8000,alt:['CP2102N','CH340K']},
+            {pn:'CH340K',desc:'USB转UART',mfr:'WCH',cat:'interface',spec:{interface:'USB2.0',voltage:'3.3/5V'},price:0.30,stock:60000,alt:['CH340N','CH340C']},
+            {pn:'TXS0108EPWR',desc:'8通道电平转换',mfr:'TI',cat:'interface',spec:{channels:8,direction:'双向',voltage:'1.65-5.5V'},price:0.45,stock:25000,alt:['PCA9306','74HC245']},
+            {pn:'NE555P',desc:'555定时器',mfr:'TI',cat:'analog',spec:{voltage:'4.5-16V',freq:'500kHz'},price:0.08,stock:150000,alt:['LM555',' ICM7555']},
+            {pn:'LM393',desc:'双比较器',mfr:'TI',cat:'analog',spec:{channels:2,voltage:'2-36V'},price:0.05,stock:120000,alt:['LM193','TLC3702']},
+            {pn:'TL431',desc:'可调精密基准',mfr:'TI',cat:'analog',spec:{vref:'2.5V', cathode:'36V',current:'100mA'},price:0.04,stock:200000,alt:['TL432','LMV431']},
+            {pn:'SGM611',desc:'国产运放',mfr:'圣邦微',cat:'analog',spec:{channels:1,bw:'3MHz',voltage:'2.1-5.5V'},price:0.10,stock:80000,alt:['LM358','OPA2333']},
+            {pn:'AO3401',desc:'P-MOSFET -30V',mfr:'A&O',cat:'discrete',spec:{type:'P-Channel',vds:'-30V',ids:'-4.3A'},price:0.04,stock:400000,alt:['IRF9540','FDN306P']},
+            {pn:'2N7002',desc:'N-MOSFET 60V',mfr:'ON',cat:'discrete',spec:{type:'N-Channel',vds:'60V',ids:'300mA'},price:0.02,stock:600000,alt:['2N7000','BS170']},
+            {pn:'IRLZ44N',desc:'N-MOSFET 55V 47A',mfr:'IR',cat:'discrete',spec:{type:'N-Channel',vds:'55V',ids:'47A'},price:0.45,stock:25000,alt:['IRF540N','IPP65R045']},
+            {pn:'SS34',desc:'肖特基二极管 3A 40V',mfr:'Various',cat:'discrete',spec:{type:'Schottky',vrm:'40V',if:'3A'},price:0.03,stock:300000,alt:['SS24','1N5819']},
+            {pn:'1N4148',desc:'开关二极管 100V',mfr:'Various',cat:'discrete',spec:{type:'Switching',vrm:'100V',if:'300mA'},price:0.01,stock:1000000,alt:['1N4148W']},
+            {pn:'BME280',desc:'气压+温湿度传感器',mfr:'Bosch',cat:'sensor',spec:{pressure:'300-1100hPa',temp:'-40~85C',humidity:'0-100%',interface:'I2C'},price:3.80,stock:20000,alt:['BMP280','SHT30']},
+            {pn:'SHT31',desc:'高精度温湿度',mfr:'Sensirion',cat:'sensor',spec:{humidity:'0-100%',temp:'-40~125C',acc:'±2%RH',interface:'I2C'},price:4.50,stock:22000,alt:['SHT30','AHT25']},
+            {pn:'AHT25',desc:'国产温湿度',mfr:'ASAIR',cat:'sensor',spec:{humidity:'0-100%',temp:'-40~85C',acc:'±2%RH',interface:'I2C'},price:2.60,stock:35000,alt:['SHT30','DHT22']},
+            {pn:'TCS34725',desc:'RGB颜色传感器',mfr:'AMS',cat:'sensor',spec:{range:'0-10000lux',interface:'I2C'},price:4.20,stock:15000,alt:['TCS34727']},
+            {pn:'MAX30102',desc:'心率血氧传感器',mfr:'Maxim',cat:'sensor',spec:{spo2:'0-100%',hr:'18-200bpm',interface:'I2C'},price:8.50,stock:10000,alt:['MAX30100']},
+            {pn:'MPU6500',desc:'6轴运动传感器',mfr:'TDK',cat:'sensor',spec:{gyro:'±2000dps',accel:'±16g',interface:'SPI/I2C'},price:4.80,stock:18000,alt:['MPU-6050','ICM20600']},
+            {pn:'ICM20948',desc:'9轴运动传感器',mfr:'TDK',cat:'sensor',spec:{accel:'±16g',gyro:'±2000dps',mag:'±4900μT',interface:'I2C'},price:12.50,stock:8000,alt:['MPU9250']},
+            {pn:'10uF_25V_0805',desc:'MLCC电容 10uF 25V',mfr:'Various',cat:'passive',spec:{cap:'10uF',volt:'25V',pkg:'0805'},price:0.015,stock:400000,alt:['10uF_16V']},
+            {pn:'100uF_16V_Ceramic',desc:'MLCC 100uF 16V 1206',mfr:'Various',cat:'passive',spec:{cap:'100uF',volt:'16V',pkg:'1206'},price:0.08,stock:150000,alt:['100uF_25V_1206']},
+            {pn:'4.7K_0603_1%',desc:'金属膜电阻 4.7KΩ',mfr:'Various',cat:'passive',spec:{res:'4.7KΩ',power:'0.1W',tol:'1%'},price:0.002,stock:2000000,alt:['4.7K_0805']},
+            {pn:'0R_0603',desc:'贴片电阻 0Ω',mfr:'Various',cat:'passive',spec:{res:'0Ω',power:'0.1W',pkg:'0603'},price:0.002,stock:2000000,alt:['0R_0805']},
         ];
 
         function search() {

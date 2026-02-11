@@ -1,4 +1,4 @@
-OpenPartSelector API v1.1.32
+OpenPartSelector API v1.1.33
 ===
 
 ## 概述
@@ -226,6 +226,6 @@ except SelectionError as e:
 
 ## 版本信息
 
-- **API 版本**: v1.1.32
-- **Python 包版本**: 1.1.32
+- **API 版本**: v1.1.33
+- **Python 包版本**: 1.1.33
 - **最后更新**: 2026-02-11

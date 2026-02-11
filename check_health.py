@@ -39,7 +39,7 @@ def find_version_files(root="."):
                     pass
     return files
 
-def check_version_consistency(expected="1.1.32"):
+def check_version_consistency(expected="1.1.33"):
     """检查版本一致性（只检查关键版本标记）"""
     print(f"🔍 检查版本一致性 (期望版本: {expected})")
     print("-" * 50)
