@@ -300,7 +300,7 @@ class TestNewCalculators_v117:
         result = calculate_rc_time_constant(resistance=1000, capacitance=0.000001)
         
         # 1KΩ × 1μF = 1ms
-        assert float(result["time_constant"].replace("s","")) == 0.001
+        assert "1.0ms" in result["time_constant"]
     
     def test_calculate_capacitor_ripple(self):
         """测试滤波电容计算"""
@@ -832,7 +832,8 @@ class TestEdgeCases_v132:
             resistance=100000,  # 100KΩ
             capacitance=0.0000001  # 0.1μF
         )
-        assert float(result["time_constant"].replace("s","")) == 0.01  # 10ms
+        # 100KΩ × 0.1μF = 10ms
+        assert "10.0ms" in result["time_constant"]
         # f = 1/(2πRC) ≈ 15.9Hz
         assert "Hz" in result["cutoff_frequency"]
 

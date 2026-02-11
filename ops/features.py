@@ -703,28 +703,27 @@ def calculate_rc_time_constant(
     f_cutoff = 1 / (2 * 3.14159 * resistance * capacitance)
     
     # 格式化电容和时间显示
+    # 电容格式化
     if capacitance >= 0.001:
         cap_str = f"{capacitance*1000:.1f}mF"
-        tau_str = f"{tau:.4f}s"
     elif capacitance >= 0.000001:
-        # μF
-        if tau >= 0.001:
-            tau_str = f"{tau*1000:.1f}ms"
-        else:
-            tau_str = f"{tau*1000000:.1f}μs"
         cap_str = f"{capacitance*1000000:.1f}μF"
+    elif capacitance >= 0.000000001:
+        cap_str = f"{capacitance*1000000000:.1f}nF"
     else:
-        # nF 或 pF
-        if tau >= 0.000001:
-            tau_str = f"{tau*1000:.1f}ms"
-        elif tau >= 0.000001:
-            tau_str = f"{tau*1000000:.1f}μs"
-        else:
-            tau_str = f"{tau*1000000:.1f}μs"
-        if capacitance >= 0.000000001:
-            cap_str = f"{capacitance*1000000000:.1f}nF"
-        else:
-            cap_str = f"{capacitance*1000000000000:.1f}pF"
+        cap_str = f"{capacitance*1000000000000:.1f}pF"
+    
+    # 时间常数格式化 - 根据实际时间值选择合适单位
+    if tau < 0.000001:  # < 1μs
+        tau_str = f"{tau*1000000000:.1f}μs"
+    elif tau < 0.001:  # < 1ms
+        tau_str = f"{tau*1000:.1f}ms"
+    elif tau < 1:  # < 1s
+        tau_str = f"{tau*1000:.1f}ms"
+    elif tau >= 3600:  # >= 1小时
+        tau_str = f"{tau/3600:.2f}h"
+    else:  # >= 1s
+        tau_str = f"{tau:.4f}s"
     
     return {
         "resistance": f"{resistance/1000:.1f}KΩ",
