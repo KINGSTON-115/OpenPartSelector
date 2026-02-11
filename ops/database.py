@@ -910,6 +910,121 @@ SENSORS = [
             {"vendor": "AliExpress", "price": 3.20, "stock": 40000}
         ],
         "alternatives": ["INA226", "ACS712"]
+    },
+    # ============ v1.1.27 新增：高精度传感器 ============
+    {
+        "part_number": "AHT20",
+        "description": "High Precision Temperature & Humidity Sensor",
+        "manufacturer": "ASAIR",
+        "category": "sensor",
+        "specs": {
+            "humidity": "0~100% RH",
+            "temperature": "-40~+85°C",
+            "accuracy": "±2% RH / ±0.3°C",
+            "interface": "I2C",
+            "voltage": "2.0V~5.5V",
+            "current": "0.5mA"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 3.20, "stock": 30000},
+            {"vendor": "AliExpress", "price": 4.50, "stock": 50000}
+        ],
+        "alternatives": ["SHT30", "DHT22", "AHT21"]
+    },
+    {
+        "part_number": "MPU9250",
+        "description": "9-Axis Motion Sensor (Accel + Gyro + Mag)",
+        "manufacturer": "TDK InvenSense",
+        "category": "sensor",
+        "specs": {
+            "accel": "±2/4/8/16g",
+            "gyro": "±250/500/1000/2000°/s",
+            "mag": "±4800μT",
+            "interface": "I2C/SPI",
+            "voltage": "2.4V~3.6V",
+            "feature": "9-Axis MotionTracking"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 8.50, "stock": 15000},
+            {"vendor": "AliExpress", "price": 12.80, "stock": 25000}
+        ],
+        "alternatives": ["MPU6050+AK8963", "BMI160+BMM150"]
+    },
+    {
+        "part_number": "APDS-9960",
+        "description": "Digital Proximity, Ambient Light, RGB and Gesture Sensor",
+        "manufacturer": "Broadcom",
+        "category": "sensor",
+        "specs": {
+            "proximity": "100mm",
+            "ambient": "ALS",
+            "rgb": "Red/Green/Blue",
+            "gesture": "4-direction",
+            "interface": "I2C",
+            "voltage": "2.4V~3.6V"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 5.80, "stock": 12000},
+            {"vendor": "AliExpress", "price": 8.20, "stock": 20000}
+        ],
+        "alternatives": ["VCNL4010", "PAJ7620"]
+    },
+    {
+        "part_number": "VL6180",
+        "description": "Proximity Sensor with Ambient Light Sensing",
+        "manufacturer": "STMicroelectronics",
+        "category": "sensor",
+        "specs": {
+            "proximity": "0~100mm",
+            "ambient": "0~10000 lux",
+            "interface": "I2C",
+            "voltage": "2.6V~3.3V",
+            "feature": "Time-of-Flight"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 6.50, "stock": 8000},
+            {"vendor": "DigiKey", "price": 12.50, "stock": 3000}
+        ],
+        "alternatives": ["VL53L0X", "VL6180X"]
+    },
+    {
+        "part_number": "BME680",
+        "description": "Integrated Environmental Sensor (Temp+Hum+Press+Gas)",
+        "manufacturer": "Bosch",
+        "category": "sensor",
+        "specs": {
+            "temperature": "-40~+85°C",
+            "humidity": "0~100% RH",
+            "pressure": "300~1100 hPa",
+            "gas": "IAQ",
+            "interface": "I2C/SPI",
+            "voltage": "1.7V~3.6V",
+            "feature": "4-in-1 Environmental"
+        },
+        "prices": [
+            {"vendor": "LCSC", "price": 12.80, "stock": 10000},
+            {"vendor": "DigiKey", "price": 18.50, "stock": 5000}
+        ],
+        "alternatives": ["BME280", "SGP30+BMP280"]
+    },
+    {
+        "part_number": "RCWL-0516",
+        "description": "Microwave Radar Motion Sensor",
+        "manufacturer": "RCWL",
+        "category": "sensor",
+        "specs": {
+            "detection": "5-9m",
+            "angle": "360°",
+            "frequency": "5.8GHz",
+            "voltage": "4~28V",
+            "current": "3mA",
+            "feature": "Doppler Radar"
+        },
+        "prices": [
+            {"vendor": "AliExpress", "price": 4.20, "stock": 60000},
+            {"vendor": "Taobao", "price": 5.50, "stock": 30000}
+        ],
+        "alternatives": ["HB100", "CD3242"]
     }
 ]
 

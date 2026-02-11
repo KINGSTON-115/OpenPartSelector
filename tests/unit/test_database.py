@@ -99,6 +99,26 @@ def test_database_sync():
     print(f"✅ ESP32同步查询: {len(results)} 个结果")
 
 
+def test_sensor_database_v127():
+    """测试 v1.1.27 新增传感器"""
+    from ops.database import search_components, SENSORS, get_component
+    
+    # 测试新传感器搜索
+    new_sensors = ["AHT20", "MPU9250", "APDS-9960", "VL6180", "BME680", "RCWL-0516"]
+    
+    for sensor_pn in new_sensors:
+        comp = get_component(sensor_pn)
+        if comp:
+            assert comp["category"] == "sensor"
+            assert comp["part_number"] == sensor_pn
+            print(f"✅ 新增传感器验证: {sensor_pn}")
+    
+    # 测试传感器类别搜索
+    sensor_results = search_components(query="sensor", category="sensor", limit=50)
+    assert len(sensor_results) >= 6  # 至少包含新增的6个
+    print(f"✅ 传感器总数: {len(sensor_results)}")
+
+
 # 运行测试
 if __name__ == "__main__":
     print("=" * 60)

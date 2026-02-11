@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔌 OpenPartSelector v1.1.26 - 电子元器件选型神器</title>
+    <title>🔌 OpenPartSelector v1.1.27 - 电子元器件选型神器</title>
     <meta name="description" content="专为电子类专业大学生打造的元器件选型工具，免费开源">
     <meta name="version" content="1.1.26">
     <style>
@@ -36,7 +36,7 @@
 </head>
 <body>
     <div class="hero">
-        <h1>🔌 OpenPartSelector v1.1.26</h1>
+        <h1>🔌 OpenPartSelector v1.1.27</h1>
         <p>🤖 AI 驱动的电子元器件选型引擎 - 免费开源</p>
         <div class="stats">
             <div class="stat"><div class="stat-value">40+</div><div class="stat-label">器件种类</div></div>
@@ -60,6 +60,9 @@
                 <span class="hot-tag" onclick="quickSearch('运放')">运放</span>
                 <span class="hot-tag" onclick="quickSearch('SGP30')">SGP30</span>
                 <span class="hot-tag" onclick="quickSearch('VL53L0X')">VL53L0X</span>
+                <span class="hot-tag" onclick="quickSearch('BME680')">BME680</span>
+                <span class="hot-tag" onclick="quickSearch('MPU9250')">MPU9250</span>
+                <span class="hot-tag" onclick="quickSearch('AHT20')">AHT20</span>
             </div>
         </div>
 
@@ -82,12 +85,12 @@
     </div>
 
     <div class="footer">
-        <p>🤖 OpenPartSelector v1.1.26 | Built with AI Agents</p>
+        <p>🤖 OpenPartSelector v1.1.27 | Built with AI Agents</p>
         <p>📍 <a href="https://github.com/KINGSTON-115/OpenPartSelector" style="color:#667eea">GitHub</a> | 📧 Open Source</p>
     </div>
 
     <script>
-        // 内置数据库 v1.1.26 (扩展至 48+ 器件)
+        // 内置数据库 v1.1.27 (扩展至 48+ 器件)
         const DATABASE = [
             // === MCU 微控制器 ===
             {pn:'ESP32-WROOM-32',desc:'WiFi+BT模块 4MB Flash',mfr:'Espressif',cat:'mcu',spec:{core:'双核 240MHz',flash:'4MB',wireless:'WiFi+BT'},price:1.85,stock:50000,alt:['ESP32-WROVER','ESP32-C3']},
