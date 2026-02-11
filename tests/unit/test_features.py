@@ -28,6 +28,8 @@ from ops.features import (
     calculate_rf_attenuator,
     find_e24_closest,
     find_e24_nearby,
+    calculate_led_parallel_resistor,
+    calculate_inductor_rough,
     CHIP_ALTERNATIVES,
     CIRCUIT_TEMPLATES,
     DATASHEET_SUMMARIES,
@@ -499,40 +501,43 @@ class TestNewCalculators_v128:
     def test_calculate_led_parallel_resistor_basic(self):
         """测试LED并联电阻计算器基础功能"""
         result = calculate_led_parallel_resistor(
+            v_supply=5.0,
             led_voltage=2.0,
             led_current=0.02,
-            supply_voltage=5.0,
-            num_leds=2
+            num_leds=2,
+            arrangement="parallel"
         )
         
-        assert "calculated_resistance" in result
-        assert "recommended_resistance" in result
-        assert "total_current" in result
-        # R = (5-2)/0.02 = 150Ω
-        assert "150" in result["calculated_resistance"]
+        assert "calculated_resistor" in result
+        assert "recommended_resistor" in result
+        assert "total_current" in result or "total_power" in result
+        # R = (5-2)/0.04 = 75Ω
+        assert "75" in result["calculated_resistor"]
         # 2个LED，总电流40mA
-        assert "40mA" in result["total_current"]
+        assert "40mA" in result["tips"][0]
 
-    def test_calculate_led_parallel_resistor_single(self):
-        """测试单LED情况"""
+    def test_calculate_led_parallel_resistor_series(self):
+        """测试串联LED情况"""
         result = calculate_led_parallel_resistor(
+            v_supply=9.0,
             led_voltage=2.0,
             led_current=0.02,
-            supply_voltage=5.0,
-            num_leds=1
+            num_leds=3,
+            arrangement="series"
         )
         
-        # R = (5-2)/0.02 = 150Ω
-        assert "150" in result["calculated_resistance"]
-        assert "20mA" in result["total_current"]
+        # 串联: R = (9-6)/0.02 = 150Ω
+        assert "150" in result["calculated_resistor"]
+        assert "series" in result["arrangement"]
 
     def test_calculate_led_parallel_resistor_error(self):
-        """测试电压不足错误"""
+        """测试串联电压不足错误"""
         result = calculate_led_parallel_resistor(
-            led_voltage=5.0,
+            v_supply=3.0,
+            led_voltage=2.0,
             led_current=0.02,
-            supply_voltage=3.3,
-            num_leds=1
+            num_leds=3,
+            arrangement="series"
         )
         
         assert "error" in result
@@ -667,5 +672,77 @@ class TestNewCalculators_v128:
             v_in=5.0,
             v_ref=2.5,
             i_ref=0
+        )
+        assert "error" in result
+
+
+# ==================== v1.1.31 新增测试 ====================
+
+class TestLEDParallelResistor_v131:
+    """LED并联电阻计算器测试"""
+    
+    def test_calculate_led_parallel_basic(self):
+        """基础并联LED测试"""
+        result = calculate_led_parallel_resistor(
+            v_supply=5.0, led_voltage=2.0, led_current=0.02, num_leds=2
+        )
+        assert "recommended_resistor" in result
+        assert result["arrangement"] == "parallel"
+        assert "parallel连接2个LED" in result["tips"][0]
+    
+    def test_calculate_led_parallel_series(self):
+        """串联LED测试"""
+        result = calculate_led_parallel_resistor(
+            v_supply=9.0, led_voltage=2.0, led_current=0.02, num_leds=3, arrangement="series"
+        )
+        assert result["arrangement"] == "series"
+        assert "series连接3个LED" in result["tips"][0]
+    
+    def test_calculate_led_parallel_insufficient_voltage(self):
+        """串联LED电压不足测试"""
+        result = calculate_led_parallel_resistor(
+            v_supply=3.0, led_voltage=2.0, led_current=0.02, num_leds=3, arrangement="series"
+        )
+        assert "error" in result
+    
+    def test_calculate_led_parallel_zero_params(self):
+        """零值参数测试"""
+        result = calculate_led_parallel_resistor(
+            v_supply=0, led_voltage=2.0, led_current=0.02, num_leds=2
+        )
+        assert "error" in result
+
+
+class TestInductorCalculator_v131:
+    """电感计算器测试"""
+    
+    def test_calculate_inductor_basic(self):
+        """基础电感计算测试"""
+        result = calculate_inductor_rough(
+            frequency=100000, voltage_in=5.0, voltage_out=3.3, current_out=0.5
+        )
+        assert "recommended_inductance" in result
+        assert "120μH" in str(result) or "100μH" in str(result)
+        assert result["duty_cycle"] == "66.0%"
+    
+    def test_calculate_inductor_high_frequency(self):
+        """高频电感计算测试"""
+        result = calculate_inductor_rough(
+            frequency=500000, voltage_in=12.0, voltage_out=5.0, current_out=1.0
+        )
+        assert "recommended_inductance" in result
+        assert "占空比" in result["tips"][0]
+    
+    def test_calculate_inductor_boost_converter(self):
+        """升压电路测试 (输出电压 > 输入电压)"""
+        result = calculate_inductor_rough(
+            frequency=100000, voltage_in=3.3, voltage_out=5.0, current_out=0.5
+        )
+        assert "error" in result
+    
+    def test_calculate_inductor_zero_frequency(self):
+        """零频率测试"""
+        result = calculate_inductor_rough(
+            frequency=0, voltage_in=5.0, voltage_out=3.3, current_out=0.5
         )
         assert "error" in result

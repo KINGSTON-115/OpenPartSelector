@@ -988,70 +988,6 @@ def calculate_rf_attenuator(
     }
 
 
-# ==================== 新增: LED 并联电阻计算器 (v1.1.28) ====================
-
-def calculate_led_parallel_resistor(
-    led_voltage: float = 2.0,  # LED正向压降 (V)
-    led_current: float = 0.02,  # LED工作电流 (A)
-    supply_voltage: float = 5.0,  # 供电电压 (V)
-    num_leds: int = 1,  # LED数量
-) -> Dict:
-    """
-    计算 LED 并联限流电阻
-    
-    适用于多个 LED 并联的情况，每个 LED 需单独限流电阻
-    
-    Args:
-        led_voltage: LED正向压降 (V)
-        led_current: 单个LED工作电流 (A)
-        supply_voltage: 供电电压 (V)
-        num_leds: LED并联数量
-    
-    Returns:
-        推荐电阻值及参数
-    """
-    if num_leds < 1:
-        return {"error": "LED数量必须大于0"}
-    
-    # 每个 LED 的电流
-    total_current = led_current * num_leds
-    
-    # 电阻两端电压
-    resistor_voltage = supply_voltage - led_voltage
-    
-    if resistor_voltage <= 0:
-        return {"error": "供电电压必须大于LED压降"}
-    
-    # 欧姆定律计算电阻值
-    resistance = resistor_voltage / led_current
-    
-    # 总功率
-    total_power = resistor_voltage * total_current
-    
-    # 推荐常用电阻值 (E24系列)
-    e24_values = [10, 12, 15, 18, 22, 27, 33, 39, 47, 51, 68, 82, 100, 
-                   120, 150, 180, 220, 270, 330, 390, 470, 510, 680, 820, 1000]
-    recommended = min(e24_values, key=lambda x: abs(x - resistance))
-    
-    # 使用推荐电阻的实际电流
-    actual_current = resistor_voltage / recommended
-    
-    return {
-        "num_leds": num_leds,
-        "led_voltage": f"{led_voltage:.1f}V",
-        "led_current_per": f"{led_current*1000:.0f}mA",
-        "total_current": f"{total_current*1000:.0f}mA",
-        "supply_voltage": f"{supply_voltage:.1f}V",
-        "resistor_voltage": f"{resistor_voltage:.1f}V",
-        "calculated_resistance": f"{resistance:.0f}Ω",
-        "recommended_resistance": f"{recommended}Ω",
-        "actual_current_per_led": f"{actual_current*1000:.1f}mA",
-        "total_power": f"{total_power*1000:.1f}mW",
-        "formula": "R = (Vsupply - Vled) / Iled",
-        "notes": "每个LED需串联独立限流电阻，确保电流均匀分配"
-    }
-
-
 # ==================== 新增: 电池续航计算器 (v1.1.28) ====================
 
 def calculate_battery_life(
@@ -1180,4 +1116,172 @@ def calculate_voltage_reference(
         "formula": "Vref = Vin × R2 / (R1 + R2)",
         "chip_example": "TL431, LM4040, REF3030",
         "notes": "推荐使用 1% 精度电阻"
+    }
+
+
+# ==================== 新增: LED 并联电阻计算器 (v1.1.31) ====================
+
+def calculate_led_parallel_resistor(
+    v_supply: float = 5.0,  # 电源电压 (V)
+    led_voltage: float = 2.0,  # LED 正向电压 (V)
+    led_current: float = 0.02,  # LED 工作电流 (A)
+    num_leds: int = 2,  # LED 数量
+    arrangement: str = "parallel"  # 连接方式: parallel/series
+) -> Dict:
+    """
+    计算多 LED 并联/串联限流电阻
+    
+    Args:
+        v_supply: 电源电压 (V)
+        led_voltage: 单个 LED 正向电压 (V)
+        led_current: 单个 LED 工作电流 (A)
+        num_leds: LED 数量
+        arrangement: 连接方式 (parallel/series)
+    
+    Returns:
+        推荐电阻值及参数
+    """
+    # 边缘情况处理
+    if v_supply <= 0:
+        return {"error": "电源电压必须大于0"}
+    if led_voltage <= 0:
+        return {"error": "LED电压必须大于0"}
+    if led_current <= 0:
+        return {"error": "LED电流必须大于0"}
+    if num_leds <= 0:
+        return {"error": "LED数量必须大于0"}
+    
+    if arrangement == "parallel":
+        # 并联: 总电流 = 单个电流 × 数量
+        total_current = led_current * num_leds
+        total_voltage_drop = led_voltage
+        # 总电压降 = LED 电压
+        # 限流电阻上的电压 = 电源电压 - LED 电压
+        resistor_voltage = v_supply - led_voltage
+        if resistor_voltage <= 0:
+            return {"error": f"电源电压{v_supply}V低于LED电压{led_voltage}V，无法点亮"}
+        resistor_value = resistor_voltage / total_current
+        power_dissipation = resistor_voltage * total_current
+    else:
+        # 串联: 总电压 = 单个电压 × 数量
+        total_voltage_drop = led_voltage * num_leds
+        total_current = led_current  # 串联电流相同
+        resistor_voltage = v_supply - total_voltage_drop
+        if resistor_voltage <= 0:
+            return {"error": f"电源电压{v_supply}V低于{num_leds}个LED串联电压{total_voltage_drop}V，无法点亮"}
+        resistor_value = resistor_voltage / total_current
+        power_dissipation = resistor_voltage * total_current
+    
+    # E24 系列标准值
+    e24 = E24_RESISTORS
+    # 过滤合理的电阻值 (1Ω - 1MΩ)
+    e24_filtered = [x for x in e24 if 1 <= x <= 1000000]
+    closest_resistor = min(e24_filtered, key=lambda x: abs(x - resistor_value))
+    
+    # 计算实际电流
+    if arrangement == "parallel":
+        actual_current_per_led = (v_supply - closest_resistor * total_current / closest_resistor) / closest_resistor if closest_resistor > 0 else 0
+    else:
+        actual_current_per_led = (v_supply - closest_resistor) / num_leds
+    
+    return {
+        "v_supply": f"{v_supply:.1f}V",
+        "led_voltage": f"{led_voltage:.1f}V",
+        "led_current": f"{led_current*1000:.0f}mA",
+        "num_leds": str(num_leds),
+        "arrangement": arrangement,
+        "calculated_resistor": f"{resistor_value:.1f}Ω",
+        "recommended_resistor": f"{closest_resistor}Ω",
+        "resistor_power": f"{power_dissipation*1000:.1f}mW",
+        "suggested_power_rating": f"{int(power_dissipation * 2 * 1000)}mW",  # 2倍余量
+        "total_power": f"{total_current * v_supply * 1000:.1f}mW",
+        "tips": [
+            f"{arrangement}连接{num_leds}个LED，总电流{total_current*1000:.0f}mA",
+            f"推荐使用{int(power_dissipation * 2 * 1000)}mW以上功率电阻",
+            f"建议并联一个{closest_resistor // 10 if closest_resistor >= 10 else 1}Ω均流电阻"
+        ]
+    }
+
+
+# ==================== 新增: 简易电感计算器 (v1.1.31) ====================
+
+def calculate_inductor_rough(
+    frequency: float = 100000,  # 开关频率 (Hz)
+    voltage_in: float = 5.0,  # 输入电压 (V)
+    voltage_out: float = 3.3,  # 输出电压 (V)
+    current_out: float = 0.5,  # 输出电流 (A)
+    ripple_current: float = 0.1,  # 纹波电流 (A)
+) -> Dict:
+    """
+    估算 Buck 降压电路所需电感值 (简化公式)
+    
+    L = (Vin - Vout) × D / (f × ΔI)
+    其中 D = Vout / Vin
+    
+    Args:
+        frequency: 开关频率 (Hz)
+        voltage_in: 输入电压 (V)
+        voltage_out: 输出电压 (V)
+        current_out: 输出电流 (A)
+        ripple_current: 纹波电流 (A)
+    
+    Returns:
+        电感估算值及推荐型号
+    """
+    # 边缘情况处理
+    if frequency <= 0:
+        return {"error": "频率必须大于0"}
+    if voltage_in <= 0:
+        return {"error": "输入电压必须大于0"}
+    if voltage_out <= 0:
+        return {"error": "输出电压必须大于0"}
+    if current_out <= 0:
+        return {"error": "输出电流必须大于0"}
+    if ripple_current <= 0:
+        return {"error": "纹波电流必须大于0"}
+    if voltage_out >= voltage_in:
+        return {"error": "降压电路输出电压必须低于输入电压"}
+    
+    # 占空比
+    duty_cycle = voltage_out / voltage_in
+    
+    # 电感计算公式
+    inductor_value = (voltage_in - voltage_out) * duty_cycle / (frequency * ripple_current)
+    
+    # 推荐标准电感值 (E12 系列)
+    e12_series = [1, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2,
+                  10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82,
+                  100, 120, 150, 180, 220, 270, 330, 390, 470, 560, 680, 820,
+                  1000, 1200, 1500, 1800, 2200, 2700, 3300, 3900, 4700, 5600, 6800, 8200,
+                  10000, 12000, 15000, 18000, 22000, 27000, 33000, 39000, 47000, 56000, 68000, 82000,
+                  100000, 120000, 150000, 180000, 220000, 270000, 330000, 390000, 470000, 560000, 680000, 820000,
+                  1000000]
+    
+    # 过滤合适的值 (单位: μH → 转换为 H 后比较)
+    inductor_h = inductor_value * 1e6  # 转换为 μH
+    e12_filtered = [x for x in e12_series if x >= inductor_h * 0.8 and x <= inductor_h * 1.5]
+    if e12_filtered:
+        recommended = min(e12_filtered, key=lambda x: abs(x - inductor_h))
+    else:
+        recommended = min(e12_series, key=lambda x: abs(x - inductor_h))
+    
+    # 计算饱和电流 (经验公式: 至少是输出电流的 1.5 倍)
+    saturation_current = current_out * 1.5
+    
+    return {
+        "frequency": f"{frequency/1000:.0f}kHz",
+        "v_in": f"{voltage_in:.1f}V",
+        "v_out": f"{voltage_out:.1f}V",
+        "i_out": f"{current_out*1000:.0f}mA",
+        "duty_cycle": f"{duty_cycle*100:.1f}%",
+        "calculated_inductance": f"{inductor_value*1e6:.1f}μH",
+        "recommended_inductance": f"{recommended}μH",
+        "recommended_saturation_current": f"{saturation_current*1000:.0f}mA以上",
+        "formula": "L = (Vin-Vout) × D / (f × ΔI)",
+        "chip_example": "MP2359, LM2596, TPS63000",
+        "tips": [
+            f"占空比 {duty_cycle*100:.1f}% = {voltage_out:.1f}V / {voltage_in:.1f}V",
+            f"推荐使用饱和电流 {saturation_current*1000:.0f}mA 以上的电感",
+            f"建议使用带磁屏蔽的功率电感以减少 EMI"
+        ]
     }

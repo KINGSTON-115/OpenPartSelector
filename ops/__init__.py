@@ -25,14 +25,15 @@ from .features import find_alternatives, get_circuit_template, get_datasheet_sum
 from .features import (
     calculate_resistor_for_led, calculate_voltage_divider, calculate_pwm_frequency,
     calculate_led_resistor, calculate_rc_time_constant, calculate_capacitor_ripple,
-    calculate_led_parallel_resistor, calculate_battery_life, calculate_voltage_reference
+    calculate_led_parallel_resistor, calculate_battery_life, calculate_voltage_reference,
+    calculate_inductor_rough
 )
 # 注意: calculate_led_series_resistor 已合并到 calculate_led_resistor()，不再导出
 from .eol import check_component_lifecycle, analyze_bom_risk
 from .cad import search_cad_library, check_cad_availability
 from .bom import analyze_bom_full, quick_bom_check
 
-__version__ = "1.1.28.1"
+__version__ = "1.1.31"
 __author__ = "KINGSTON-115"
 
 __all__ = [
@@ -59,6 +60,7 @@ __all__ = [
     "calculate_led_parallel_resistor",
     "calculate_battery_life",
     "calculate_voltage_reference",
+    "calculate_inductor_rough",
     "check_component_lifecycle",
     "analyze_bom_risk",
     "search_cad_library",
