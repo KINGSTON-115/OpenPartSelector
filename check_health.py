@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 OpenPartSelector 版本一致性检查
-v1.1.33
+v1.1.34
 """
 import os
 import re
@@ -32,14 +32,14 @@ def find_version_files(root="."):
                         matches = re.findall(version_pattern, content)
                         if matches:
                             # 过滤掉明显的依赖版本
-                            filtered = {v for v in matches if not v.startswith(('0.', '1.0.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.')) or v == "1.1.33"}
+                            filtered = {v for v in matches if not v.startswith(('0.', '1.0.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.')) or v == "1.1.34"}
                             if filtered:
                                 files.append((full_path, filtered))
                 except:
                     pass
     return files
 
-def check_version_consistency(expected="1.1.33"):
+def check_version_consistency(expected="1.1.34"):
     """检查版本一致性（只检查关键版本标记）"""
     print(f"🔍 检查版本一致性 (期望版本: {expected})")
     print("-" * 50)
@@ -109,14 +109,14 @@ def check_dependencies():
     if os.path.exists(setup_file):
         with open(setup_file, "r") as f:
             content = f.read()
-            if 'version="1.1.33"' in content:
+            if 'version="1.1.34"' in content:
                 print("   ✅ setup.py 版本一致")
             else:
                 print("   ⚠️  setup.py 版本可能不一致")
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("🚀 OpenPartSelector v1.1.33 持续改进检查")
+    print("🚀 OpenPartSelector v1.1.34 持续改进检查")
     print("=" * 50)
     
     success = check_version_consistency()
