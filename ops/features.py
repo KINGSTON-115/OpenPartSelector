@@ -990,3 +990,183 @@ def calculate_rf_attenuator(
         "output_power_w": f"{output_w:.9f}W",
         "formula": "P_out(dBm) = P_in(dBm) - Attenuation(dB)"
     }
+
+
+# ==================== 新增: LED 并联电阻计算器 (v1.1.28) ====================
+
+def calculate_led_parallel_resistor(
+    led_voltage: float = 2.0,  # LED正向压降 (V)
+    led_current: float = 0.02,  # LED工作电流 (A)
+    supply_voltage: float = 5.0,  # 供电电压 (V)
+    num_leds: int = 1,  # LED数量
+) -> Dict:
+    """
+    计算 LED 并联限流电阻
+    
+    适用于多个 LED 并联的情况，每个 LED 需单独限流电阻
+    
+    Args:
+        led_voltage: LED正向压降 (V)
+        led_current: 单个LED工作电流 (A)
+        supply_voltage: 供电电压 (V)
+        num_leds: LED并联数量
+    
+    Returns:
+        推荐电阻值及参数
+    """
+    if num_leds < 1:
+        return {"error": "LED数量必须大于0"}
+    
+    # 每个 LED 的电流
+    total_current = led_current * num_leds
+    
+    # 电阻两端电压
+    resistor_voltage = supply_voltage - led_voltage
+    
+    if resistor_voltage <= 0:
+        return {"error": "供电电压必须大于LED压降"}
+    
+    # 欧姆定律计算电阻值
+    resistance = resistor_voltage / led_current
+    
+    # 总功率
+    total_power = resistor_voltage * total_current
+    
+    # 推荐常用电阻值 (E24系列)
+    e24_values = [10, 12, 15, 18, 22, 27, 33, 39, 47, 51, 68, 82, 100, 
+                   120, 150, 180, 220, 270, 330, 390, 470, 510, 680, 820, 1000]
+    recommended = min(e24_values, key=lambda x: abs(x - resistance))
+    
+    # 使用推荐电阻的实际电流
+    actual_current = resistor_voltage / recommended
+    
+    return {
+        "num_leds": num_leds,
+        "led_voltage": f"{led_voltage:.1f}V",
+        "led_current_per": f"{led_current*1000:.0f}mA",
+        "total_current": f"{total_current*1000:.0f}mA",
+        "supply_voltage": f"{supply_voltage:.1f}V",
+        "resistor_voltage": f"{resistor_voltage:.1f}V",
+        "calculated_resistance": f"{resistance:.0f}Ω",
+        "recommended_resistance": f"{recommended}Ω",
+        "actual_current_per_led": f"{actual_current*1000:.1f}mA",
+        "total_power": f"{total_power*1000:.1f}mW",
+        "formula": "R = (Vsupply - Vled) / Iled",
+        "notes": "每个LED需串联独立限流电阻，确保电流均匀分配"
+    }
+
+
+# ==================== 新增: 电池续航计算器 (v1.1.28) ====================
+
+def calculate_battery_life(
+    battery_capacity: float = 2000,  # 电池容量 (mAh)
+    avg_current: float = 50,  # 平均工作电流 (mA)
+    standby_current: float = 0.1,  # 待机电流 (mA)
+    active_time_per_day: float = 2,  # 每天活跃时间 (小时)
+) -> Dict:
+    """
+    计算电池续航时间
+    
+    Args:
+        battery_capacity: 电池容量 (mAh)
+        avg_current: 平均工作电流 (mA)
+        standby_current: 待机电流 (mA)
+        active_time_per_day: 每天活跃时间 (小时)
+    
+    Returns:
+        续航时间及参数
+    """
+    standby_time_per_day = 24 - active_time_per_day
+    
+    # 每天消耗的容量
+    daily_capacity_used = avg_current * active_time_per_day + standby_current * standby_time_per_day
+    
+    # 续航天数
+    if daily_capacity_used <= 0:
+        return {"error": "电流消耗必须大于0"}
+    
+    days = battery_capacity / daily_capacity_used
+    
+    # 预计日期
+    from datetime import datetime, timedelta
+    now = datetime.now()
+    end_date = now + timedelta(days=days)
+    
+    return {
+        "battery_capacity": f"{battery_capacity}mAh",
+        "avg_current": f"{avg_current}mA",
+        "active_time_per_day": f"{active_time_per_day}h",
+        "daily_capacity_used": f"{daily_capacity_used:.1f}mAh",
+        "battery_life_days": f"{days:.1f}天",
+        "battery_life_hours": f"{days*24:.0f}小时",
+        "expected_depletion": end_date.strftime("%Y-%m-%d"),
+        "tips": [
+            f"每天活跃{active_time_per_day}小时，消耗{avg_current*active_time_per_day:.0f}mAh",
+            f"待机{standby_time_per_day}小时，消耗{standby_current*standby_time_per_day:.1f}mAh",
+            f"总计每天约{daily_capacity_used:.1f}mAh"
+        ]
+    }
+
+
+# ==================== 新增: 电压基准计算器 (v1.1.28) ====================
+
+def calculate_voltage_reference(
+    v_in: float = 5.0,  # 输入电压 (V)
+    v_ref: float = 2.5,  # 目标基准电压 (V)
+    i_ref: float = 0.001,  # 基准芯片工作电流 (A)
+    tolerance: str = "1%"
+) -> Dict:
+    """
+    计算电压基准分压电阻
+    
+    使用 TL431 等电压基准芯片
+    
+    Args:
+        v_in: 输入电压 (V)
+        v_ref: 目标基准电压 (V)
+        i_ref: 基准芯片工作电流 (A)
+        tolerance: 电阻精度
+    
+    Returns:
+        推荐电阻值及参数
+    """
+    if v_ref >= v_in:
+        return {"error": "基准电压必须小于输入电压"}
+    
+    # 计算分压电流 (应大于 i_ref 的 10 倍以保证稳定性)
+    min_divider_current = i_ref * 10
+    divider_current = max(min_divider_current, 0.001)  # 至少 1mA
+    
+    # 总电阻
+    r_total = (v_in - v_ref) / divider_current
+    
+    # 下拉电阻 (从 Vref 到 GND)
+    r2 = v_ref / divider_current
+    
+    # 上拉电阻 (从 Vin 到 Vref)
+    r1 = r_total - r2
+    
+    # E24 系列标准值
+    e24 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 51, 68, 82, 100, 120, 
+           150, 180, 220, 270, 330, 390, 470, 510, 680, 820, 1000, 1500, 
+           2000, 2200, 3300, 4700, 5100, 6800, 10000]
+    
+    r1_closest = min([x for x in e24 if x >= r1*0.8], key=lambda x: abs(x - r1))
+    r2_closest = min([x for x in e24 if x >= r2*0.8], key=lambda x: abs(x - r2))
+    
+    # 实际输出电压
+    v_out_actual = v_in * r2_closest / (r1_closest + r2_closest)
+    
+    return {
+        "v_in": f"{v_in:.1f}V",
+        "target_v_ref": f"{v_ref}V",
+        "calculated_r1": f"{r1:.0f}Ω",
+        "calculated_r2": f"{r2:.0f}Ω",
+        "recommended_r1": f"{r1_closest}Ω",
+        "recommended_r2": f"{r2_closest}Ω",
+        "actual_v_ref": f"{v_out_actual:.3f}V",
+        "divider_current": f"{divider_current*1000:.1f}mA",
+        "formula": "Vref = Vin × R2 / (R1 + R2)",
+        "chip_example": "TL431, LM4040, REF3030",
+        "notes": "推荐使用 1% 精度电阻"
+    }

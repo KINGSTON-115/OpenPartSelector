@@ -24,7 +24,8 @@ from .jlc import search_jlc, calculate_jlc_smt, get_jlc_footprint, export_jlc_bo
 from .features import find_alternatives, get_circuit_template, get_datasheet_summary
 from .features import (
     calculate_resistor_for_led, calculate_voltage_divider, calculate_pwm_frequency,
-    calculate_led_resistor, calculate_rc_time_constant, calculate_capacitor_ripple
+    calculate_led_resistor, calculate_rc_time_constant, calculate_capacitor_ripple,
+    calculate_led_parallel_resistor, calculate_battery_life, calculate_voltage_reference
 )
 # 注意: calculate_led_series_resistor 已合并到 calculate_led_resistor()，不再导出
 from .eol import check_component_lifecycle, analyze_bom_risk
@@ -55,6 +56,9 @@ __all__ = [
     "calculate_led_resistor",
     "calculate_rc_time_constant",
     "calculate_capacitor_ripple",
+    "calculate_led_parallel_resistor",
+    "calculate_battery_life",
+    "calculate_voltage_reference",
     "check_component_lifecycle",
     "analyze_bom_risk",
     "search_cad_library",
