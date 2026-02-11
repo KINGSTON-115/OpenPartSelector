@@ -598,7 +598,74 @@ class TestNewCalculators_v128:
             v_ref=2.495,
             i_ref=0.001
         )
-        
+
         # 应该计算出12V转2.495V的分压电阻
         assert "calculated_r1" in result
         assert "calculated_r2" in result
+
+    # ===== 边缘情况测试 (v1.1.28.1) =====
+
+    def test_calculate_battery_life_zero_capacity_error(self):
+        """测试零容量电池错误"""
+        result = calculate_battery_life(
+            battery_capacity=0,
+            avg_current=50
+        )
+        assert "error" in result
+        assert "大于0" in result["error"]
+
+    def test_calculate_battery_life_negative_time_error(self):
+        """测试负活跃时间错误"""
+        result = calculate_battery_life(
+            battery_capacity=2000,
+            avg_current=50,
+            active_time_per_day=-1
+        )
+        assert "error" in result
+        assert "负数" in result["error"]
+
+    def test_calculate_battery_life_over_24h_error(self):
+        """测试超过24小时错误"""
+        result = calculate_battery_life(
+            battery_capacity=2000,
+            avg_current=50,
+            active_time_per_day=25
+        )
+        assert "error" in result
+        assert "24" in result["error"]
+
+    def test_calculate_voltage_reference_zero_input_error(self):
+        """测试零输入电压错误"""
+        result = calculate_voltage_reference(
+            v_in=0,
+            v_ref=2.5
+        )
+        assert "error" in result
+        assert "大于0" in result["error"]
+
+    def test_calculate_voltage_reference_zero_ref_error(self):
+        """测试零基准电压错误"""
+        result = calculate_voltage_reference(
+            v_in=5.0,
+            v_ref=0
+        )
+        assert "error" in result
+        assert "大于0" in result["error"]
+
+    def test_calculate_voltage_reference_vref_geq_vin_error(self):
+        """测试基准电压>=输入电压错误"""
+        result = calculate_voltage_reference(
+            v_in=5.0,
+            v_ref=5.0
+        )
+        assert "error" in result
+        assert "小于" in result["error"]
+
+    def test_calculate_voltage_reference_zero_current_error(self):
+        """测试零电流错误"""
+        result = calculate_voltage_reference(
+            v_in=5.0,
+            v_ref=2.5,
+            i_ref=0
+        )
+        assert "error" in result

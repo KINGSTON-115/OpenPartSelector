@@ -543,10 +543,6 @@ def calculate_resistor_for_led(
     }
 
 
-# 移除旧版重复函数 (v1.1.24 合并)
-# def calculate_led_resistor(...)  # 已合并到 calculate_resistor_for_led
-# def calculate_led_series_resistor(...)  # 已合并
-
 # 为保持向后兼容性，保留这些别名函数
 def calculate_led_resistor(
     voltage: float = 5.0,
@@ -1066,21 +1062,29 @@ def calculate_battery_life(
 ) -> Dict:
     """
     计算电池续航时间
-    
+
     Args:
         battery_capacity: 电池容量 (mAh)
         avg_current: 平均工作电流 (mA)
         standby_current: 待机电流 (mA)
         active_time_per_day: 每天活跃时间 (小时)
-    
+
     Returns:
         续航时间及参数
     """
+    # 边缘情况处理
+    if battery_capacity <= 0:
+        return {"error": "电池容量必须大于0"}
+    if active_time_per_day < 0:
+        return {"error": "活跃时间不能为负数"}
+    if active_time_per_day > 24:
+        return {"error": "每天活跃时间不能超过24小时"}
+
     standby_time_per_day = 24 - active_time_per_day
-    
+
     # 每天消耗的容量
     daily_capacity_used = avg_current * active_time_per_day + standby_current * standby_time_per_day
-    
+
     # 续航天数
     if daily_capacity_used <= 0:
         return {"error": "电流消耗必须大于0"}
@@ -1130,8 +1134,15 @@ def calculate_voltage_reference(
     Returns:
         推荐电阻值及参数
     """
+    # 边缘情况处理
+    if v_in <= 0:
+        return {"error": "输入电压必须大于0"}
+    if v_ref <= 0:
+        return {"error": "基准电压必须大于0"}
     if v_ref >= v_in:
         return {"error": "基准电压必须小于输入电压"}
+    if i_ref <= 0:
+        return {"error": "基准电流必须大于0"}
     
     # 计算分压电流 (应大于 i_ref 的 10 倍以保证稳定性)
     min_divider_current = i_ref * 10
