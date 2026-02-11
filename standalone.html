@@ -36,7 +36,7 @@
 </head>
 <body>
     <div class="hero">
-        <h1>🔌 OpenPartSelector v1.1.30</h1>
+        <h1>🔌 OpenPartSelector v1.1.31</h1>
         <p>🤖 AI 驱动的电子元器件选型引擎 - 免费开源</p>
         <div class="stats">
             <div class="stat"><div class="stat-value">40+</div><div class="stat-label">器件种类</div></div>
@@ -80,17 +80,43 @@
             </div>
         </div>
 
+        <div class="card">
+            <h2>🔧 电路计算器</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-top:20px">
+                <div style="background:#f5f7fa;padding:20px;border-radius:12px;text-align:center;">
+                    <div style="font-size:30px;margin-bottom:10px;">💡</div>
+                    <h4 style="color:#667eea;">LED 电阻</h4>
+                    <p style="color:#718096;font-size:13px;">R=(V-Vled)/Iled</p>
+                </div>
+                <div style="background:#f5f7fa;padding:20px;border-radius:12px;text-align:center;">
+                    <div style="font-size:30px;margin-bottom:10px;">🔋</div>
+                    <h4 style="color:#48bb78;">电池续航</h4>
+                    <p style="color:#718096;font-size:13px;">续航时间估算</p>
+                </div>
+                <div style="background:#f5f7fa;padding:20px;border-radius:12px;text-align:center;">
+                    <div style="font-size:30px;margin-bottom:10px;">🌀</div>
+                    <h4 style="color:#ed8936;">电感计算</h4>
+                    <p style="color:#718096;font-size:13px;">Buck 电路电感</p>
+                </div>
+                <div style="background:#f5f7fa;padding:20px;border-radius:12px;text-align:center;">
+                    <div style="font-size:30px;margin-bottom:10px;">📊</div>
+                    <h4 style="color:#ed64a6;">分压电阻</h4>
+                    <p style="color:#718096;font-size:13px;">Vout=Vin×R2/(R1+R2)</p>
+                </div>
+            </div>
+        </div>
+
         <div id="results"></div>
         <div class="loading" id="loading">🔄 智能分析中...</div>
     </div>
 
     <div class="footer">
-        <p>🤖 OpenPartSelector v1.1.30 | Built with AI Agents</p>
+        <p>🤖 OpenPartSelector v1.1.31 | Built with AI Agents</p>
         <p>📍 <a href="https://github.com/KINGSTON-115/OpenPartSelector" style="color:#667eea">GitHub</a> | 📧 Open Source</p>
     </div>
 
     <script>
-        // 内置数据库 v1.1.30 (扩展至 48+ 器件)
+        // 内置数据库 v1.1.31 (扩展至 48+ 器件)
         const DATABASE = [
             // === MCU 微控制器 ===
             {pn:'ESP32-WROOM-32',desc:'WiFi+BT模块 4MB Flash',mfr:'Espressif',cat:'mcu',spec:{core:'双核 240MHz',flash:'4MB',wireless:'WiFi+BT'},price:1.85,stock:50000,alt:['ESP32-WROVER','ESP32-C3']},

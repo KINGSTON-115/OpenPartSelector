@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔌 OpenPartSelector v1.1.31 - 电子元器件选型神器</title>
     <meta name="description" content="专为电子类专业大学生打造的元器件选型工具，免费开源 v1.1.31">
-    <meta name="version" content="1.1.30">
+    <meta name="version" content="1.1.31">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{
@@ -736,6 +736,55 @@
                 <a href="https://www.easyeda.com" target="_blank" class="shop-link">🎨 立创EDA</a>
                 <a href="https://www.digikey.com" target="_blank" class="shop-link">🌍 Digi-Key</a>
             </div>
+        </div>
+
+        <!-- 电路计算器 v1.1.31 -->
+        <div class="card hover-lift">
+            <h2>🔧 电路计算器</h2>
+            <p style="color:#718096;font-size:1.1em;margin-bottom:20px;">
+                学生工程师必备的实用工具箱
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+                <div style="background:linear-gradient(135deg,rgba(102,126,234,0.1),rgba(118,75,162,0.1));padding:25px;border-radius:15px;text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;">💡</div>
+                    <h3 style="color:#667eea;margin-bottom:10px;">LED 限流电阻</h3>
+                    <p style="color:#718096;font-size:14px;margin-bottom:15px;">计算 LED 串联限流电阻，支持并联/串联模式</p>
+                    <code style="background:#1a1a2e;color:#48bb78;padding:8px 15px;border-radius:8px;font-size:13px;">R = (Vsupply - Vled) / Iled</code>
+                </div>
+                <div style="background:linear-gradient(135deg,rgba(72,187,120,0.1),rgba(56,161,105,0.1));padding:25px;border-radius:15px;text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;">🔋</div>
+                    <h3 style="color:#48bb78;margin-bottom:10px;">电池续航计算</h3>
+                    <p style="color:#718096;font-size:14px;margin-bottom:15px;">估算电池供电项目续航时间</p>
+                    <code style="background:#1a1a2e;color:#48bb78;padding:8px 15px;border-radius:8px;font-size:13px;">T = (mAh × V) / (W × η)</code>
+                </div>
+                <div style="background:linear-gradient(135deg,rgba(237,137,54,0.1),rgba(221,107,32,0.1));padding:25px;border-radius:15px;text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;">🌀</div>
+                    <h3 style="color:#ed8936;margin-bottom:10px;">电感估算</h3>
+                    <p style="color:#718096;font-size:14px;margin-bottom:15px;">Buck 降压电路电感值快速估算</p>
+                    <code style="background:#1a1a2e;color:#48bb78;padding:8px 15px;border-radius:8px;font-size:13px;">L = (Vin-Vout)×D/(f×ΔI)</code>
+                </div>
+                <div style="background:linear-gradient(135deg,rgba(237,100,166,0.1),rgba(219,39,119,0.1));padding:25px;border-radius:15px;text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;">📊</div>
+                    <h3 style="color:#ed64a6;margin-bottom:10px;">分压电阻计算</h3>
+                    <p style="color:#718096;font-size:14px;margin-bottom:15px;">电压分压电路电阻选型</p>
+                    <code style="background:#1a1a2e;color:#48bb78;padding:8px 15px;border-radius:8px;font-size:13px;">Vout = Vin × R2/(R1+R2)</code>
+                </div>
+                <div style="background:linear-gradient(135deg,rgba(66,153,225,0.1),rgba(44,82,130,0.1));padding:25px;border-radius:15px;text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;">📈</div>
+                    <h3 style="color:#4299e1;margin-bottom:10px;">PWM 频率</h3>
+                    <p style="color:#718096;font-size:14px;margin-bottom:15px;">PWM 占空比与频率计算</p>
+                    <code style="background:#1a1a2e;color:#48bb78;padding:8px 15px;border-radius:8px;font-size:13px;">f = 1 / (T × 256)</code>
+                </div>
+                <div style="background:linear-gradient(135deg,rgba(159,122,234,0.1),rgba(128,90,213,0.1));padding:25px;border-radius:15px;text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;">⚡</div>
+                    <h3 style="color:#9f7aea;margin-bottom:10px;">电容充放电</h3>
+                    <p style="color:#718096;font-size:14px;margin-bottom:15px;">RC 时间常数计算</p>
+                    <code style="background:#1a1a2e;color:#48bb78;padding:8px 15px;border-radius:8px;font-size:13px;">τ = R × C</code>
+                </div>
+            </div>
+            <p style="margin-top:20px;color:#718096;font-size:14px;text-align:center;">
+                💡 更多计算器请使用 Python API: <code style="background:#1a1a2e;color:#667eea;padding:5px 10px;border-radius:5px;">from ops import calculate_*</code>
+            </p>
         </div>
 
         <!-- 学习资源 --><a id="learn"></a>
