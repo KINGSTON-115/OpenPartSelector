@@ -676,7 +676,7 @@ class TestNewCalculators_v128:
         assert "error" in result
 
 
-# ==================== v1.1.33 新增测试 ====================
+# ==================== v1.1.34 新增测试 ====================
 
 class TestLEDParallelResistor_v131:
     """LED并联电阻计算器测试"""
@@ -748,10 +748,10 @@ class TestInductorCalculator_v131:
         assert "error" in result
 
 
-# ==================== v1.1.33 新增边缘情况测试 ====================
+# ==================== v1.1.34 新增边缘情况测试 ====================
 
 class TestEdgeCases_v132:
-    """v1.1.33 边缘情况测试"""
+    """v1.1.34 边缘情况测试"""
 
     def test_calculate_battery_life_very_large_capacity(self):
         """测试超大容量电池"""
