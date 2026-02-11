@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.34 🚀🤖🔌
+# OpenPartSelector v1.1.35 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,9 +6,10 @@
 
 ---
 
-## ✨ v1.1.34 更新日志 (2026-02-11)
+## ✨ v1.1.35 更新日志 (2026-02-11)
 
-### 🔧 新增器件
+### 🔧 版本统一修复
+- 修复所有文件版本号不一致问题
 - **扩展器件库**: 新增 22+ 常用器件
 - **新增品类**: 充电管理 (TP4056, IP5306)、电平转换 (TXS0108EPWR)、精密基准 (TL431)
 - **传感器扩展**: BME280, SHT31, AHT25, TCS34725, MAX30102, MPU6500, ICM20948
