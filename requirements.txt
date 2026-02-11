@@ -39,13 +39,12 @@ rich>=13.0.0
 # python-multipart>=0.0.6
 
 # ==================== Logging & Monitoring (可选) ====================
-# loguru>=0.7.0
+loguru>=0.7.0
 
 # ==================== Testing (开发) ====================
 pytest>=7.0.0
 pytest-asyncio>=0.21.0
 pytest-cov>=4.0.0
-httpx>=0.25.0
 
 # ==================== Development (开发) ====================
 black>=23.0.0
