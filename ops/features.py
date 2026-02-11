@@ -1120,7 +1120,7 @@ def calculate_voltage_reference(
     }
 
 
-# ==================== 新增: LED 并联电阻计算器 (v1.1.32) ====================
+# ==================== 新增: LED 并联电阻计算器 (v1.1.33) ====================
 
 def calculate_led_parallel_resistor(
     v_supply: float = 5.0,  # 电源电压 (V)
@@ -1204,7 +1204,7 @@ def calculate_led_parallel_resistor(
     }
 
 
-# ==================== 新增: 简易电感计算器 (v1.1.32) ====================
+# ==================== 新增: 简易电感计算器 (v1.1.33) ====================
 
 def calculate_inductor_rough(
     frequency: float = 100000,  # 开关频率 (Hz)
