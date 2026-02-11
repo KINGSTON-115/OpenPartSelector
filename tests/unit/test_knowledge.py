@@ -127,7 +127,7 @@ class TestEmbeddingFunctions:
         part = await vector_store.get_part("ESP32-S3")
         assert part is not None
         assert part.get("embeddings") is not None
-        assert len(part["embeddings"]) == 64
+        assert len(part["embeddings"]) == 128
 
     @pytest.mark.asyncio
     async def test_semantic_search(self, vector_store):
@@ -158,7 +158,7 @@ class TestEmbeddingFunctions:
         embedding = vector_store._generate_text_embedding(text)
 
         assert embedding is not None
-        assert len(embedding) == 64
+        assert len(embedding) == 128
         assert all(0.0 <= v <= 1.0 for v in embedding)
 
         # 验证 WiFi/Bluetooth 词汇有较高权重
