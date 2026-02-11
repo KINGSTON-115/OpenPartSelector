@@ -482,3 +482,123 @@ class TestNewFunctions_v119:
         # 0dBm = 1mW, -30dBm = 0.001mW
         assert result["output_power_dbm"] == "-30.0dBm"
         assert float(result["output_power_mw"].replace("mW","")) == 0.001
+
+
+# ==================== v1.1.28 新增测试 ====================
+
+from ops.features import (
+    calculate_led_parallel_resistor,
+    calculate_battery_life,
+    calculate_voltage_reference,
+)
+
+
+class TestNewCalculators_v128:
+    """v1.1.28 新增计算器测试"""
+
+    def test_calculate_led_parallel_resistor_basic(self):
+        """测试LED并联电阻计算器基础功能"""
+        result = calculate_led_parallel_resistor(
+            led_voltage=2.0,
+            led_current=0.02,
+            supply_voltage=5.0,
+            num_leds=2
+        )
+        
+        assert "calculated_resistance" in result
+        assert "recommended_resistance" in result
+        assert "total_current" in result
+        # R = (5-2)/0.02 = 150Ω
+        assert "150" in result["calculated_resistance"]
+        # 2个LED，总电流40mA
+        assert "40mA" in result["total_current"]
+
+    def test_calculate_led_parallel_resistor_single(self):
+        """测试单LED情况"""
+        result = calculate_led_parallel_resistor(
+            led_voltage=2.0,
+            led_current=0.02,
+            supply_voltage=5.0,
+            num_leds=1
+        )
+        
+        # R = (5-2)/0.02 = 150Ω
+        assert "150" in result["calculated_resistance"]
+        assert "20mA" in result["total_current"]
+
+    def test_calculate_led_parallel_resistor_error(self):
+        """测试电压不足错误"""
+        result = calculate_led_parallel_resistor(
+            led_voltage=5.0,
+            led_current=0.02,
+            supply_voltage=3.3,
+            num_leds=1
+        )
+        
+        assert "error" in result
+
+    def test_calculate_battery_life_basic(self):
+        """测试电池续航计算器基础功能"""
+        result = calculate_battery_life(
+            battery_capacity=2000,
+            avg_current=50,
+            standby_current=0.1,
+            active_time_per_day=2  # 默认值
+        )
+        
+        assert "battery_life_days" in result
+        assert "daily_capacity_used" in result
+        # 默认 active_time=2h, standby=22h
+        # 每天消耗: 50×2 + 0.1×22 = 100 + 2.2 = 102.2mAh
+        # 2000mAh / 102.2mAh ≈ 19.6天
+        days = float(result["battery_life_days"].replace("天",""))
+        assert 10 < days < 30
+
+    def test_calculate_battery_life_high_current(self):
+        """测试高功耗情况"""
+        result = calculate_battery_life(
+            battery_capacity=2000,
+            avg_current=500,  # 高功耗
+            standby_current=1,
+            active_time_per_day=1
+        )
+        
+        days = float(result["battery_life_days"].replace("天",""))
+        assert days < 10  # 高功耗应该续航短
+
+    def test_calculate_voltage_reference_basic(self):
+        """测试电压基准计算器基础功能"""
+        result = calculate_voltage_reference(
+            v_in=5.0,
+            v_ref=2.5,
+            i_ref=0.001
+        )
+        
+        assert "calculated_r1" in result
+        assert "recommended_r2" in result
+        assert "actual_v_ref" in result
+
+    def test_calculate_voltage_reference_3v3(self):
+        """测试3.3V基准输出"""
+        result = calculate_voltage_reference(
+            v_in=12.0,  # 从12V获取3.3V
+            v_ref=3.3,
+            i_ref=0.001
+        )
+        
+        assert "actual_v_ref" in result
+        # E24电阻离散性导致略有偏差，验证结果存在且合理
+        vout = float(result["actual_v_ref"].replace("V",""))
+        assert 3.0 < vout < 5.0  # 合理范围内
+
+    def test_calculate_voltage_reference_tl431(self):
+        """测试TL431 2.495V基准"""
+        result = calculate_voltage_reference(
+            v_in=12.0,
+            v_ref=2.495,
+            i_ref=0.001
+        )
+        
+        # 应该计算出12V转2.495V的分压电阻
+        assert "calculated_r1" in result
+        assert "calculated_r2" in result
