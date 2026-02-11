@@ -592,18 +592,39 @@ def calculate_voltage_divider(
     r1: float = None  # 如果为None则自动计算
 ) -> Dict:
     """计算分压电阻 (复用E24标准值)"""
+    # 边缘情况处理
+    if v_in <= 0:
+        return {"error": "输入电压必须大于0"}
+    if v_out <= 0:
+        return {"error": "输出电压必须大于0"}
+    if v_out >= v_in:
+        return {"error": "输出电压必须小于输入电压"}
+    
     if r1 is None:
         # 假设R2=10K，计算R1
         r2 = 10000
         r1 = r2 * (v_in / v_out - 1)
     else:
+        if r1 <= 0:
+            return {"error": "R1电阻值必须大于0"}
         r2 = r1 * v_out / (v_in - v_out)
+        if r2 <= 0:
+            return {"error": "R2电阻值必须大于0"}
     
     # 使用共享的E24标准值
     r1_std = find_e24_closest(r1)
     r2_std = find_e24_closest(r2)
     
     actual_vout = v_in * r2_std / (r1_std + r2_std)
+    
+    # 生成提示
+    tips = []
+    if r1_std >= 1000:
+        tips.append(f"R1={r1_std/1000:.0f}KΩ, R2={r2_std/1000:.0f}KΩ")
+    else:
+        tips.append(f"R1={r1_std}Ω, R2={r2_std}Ω")
+    if abs(actual_vout - v_out) / v_out > 0.05:
+        tips.append("误差超过5%，建议调整电阻值")
     
     return {
         "input_voltage": f"{v_in}V",
@@ -614,7 +635,8 @@ def calculate_voltage_divider(
         "recommended_r2": f"{r2_std}Ω",
         "actual_output": f"{actual_vout:.2f}V",
         "error_percent": f"{abs(actual_vout - v_out) / v_out * 100:.2f}%",
-        "formula": "Vout = Vin × R2 / (R1 + R2)"
+        "formula": "Vout = Vin × R2 / (R1 + R2)",
+        "tips": tips
     }
 
 
@@ -624,6 +646,14 @@ def calculate_pwm_frequency(
     auto_reload: int = 99
 ) -> Dict:
     """计算PWM频率"""
+    # 边缘情况处理
+    if timer_clock <= 0:
+        return {"error": "定时器时钟频率必须大于0"}
+    if prescaler <= 0:
+        return {"error": "预分频值必须大于0"}
+    if auto_reload <= 0:
+        return {"error": "自动重载值必须大于0"}
+    
     period = prescaler + 1
     frequency = timer_clock / (prescaler + 1) / (auto_reload + 1)
     duty_resolution = (auto_reload + 1)
@@ -654,6 +684,12 @@ def calculate_rc_time_constant(
     Returns:
         时间常数及充放电参数
     """
+    # 边缘情况处理
+    if resistance <= 0:
+        return {"error": "电阻值必须大于0"}
+    if capacitance <= 0:
+        return {"error": "电容值必须大于0"}
+    
     tau = resistance * capacitance
     
     # 充放电时间
@@ -665,14 +701,38 @@ def calculate_rc_time_constant(
     # 截止频率
     f_cutoff = 1 / (2 * 3.14159 * resistance * capacitance)
     
+    # 格式化电容和时间显示
+    if capacitance >= 0.001:
+        cap_str = f"{capacitance*1000:.1f}mF"
+        tau_str = f"{tau:.4f}s"
+    elif capacitance >= 0.000001:
+        # μF
+        if tau >= 0.001:
+            tau_str = f"{tau*1000:.1f}ms"
+        else:
+            tau_str = f"{tau*1000000:.1f}μs"
+        cap_str = f"{capacitance*1000000:.1f}μF"
+    else:
+        # nF 或 pF
+        if tau >= 0.000001:
+            tau_str = f"{tau*1000:.1f}ms"
+        elif tau >= 0.000001:
+            tau_str = f"{tau*1000000:.1f}μs"
+        else:
+            tau_str = f"{tau*1000000:.1f}μs"
+        if capacitance >= 0.000000001:
+            cap_str = f"{capacitance*1000000000:.1f}nF"
+        else:
+            cap_str = f"{capacitance*1000000000000:.1f}pF"
+    
     return {
         "resistance": f"{resistance/1000:.1f}KΩ",
-        "capacitance": f"{capacitance*1000000:.1f}μF",
-        "time_constant": f"{tau:.4f}s",
-        "time_50pct": f"{t_50:.4f}s (50%充电)",
-        "time_63pct": f"{t_63:.4f}s (63.2%充电)",
-        "time_90pct": f"{t_90:.4f}s (90%充电)",
-        "time_99pct": f"{t_99:.4f}s (99%充电)",
+        "capacitance": cap_str,
+        "time_constant": tau_str,
+        "time_50pct": f"{t_50:.6f}s (50%充电)",
+        "time_63pct": f"{t_63:.6f}s (63.2%充电)",
+        "time_90pct": f"{t_90:.6f}s (90%充电)",
+        "time_99pct": f"{t_99:.6f}s (99%充电)",
         "cutoff_frequency": f"{f_cutoff:.2f}Hz",
         "formula": "τ = R × C"
     }
@@ -694,18 +754,35 @@ def calculate_capacitor_ripple(
     Returns:
         推荐电容值及参数
     """
+    # 边缘情况处理
+    if load_current <= 0:
+        return {"error": "负载电流必须大于0"}
+    if ripple_voltage <= 0:
+        return {"error": "纹波电压必须大于0"}
+    if frequency <= 0:
+        return {"error": "频率必须大于0"}
+    
     # 简化公式: C = I / (f × Vripple)
     c_ideal = load_current / (frequency * ripple_voltage)
     
     # 转换为常用单位 (μF)
     c_uf = c_ideal * 1000000
     
-    # 推荐标准值
-    standard_values = [10, 22, 47, 100, 220, 470, 1000, 2200, 4700, 10000]
+    # 推荐标准值 (扩展范围)
+    standard_values = [4.7, 10, 22, 47, 100, 220, 470, 1000, 2200, 4700, 10000, 22000, 47000]
     c_std = min(standard_values, key=lambda x: abs(x - c_uf))
     
     # 实际纹波 (C 转换为法拉)
     actual_ripple = load_current / (frequency * (c_std / 1000000))
+    
+    # 生成提示
+    tips = [f"频率{frequency}Hz对应周期{1000/frequency:.1f}ms"]
+    if frequency == 100:
+        tips.append("100Hz = 全波整流后的频率")
+    elif frequency == 120:
+        tips.append("120Hz = 全波整流50Hz市电后的频率")
+    elif frequency == 60:
+        tips.append("60Hz = 全波整流60Hz市电后的频率")
     
     return {
         "load_current": f"{load_current*1000:.0f}mA",
@@ -714,7 +791,8 @@ def calculate_capacitor_ripple(
         "ideal_capacitor": f"{c_uf:.1f}μF",
         "recommended_capacitor": f"{c_std}μF",
         "actual_ripple": f"{actual_ripple*1000:.1f}mVpp",
-        "formula": "C = I / (f × ΔV)"
+        "formula": "C = I / (f × ΔV)",
+        "tips": tips
     }
 
 
@@ -1023,6 +1101,8 @@ def calculate_battery_life(
     daily_capacity_used = avg_current * active_time_per_day + standby_current * standby_time_per_day
 
     # 续航天数
+    if avg_current <= 0 and standby_current <= 0:
+        return {"error": "电流消耗必须大于0"}
     if daily_capacity_used <= 0:
         return {"error": "电流消耗必须大于0"}
     
@@ -1094,13 +1174,27 @@ def calculate_voltage_reference(
     # 上拉电阻 (从 Vin 到 Vref)
     r1 = r_total - r2
     
-    # E24 系列标准值
+    # E24 系列标准值 (扩展到更大阻值)
     e24 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 51, 68, 82, 100, 120, 
-           150, 180, 220, 270, 330, 390, 470, 510, 680, 820, 1000, 1500, 
-           2000, 2200, 3300, 4700, 5100, 6800, 10000]
+           150, 180, 220, 270, 330, 390, 470, 510, 680, 820, 1000, 1200,
+           1500, 1800, 2000, 2200, 2700, 3300, 3900, 4700, 5100, 5600,
+           6800, 8200, 10000, 12000, 15000, 18000, 20000, 22000, 27000,
+           33000, 39000, 47000, 51000, 68000, 82000, 100000, 120000,
+           150000, 180000, 200000, 220000, 270000, 330000, 390000, 470000,
+           510000, 680000, 820000, 1000000]
     
-    r1_closest = min([x for x in e24 if x >= r1*0.8], key=lambda x: abs(x - r1))
-    r2_closest = min([x for x in e24 if x >= r2*0.8], key=lambda x: abs(x - r2))
+    # 查找合适的标准值
+    available_e24 = [x for x in e24 if x >= r1 * 0.1]  # 至少要接近计算值
+    if not available_e24:
+        r1_closest = max(e24)  # 使用最大值
+    else:
+        r1_closest = min(available_e24, key=lambda x: abs(x - r1))
+    
+    available_e24_r2 = [x for x in e24 if x >= r2 * 0.1]
+    if not available_e24_r2:
+        r2_closest = max(e24)
+    else:
+        r2_closest = min(available_e24_r2, key=lambda x: abs(x - r2))
     
     # 实际输出电压
     v_out_actual = v_in * r2_closest / (r1_closest + r2_closest)
