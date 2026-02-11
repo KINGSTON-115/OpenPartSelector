@@ -54,7 +54,7 @@ class VectorStore:
         self.index[part_number.upper()] = {
             "part_number": part_number.upper(),
             "data": data,
-            "embeddings": None,  # TODO: 添加向量嵌入
+            "embeddings": None,  # 向量嵌入（首次搜索时自动生成）
             "added_at": self._timestamp(),
         }
         
@@ -200,21 +200,46 @@ class VectorStore:
         """
         import hashlib
 
-        # 使用词汇表生成固定维度的向量
+        # 综合电子元器件词汇表（扩展至128维）
         vocabulary = [
-            "arduino", "raspberry", "esp32", "stm32", "arduino", "sensor",
-            "voltage", "current", "power", "digital", "analog", "wireless",
-            "bluetooth", "wifi", "i2c", "spi", "uart", "gpio", "pwm",
-            "led", "motor", "display", "oled", "lcd", "touch", "audio",
-            "battery", "charger", "ldo", "dc-dc", "amplifier", "amplify",
-            "memory", "flash", "eeprom", "secure", "crypto", "wireless",
-            "rf", "lora", "nbiot", "gps", "gprs", "4g", "5g", "usb",
-            "can", "rs485", "ethernet", "usb-c", "hdmi", "mipi", "dvp",
-            "camera", "vision", "ai", "machine", "learning", "neural"
+            # 微控制器 & 处理器
+            "arduino", "raspberry", "esp32", "stm32", "nrf52", "k210", "rp2040", "atmega",
+            "pic", "avr", "cortex", "arm", "riscv", "8051", "mcu", "cpu", "soc", "fpga",
+            # 传感器
+            "sensor", "temperature", "humidity", "pressure", "accelerometer", "gyroscope",
+            "magnetometer", "proximity", "light", "infrared", "ultrasonic", "motion", "imu",
+            "bme280", "dht11", "dht22", "ds18b20", "mpu6050", "bmp280", "bh1750", "sgp30",
+            # 电源管理
+            "voltage", "current", "power", "battery", "charger", "ldo", "dc-dc", "buck",
+            "boost", "linear", "switching", "regulation", "reference", "tl431", "lm317",
+            # 通信模块
+            "bluetooth", "wifi", "wireless", "i2c", "spi", "uart", "gpio", "pwm", "can",
+            "rs485", "ethernet", "usb", "usb-c", "hdmi", "mipi", "dvp", "usb-otg",
+            # 无线通信
+            "lora", "nbiot", "gprs", "4g", "5g", "gps", "rf", "subghz", "zigbee", "mqtt",
+            # 显示 & 输入
+            "led", "oled", "lcd", "display", "touch", "seven-segment", "matrix", "tft",
+            # 电机 & 执行器
+            "motor", "servo", "stepper", "driver", "relay", "solenoid", "dc-motor",
+            # 存储 & 存储器
+            "memory", "flash", "eeprom", "sd-card", "fram", "secure", "crypto", "at24c",
+            # 音频 & 多媒体
+            "audio", "microphone", "speaker", "codec", "amplifier", "dac", "adc", "pdm",
+            # 接口 & 连接器
+            "connector", "terminal", "header", "socket", "jack", "plug", "receptacle",
+            # 模拟电路
+            "opamp", "operational", "amplify", "filter", "comparator", "mosfet", "transistor",
+            "bjt", "igbt", "diode", "led", "photodiode", "optocoupler", "triac", "scr",
+            # 被动元件
+            "resistor", "capacitor", "inductor", "transformer", "ferrite", "crystal",
+            # 特殊功能
+            "camera", "vision", "ai", "machine", "learning", "neural", "edge", "iot",
+            # 封装类型
+            "qfp", "bga", "soic", "dip", "ssop", "tssop", "vfqfpn", "wlcsp", "dfn", "qfn",
         ]
 
-        # 生成 64 维向量
-        vector_dim = 64
+        # 生成 128 维向量
+        vector_dim = 128
         vector = [0.0] * vector_dim
 
         text_lower = text.lower()
