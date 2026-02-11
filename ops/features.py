@@ -633,6 +633,7 @@ def calculate_voltage_divider(
         "calculated_r2": f"{r2/1000:.1f}KΩ",
         "recommended_r1": f"{r1_std}Ω",
         "recommended_r2": f"{r2_std}Ω",
+        "actual_vout": f"{actual_vout:.2f}V",
         "actual_output": f"{actual_vout:.2f}V",
         "error_percent": f"{abs(actual_vout - v_out) / v_out * 100:.2f}%",
         "formula": "Vout = Vin × R2 / (R1 + R2)",
@@ -1094,6 +1095,8 @@ def calculate_battery_life(
         return {"error": "活跃时间不能为负数"}
     if active_time_per_day > 24:
         return {"error": "每天活跃时间不能超过24小时"}
+    if avg_current <= 0 and standby_current <= 0:
+        return {"error": "电流消耗必须大于0"}
 
     standby_time_per_day = 24 - active_time_per_day
 
@@ -1101,8 +1104,6 @@ def calculate_battery_life(
     daily_capacity_used = avg_current * active_time_per_day + standby_current * standby_time_per_day
 
     # 续航天数
-    if avg_current <= 0 and standby_current <= 0:
-        return {"error": "电流消耗必须大于0"}
     if daily_capacity_used <= 0:
         return {"error": "电流消耗必须大于0"}
     
