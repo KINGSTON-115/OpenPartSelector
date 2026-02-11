@@ -459,7 +459,77 @@
         .filter-select{padding:10px 15px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;transition:all 0.3s;background:#fff;color:#4a5568;cursor:pointer;}
         .filter-select:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,0.2);}
         body.dark-mode .filter-select{background:#1a1a2e;border-color:rgba(102,126,234,0.3);color:#e2e8f0;}
-    </style>
+    
+/* Sidebar Navigation - Arc Browser Style */
+#sidebar{transform:translateX(-100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);}
+#sidebar:hover,#sidebar.show{transform:translateX(0);}
+#sidebar div:hover{transform:scale(1.1);background:linear-gradient(135deg,rgba(102,126,234,0.3) 0%,rgba(118,75,162,0.3) 100%) !important;}
+#sidebar div:active{transform:scale(0.95);}
+@media(max-width:768px){
+    #sidebar{width:60px;padding:15px 8px;}
+    #sidebar div{width:44px;height:44px;font-size:20px;}
+    body{padding-left:70px !important;}
+}
+
+/* Block-based UI - Notion Style */
+.part-block{
+    background:linear-gradient(135deg,rgba(102,126,234,0.05) 0%,rgba(118,75,162,0.05) 100%);
+    border-radius:12px;
+    padding:20px;
+    margin:15px 0;
+    border-left:4px solid #667eea;
+    transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+    position:relative;
+    overflow:hidden;
+}
+.part-block::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(102,126,234,0.05),transparent);
+    transform:translateX(-100%);
+    transition:transform 0.5s;
+}
+.part-block:hover::before{transform:translateX(100%);}
+.part-block:hover{
+    transform:translateX(10px);
+    box-shadow:0 10px 40px rgba(102,126,234,0.15);
+    border-left-color:#764ba2;
+}
+.block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.block-title{font-size:1.3em;font-weight:600;color:#667eea;}
+.block-meta{display:flex;gap:10px;flex-wrap:wrap;}
+.block-tag{padding:6px 14px;background:rgba(102,126,234,0.1);border-radius:20px;font-size:13px;color:#667eea;}
+.block-tag.mfr{background:rgba(72,187,120,0.1);color:#48bb78;}
+.block-tag.price{background:rgba(237,137,54,0.1);color:#ed8936;}
+.block-content{color:#4a5568;line-height:1.6;margin:15px 0;}
+.block-actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;}
+
+/* Micro-interactions - Apple Style */
+.ripple{
+    position:relative;overflow:hidden;
+}
+.ripple::after{
+    content:'';position:absolute;top:50%;left:50%;width:0;height:0;
+    background:rgba(255,255,255,0.3);
+    border-radius:50%;transform:translate(-50%,-50%);
+    transition:width 0.6s,height 0.6s,opacity 0.6s;
+}
+.ripple:active::after{width:300px;height:300px;opacity:0;}
+.hover-lift{transition:transform 0.3s,box-shadow 0.3s;}
+.hover-lift:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(102,126,234,0.2);}
+.hover-scale{transition:transform 0.3s;}
+.hover-scale:hover{transform:scale(1.05);}
+.glow{animation:glow 2s ease-in-out infinite;}
+@keyframes glow{
+    0%,100%{box-shadow:0 0 20px rgba(102,126,234,0.3);}
+    50%{box-shadow:0 0 40px rgba(102,126,234,0.6);}
+}
+.shimmer{
+    background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0) 100%);
+    background-size:200% 100%;
+    animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+</style>
 </head>
 <body>
     <!-- Toast 容器 -->
@@ -500,6 +570,19 @@
 <!-- 命令面板遮罩 -->
 <div id="paletteBackdrop" onclick="closeCommandPalette()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99998;"></div>
 
+
+<!-- 侧边栏导航 -->
+<div id="sidebar" style="position:fixed;left:0;top:0;bottom:0;width:70px;background:linear-gradient(180deg,rgba(15,15,26,0.95) 0%,rgba(26,26,46,0.95) 100%);z-index:9990;padding:20px 10px;display:flex;flex-direction:column;align-items:center;gap:15px;border-right:1px solid rgba(102,126,234,0.1);">
+    <div onclick="scrollToSection('hero')" style="width:50px;height:50px;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;" title="首页">🔌</div>
+    <div onclick="scrollToSection('search')" style="width:50px;height:50px;border-radius:12px;background:rgba(102,126,234,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;" title="搜索">🔍</div>
+    <div onclick="scrollToSection('features')" style="width:50px;height:50px;border-radius:12px;background:rgba(102,126,234,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;" title="功能">✨</div>
+    <div onclick="openCommandPalette()" style="width:50px;height:50px;border-radius:12px;background:rgba(102,126,234,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;" title="命令">⌘</div>
+    <div onclick="scrollToSection('download')" style="width:50px;height:50px;border-radius:12px;background:rgba(102,126,234,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;" title="下载">📥</div>
+    <div onclick="scrollToSection('learn')" style="width:50px;height:50px;border-radius:12px;background:rgba(102,126,234,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;" title="学习">📚</div>
+    <div style="flex:1;"></div>
+    <div onclick="toggleDark()" style="width:50px;height:50px;border-radius:12px;background:rgba(102,126,234,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;" title="模式">🌙</div>
+</div>
+
 <div class="hero">
         <div class="hero-logo">🔌</div>
         <h1>OpenPartSelector</h1>
@@ -514,7 +597,7 @@
 
     <div class="container">
         <!-- 搜索卡片 --><a id="search"></a>
-        <div class="card">
+        <div class="card hover-lift">
             <h2>🔍 智能选型</h2>
             <p style="color:#718096;font-size:1.1em;margin-bottom:20px;">
                 输入器件型号或需求，实时搜索全网最优方案
@@ -548,16 +631,16 @@
                 
                 <p style="color:#fff;margin:15px 0 10px;font-size:15px;">🔥 热门搜索：</p>
                 <div class="hot-tags">
-                    <button class="hot-tag" onclick="setQuery('STM32F103C8T6')">STM32F103</button>
-                    <button class="hot-tag" onclick="setQuery('ESP32-WROOM')">ESP32</button>
-                    <button class="hot-tag" onclick="setQuery('CH340N')">CH340N</button>
-                    <button class="hot-tag" onclick="setQuery('ATMEGA328P')">ATMEGA328P</button>
-                    <button class="hot-tag" onclick="setQuery('NE555')">NE555</button>
-                    <button class="hot-tag" onclick="setQuery('RP2040')">RP2040</button>
-                    <button class="hot-tag" onclick="setQuery('GD32F103')">GD32国产</button>
-                    <button class="hot-tag" onclick="setQuery('BME680')">BME680</button>
-                    <button class="hot-tag" onclick="setQuery('MPU9250')">MPU9250</button>
-                    <button class="hot-tag" onclick="setQuery('AHT20')">AHT20</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('STM32F103C8T6')">STM32F103</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('ESP32-WROOM')">ESP32</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('CH340N')">CH340N</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('ATMEGA328P')">ATMEGA328P</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('NE555')">NE555</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('RP2040')">RP2040</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('GD32F103')">GD32国产</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('BME680')">BME680</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('MPU9250')">MPU9250</button>
+                    <button class="hot-tag hover-scale" onclick="setQuery('AHT20')">AHT20</button>
                 </div>
             </div>
 
@@ -593,7 +676,7 @@
         </div>
 
         <!-- 核心功能 --><a id="features"></a>
-        <div class="card">
+        <div class="card hover-lift">
             <h2>✨ 核心功能</h2>
             <div class="features">
                 <div class="feature">
@@ -635,10 +718,10 @@
             <h2>📥 获取工具</h2>
             <p>选择最适合你的使用方式</p>
             <div class="download-buttons">
-                <a href="https://github.com/KINGSTON-115/OpenPartSelector/releases" target="_blank" class="download-btn">
+                <a href="https://github.com/KINGSTON-115/OpenPartSelector/releases" target="_blank" class="download-btn ripple hover-lift">
                     🪟 Windows 版
                 </a>
-                <a href="https://pypi.org/project/OpenPartSelector" target="_blank" class="download-btn">
+                <a href="https://pypi.org/project/OpenPartSelector" target="_blank" class="download-btn ripple hover-lift">
                     📦 pip 安装
                 </a>
                 <a href="https://github.com/KINGSTON-115/OpenPartSelector" target="_blank" class="download-btn secondary">
@@ -656,7 +739,7 @@
         </div>
 
         <!-- 学习资源 --><a id="learn"></a>
-        <div class="card">
+        <div class="card hover-lift">
             <h2>📚 电子学习资源</h2>
             <div class="features">
                 <div class="feature">
