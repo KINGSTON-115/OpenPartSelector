@@ -1,4 +1,4 @@
-# OpenPartSelector v1.1.28.1 🚀🤖🔌
+# OpenPartSelector v1.1.29 🚀🤖🔌
 
 **AI-Driven Open-Source Electronic Component Selection Engine**
 
@@ -6,11 +6,13 @@
 
 ---
 
-## ✨ v1.1.28.1 更新日志 (2026-02-11)
+## ✨ v1.1.29 更新日志 (2026-02-11)
 
-### 🔧 版本修复
-- 统一 frontend/index.html 中的版本号与实际版本保持一致
-- 统一 standalone.html 中的版本号与实际版本保持一致
+### 🔧 向量嵌入功能
+- 实现 TF-IDF 风格文本嵌入生成（64维向量）
+- 新增 `semantic_search` 语义搜索功能
+- 新增 `cosine_similarity` 余弦相似度计算
+- 知识库支持向量相似度检索
 
 ### 🐛 问题修复
 - 修复版本号不一致问题，确保所有文件版本统一
