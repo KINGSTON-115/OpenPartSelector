@@ -1,0 +1,19 @@
+{
+  "name": "openpartselector-frontend",
+  "version": "1.1.32",
+  "description": "OpenPartSelector Frontend Tests",
+  "main": "__tests__/index.test.js",
+  "scripts": {
+    "test": "node __tests__/index.test.js",
+    "test:watch": "node --watch __tests__/index.test.js"
+  },
+  "keywords": ["openpartselector", "frontend", "test"],
+  "author": "OpenPartSelector Team",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

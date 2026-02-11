@@ -72,12 +72,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
       
-      - name: Install and run frontend tests
+      - name: Install dependencies and run frontend tests
         run: |
           cd frontend
-          npm install jest @types/jest
-          npm test || echo "No npm test configured"
+          if [ -f "package.json" ]; then
+            npm install
+            npm test
+          else
+            echo "No frontend tests configured (package.json missing)"
+            exit 0
+          fi
 
   notify:
     needs: [test, lint, frontend-test]
